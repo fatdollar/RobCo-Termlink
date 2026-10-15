@@ -1,0 +1,9 @@
+[Scheme]
+Name=Termlink Fallout
+ColorForeground=#00FF99
+ColorBackground=#003300
+ColorCursor=#00FF00
+ColorCursorUseDefault=FALSE
+
+# Fallout 4 green palette (16 colors)
+ColorPalette=#003300;#005500;#00FF00;#00FF99;#009966;#00CC66;#00FF99;#00FFCC;#003300;#005500;#00FF00;#00FF99;#009966;#00CC66;#00FF99;#00FFCC

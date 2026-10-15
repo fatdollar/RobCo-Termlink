@@ -1,0 +1,98 @@
+#include "main.h"
+#include "terminal.h"
+#include "theme.h"
+
+struct termios terminal_orig_termios;
+
+int terminal_rows = 24;
+int terminal_cols = 80;
+
+int terminal_scroll_top = 5;
+int terminal_scroll_bottom = 0;
+int terminal_cursor_line = 5;
+
+void terminal_restore(void)
+{
+	tcsetattr(STDIN_FILENO, TCSANOW, &terminal_orig_termios);
+}
+
+void terminal_setup(void)
+{
+	struct termios t;
+
+	tcgetattr(STDIN_FILENO, &terminal_orig_termios);
+	atexit(terminal_restore);
+
+	t = terminal_orig_termios;
+	t.c_lflag &= ~(ICANON | ECHO);
+	t.c_cc[VMIN] = 1;
+	t.c_cc[VTIME] = 0;
+	tcsetattr(STDIN_FILENO, TCSANOW, &t);
+
+	theme_apply_default();
+}
+
+void terminal_update_size(void)
+{
+	struct winsize ws;
+	if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) == 0)
+	{
+		terminal_rows = ws.ws_row;
+		terminal_cols = ws.ws_col;
+	}
+	terminal_scroll_bottom = terminal_rows - 1;
+	if (terminal_cursor_line < terminal_scroll_top || terminal_cursor_line >= terminal_scroll_bottom)
+		terminal_cursor_line = terminal_scroll_top;
+}
+
+void terminal_slow_putc(char c)
+{
+	putchar(c);
+	fflush(stdout);
+	usleep(PRINT_DELAY);
+}
+
+void terminal_slow_print_at(int line, const char *s)
+{
+	printf("\033[%d;1H", line);
+	fflush(stdout);
+	for (const char *p = s; *p; ++p)
+		terminal_slow_putc(*p);
+}
+
+void terminal_slow_print(const char *s)
+{
+	terminal_slow_print_at(terminal_cursor_line, s);
+	terminal_cursor_line++;
+}
+
+void terminal_clear_scroll(void)
+{
+	for (int i = terminal_scroll_top; i < terminal_scroll_bottom; i++)
+	{
+		printf("\033[%d;1H", i);
+		for (int c = 0; c < terminal_cols; c++)
+			putchar(' ');
+	}
+	terminal_cursor_line = terminal_scroll_top;
+}
+
+void terminal_draw_prompt(void)
+{
+	printf("\033[%d;1H", terminal_rows);
+	terminal_cursor_line = terminal_scroll_top;
+	terminal_slow_putc('>');
+	printf("\033[K");
+}
+
+void terminal_print_header(void)
+{
+	printf("\033[2J\033[H");
+
+	terminal_slow_print_at(1, "=============================================");
+	terminal_slow_print_at(2, "      RobCo Industries (TM) Termlink v1.0");
+	terminal_slow_print_at(3, "=============================================");
+	terminal_slow_print_at(4, "");
+
+	terminal_clear_scroll();
+}
