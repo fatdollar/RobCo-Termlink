@@ -15,6 +15,7 @@ int main(void) {
 
 	terminal_slow_print_at(terminal_rows, "Accessing system...");
     
+	history_load();
 	util_load_completions();
     builtin_load_external_from_path();
 

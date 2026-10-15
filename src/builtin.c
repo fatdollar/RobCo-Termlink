@@ -2,6 +2,7 @@
 #include "builtin.h"
 #include "terminal.h"
 #include "util.h"
+#include "history.h"
 
 char builtin_external_cmds[MAX_EXTERNAL_CMDS][PATH_MAX];
 int builtin_external_cmd_count = 0;
@@ -188,6 +189,7 @@ void builtin_process(const char *cmd) {
 
     // always clear before executing a command
     terminal_clear_scroll();
+	history_add(cmd);
     terminal_cursor_line = terminal_scroll_top;
 
     if (builtin_try(argc, argv)) {

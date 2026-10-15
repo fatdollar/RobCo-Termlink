@@ -7,6 +7,9 @@
 #define MAX_COMPLETIONS 128
 #define MAX_ARGS 64
 
+#define KEY_UP    1001
+#define KEY_DOWN  1002
+
 typedef enum {
     COMPLETE_FILES_AND_DIRS = 0,
     COMPLETE_DIRS,

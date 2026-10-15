@@ -201,15 +201,15 @@ type=dirs
 ```
 
 ## Known Issues / Current State
-- History system is not yet implemented.
 - Some ANSI cursor movements may flicker depending on terminal.
 - Scroll region behavior is stable but can be improved for long outputs.
 - External command output is slow-printed; large outputs may feel sluggish.
 - Completion system does not yet support multi-argument completion.
+- Command cd doesn't support ~ (HOME)
+- Tab completion should not redraw prompt unless text is being added to the prompt area
+- Directory tab completions should append / so that multiple tab presses can work
 
 ## Planned Features
-- Full history navigation (↑ / ↓)
-- Persistent history file (`~/.termlink_history`)
 - Searchable history (`Ctrl+R`)
 - Configurable themes
 - Configurable scroll region size

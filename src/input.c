@@ -139,46 +139,99 @@ void input_handle_tab(char *buf, size_t *len) {
     fflush(stdout);
 }
 
-void input_read_line(char *buf, size_t maxlen) {
+static int input_read_char(void)
+{
+    int c = getchar();
+
+    if (c != 27)   // not ESC
+        return c;
+
+    int c1 = getchar();
+    if (c1 != '[') {
+        // Not an arrow sequence: put it back and return ESC
+        ungetc(c1, stdin);
+        return 27;
+    }
+
+    int c2 = getchar();
+
+    if (c2 == 'A') return KEY_UP;
+    if (c2 == 'B') return KEY_DOWN;
+
+    ungetc(c2, stdin);
+    ungetc('[', stdin);
+    return 27;
+}
+
+void input_read_line(char *buf, size_t maxlen)
+{
     size_t len = 0;
     int ch;
 
     terminal_draw_prompt();
-	printf("\033[%d;%dH", terminal_rows, PROMPT_COL);
+    printf("\033[%d;%dH", terminal_rows, PROMPT_COL);
 
-	while (1) {
-		ch = getchar();
+    while (1) {
+        ch = input_read_char();
 
-		if (ch == '\n' || ch == '\r') {
-			break;
-		}
+        switch (ch) {
 
-		else if (ch == 127 || ch == '\b') {   // BACKSPACE
-			if (len > 0) {
-				len--;
-				printf("\033[%d;%dH", terminal_rows, PROMPT_COL + (int)len);
-				terminal_slow_putc(' ');
-				printf("\033[%d;%dH", terminal_rows, PROMPT_COL + (int)len);
-				fflush(stdout);
-			}
-		}
+        case '\n':
+        case '\r':
+            buf[len] = '\0';
+            terminal_draw_prompt();
+            return;
 
-		else if (ch == '\t') {               // TAB COMPLETION
-			input_handle_tab(buf, &len);
+        case 127:      // BACKSPACE
+        case '\b':
+            if (len > 0) {
+                len--;
+                printf("\033[%d;%dH", terminal_rows, PROMPT_COL + (int)len);
+                terminal_slow_putc(' ');
+                printf("\033[%d;%dH", terminal_rows, PROMPT_COL + (int)len);
+                fflush(stdout);
+            }
+            break;
 
-			// restore cursor to correct position
-			printf("\033[%d;%dH", terminal_rows, PROMPT_COL + (int)len);
-			fflush(stdout);
-			continue;
-		}
+        case '\t':     // TAB COMPLETION
+            input_handle_tab(buf, &len);
+            printf("\033[%d;%dH", terminal_rows, PROMPT_COL + (int)len);
+            fflush(stdout);
+            break;
 
-		else if (len + 1 < maxlen) {         // NORMAL CHAR
-			buf[len++] = (char)ch;
-			printf("\033[%d;%dH", terminal_rows, PROMPT_COL + (int)(len - 1));
-			terminal_slow_putc((char)ch);
-		}
-	}
+        // ============================
+        //        HISTORY KEYS
+        // ============================
+        case KEY_UP:
+            history_prev(buf, maxlen);
+            len = strlen(buf);
 
-    buf[len] = '\0';
-    terminal_draw_prompt();
+            terminal_draw_prompt();
+            printf("\033[%d;%dH", terminal_rows, PROMPT_COL);
+            printf("%s", buf);
+            fflush(stdout);
+            break;
+
+        case KEY_DOWN:
+            history_next(buf, maxlen);
+            len = strlen(buf);
+
+            terminal_draw_prompt();
+            printf("\033[%d;%dH", terminal_rows, PROMPT_COL);
+            printf("%s", buf);
+            fflush(stdout);
+            break;
+
+        // ============================
+        //        NORMAL CHAR
+        // ============================
+        default:
+            if (len + 1 < maxlen && ch >= 32 && ch < 127) {
+                buf[len++] = (char)ch;
+                printf("\033[%d;%dH", terminal_rows, PROMPT_COL + (int)(len - 1));
+                terminal_slow_putc((char)ch);
+            }
+            break;
+        }
+    }
 }
