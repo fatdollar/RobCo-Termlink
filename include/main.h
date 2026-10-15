@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <string.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
@@ -12,5 +13,7 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #include <limits.h>
+
+#include "config.h"
 
 #endif
