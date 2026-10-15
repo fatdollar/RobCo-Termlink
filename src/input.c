@@ -36,107 +36,270 @@ completion_entry *input_lookup_completion(const char *cmd) {
     return NULL;
 }
 
-void input_complete_path(char **argv, size_t *len, char *buf, completion_type type) {
+static int cmp_match(const void *a, const void *b) {
+    const char *sa = (const char *)a;
+    const char *sb = (const char *)b;
+    return strcmp(sa, sb);
+}
+void input_complete_path(char **argv, size_t *len, char *buf, completion_type type)
+{
     const char *prefix = (argv[1]) ? argv[1] : "";
 
-    char dirname[PATH_MAX];
-    char partial[PATH_MAX];
+	for (size_t i = 0; prefix[i]; i++)
+		if ((unsigned char)prefix[i] < 32)
+			((char *)prefix)[i] = '\0';
 
-    char *slash = strrchr(prefix, '/');
-    if (slash) {
-        size_t dlen = slash - prefix;
-        if (dlen >= sizeof(dirname)) dlen = sizeof(dirname) - 1;
-        memcpy(dirname, prefix, dlen);
-        dirname[dlen] = '\0';
-        snprintf(partial, sizeof(partial), "%s", slash + 1);
-    } else {
-        snprintf(dirname, sizeof(dirname), ".");
-        snprintf(partial, sizeof(partial), "%s", prefix);
+    /* Tilde expansion */
+    if (prefix[0] == '~') {
+        const char *home = getenv("HOME");
+        if (!home)
+            home = "/";
+
+        static char expanded[PATH_MAX];
+
+        if (prefix[1] == '/' || prefix[1] == '\0') {
+            snprintf(expanded, sizeof(expanded), "%s%s", home, prefix + 1);
+            prefix = expanded;
+        }
+    }
+
+	char dirname[PATH_MAX] = {0};
+	char partial[PATH_MAX] = {0};
+
+    /* ============================================================
+       Compute dirname + partial from prefix
+       ============================================================ */
+    if (prefix[0] == '/')
+    {
+        char *slash = strrchr(prefix, '/');
+
+        if (slash == prefix)
+        {
+            snprintf(dirname, sizeof(dirname), "/");
+            snprintf(partial, sizeof(partial), "%s", prefix + 1);
+        }
+        else
+        {
+            size_t dlen = (size_t)(slash - prefix);
+            if (dlen >= sizeof(dirname))
+                dlen = sizeof(dirname) - 1;
+
+            memcpy(dirname, prefix, dlen);
+            dirname[dlen] = '\0';
+
+            snprintf(partial, sizeof(partial), "%s", slash + 1);
+        }
+    }
+    else
+    {
+        char *slash = strrchr(prefix, '/');
+        if (slash)
+        {
+            size_t dlen = (size_t)(slash - prefix);
+            if (dlen >= sizeof(dirname))
+                dlen = sizeof(dirname) - 1;
+
+            memcpy(dirname, prefix, dlen);
+            dirname[dlen] = '\0';
+
+            snprintf(partial, sizeof(partial), "%s", slash + 1);
+        }
+        else
+        {
+            if (!getcwd(dirname, sizeof(dirname)))
+                snprintf(dirname, sizeof(dirname), ".");
+
+            snprintf(partial, sizeof(partial), "%s", prefix);
+        }
     }
 
     DIR *d = opendir(dirname);
-    if (!d) return;
+    if (!d)
+        return;
 
     struct dirent *ent;
     char matches[128][PATH_MAX];
     int match_count = 0;
 
-    while ((ent = readdir(d)) != NULL) {
-        if (strncmp(ent->d_name, partial, strlen(partial)) != 0)
+    /* ============================================================
+       Scan directory entries
+       ============================================================ */
+    while ((ent = readdir(d)) != NULL)
+    {
+        size_t plen = strlen(partial);
+        if (strncmp(ent->d_name, partial, plen) != 0)
             continue;
 
-        size_t need = strlen(dirname) + strlen(ent->d_name) + 2;
-        char fullpath[need];
-        snprintf(fullpath, need, "%s/%s", dirname, ent->d_name);
+        if (plen > 0 &&
+            (strcmp(ent->d_name, ".") == 0 || strcmp(ent->d_name, "..") == 0))
+            continue;
+
+        char fullpath[PATH_MAX];
+        size_t dlen = strlen(dirname);
+        size_t nlen = strlen(ent->d_name);
+
+        if (dlen + 1 + nlen >= PATH_MAX)
+            continue;
+
+        memcpy(fullpath, dirname, dlen);
+        fullpath[dlen] = '/';
+        memcpy(fullpath + dlen + 1, ent->d_name, nlen);
+        fullpath[dlen + 1 + nlen] = '\0';
 
         struct stat st;
-        if (stat(fullpath, &st) != 0) continue;
+        if (stat(fullpath, &st) != 0)
+            continue;
 
-        if (type == COMPLETE_DIRS && !S_ISDIR(st.st_mode)) continue;
-        if (type == COMPLETE_FILES && !S_ISREG(st.st_mode)) continue;
+        if (type == COMPLETE_DIRS && !S_ISDIR(st.st_mode))
+            continue;
+        if (type == COMPLETE_FILES && !S_ISREG(st.st_mode))
+            continue;
 
-        snprintf(matches[match_count++], PATH_MAX, "%s", ent->d_name);
-        if (match_count >= 128) break;
+        snprintf(matches[match_count], PATH_MAX, "%s", ent->d_name);
+        matches[match_count][PATH_MAX - 1] = '\0';
+
+        match_count++;
+        if (match_count >= 128)
+            break;
     }
     closedir(d);
 
-    if (match_count == 0) return;
+    if (match_count == 0)
+        return;
 
-    if (match_count == 1) {
+    /* Sort matches */
+    qsort(matches, match_count, PATH_MAX, cmp_match);
+
+    /* ============================================================
+       Single match → complete it
+       ============================================================ */
+    if (match_count == 1)
+    {
         const char *m = matches[0];
 
-        size_t plen = strlen(prefix);
+        size_t plen = strlen(partial);
         size_t mlen = strlen(m);
 
-        *len -= plen;
+        if (*len >= plen)
+            *len -= plen;
         buf[*len] = '\0';
 
-        snprintf(buf + *len, PATH_MAX - *len, "%s", m);
-        *len += mlen;
+        if (*len + mlen < PATH_MAX)
+        {
+            memcpy(buf + *len, m, mlen);
+            *len += mlen;
+            buf[*len] = '\0';
+        }
 
-        terminal_draw_prompt();
-        printf("\033[%d;%dH", terminal_rows, PROMPT_COL);
-        for (size_t i = 0; i < *len; i++) terminal_slow_putc(buf[i]);
+        char fullpath[PATH_MAX];
+        size_t dlen = strlen(dirname);
+        size_t nlen = strlen(m);
+
+        if (dlen + 1 + nlen < PATH_MAX)
+        {
+            memcpy(fullpath, dirname, dlen);
+            fullpath[dlen] = '/';
+            memcpy(fullpath + dlen + 1, m, nlen);
+            fullpath[dlen + 1 + nlen] = '\0';
+
+            struct stat st;
+            if (stat(fullpath, &st) == 0 && S_ISDIR(st.st_mode))
+            {
+                if (*len + 1 < PATH_MAX)
+                {
+                    buf[*len] = '/';
+                    (*len)++;
+                    buf[*len] = '\0';
+                }
+            }
+        }
+
         return;
     }
 
+    /* ============================================================
+       Multiple matches → print list
+       ============================================================ */
     terminal_slow_print("Matches:");
-    for (int i = 0; i < match_count; i++) {
+    for (int i = 0; i < match_count; i++)
         terminal_slow_print(matches[i]);
-    }
-
-    terminal_draw_prompt();
-    for (size_t i = 0; i < *len; i++) terminal_slow_putc(buf[i]);
 }
 
-void input_handle_tab(char *buf, size_t *len) {
-	char temp[PATH_MAX];
+void input_handle_tab(char *buf, size_t *len)
+{
+    char temp[PATH_MAX];
     char *argv[MAX_ARGS];
 
+    /* Clear scroll region for match printing */
     terminal_clear_scroll();
     terminal_cursor_line = terminal_scroll_top;
 
+    /* Parse arguments from buffer */
     snprintf(temp, sizeof(temp), "%s", buf);
     int argc = input_parse_args(temp, argv, MAX_ARGS);
-    if (argc == 0) return;
+    if (argc == 0)
+        return;
 
+    /* Determine completion type from command */
     completion_type type = COMPLETE_FILES_AND_DIRS;
     completion_entry *ce = input_lookup_completion(argv[0]);
-    if (ce) type = ce->type;
+    if (ce)
+        type = ce->type;
+
+    /* ============================================================
+       Determine which argument to complete
+       Rules:
+         - If only command: complete empty second arg
+         - If flags present: complete LAST non-flag argument
+         - Else: complete argv[1]
+       ============================================================ */
+
+    int target_index = 1;
 
     if (argc == 1)
+    {
+        /* "ls<TAB>" → complete empty second arg */
         argv[1] = "";
+        target_index = 1;
+    }
+    else
+    {
+        /* If argv[1] is a flag, complete the last argument */
+        if (argv[1][0] == '-' && argc > 2)
+        {
+            target_index = argc - 1;
+        }
+        else
+        {
+            /* Normal case: complete argv[1] */
+            target_index = 1;
+        }
+    }
 
-    input_complete_path(argv, len, buf, type);
+    /* Build a minimal argv view for completion */
+    char *comp_argv[2];
+    comp_argv[0] = argv[0];
+    comp_argv[1] = argv[target_index];
 
-    // After completion, redraw prompt + buffer
-    terminal_draw_prompt();
-    printf("\033[%d;%dH", terminal_rows, PROMPT_COL);
+    /* Save old buffer for change detection */
+    char oldbuf[PATH_MAX];
+    snprintf(oldbuf, sizeof(oldbuf), "%s", buf);
 
-    for (size_t i = 0; i < *len; i++)
-        terminal_slow_putc(buf[i]);
+    /* Perform completion */
+    input_complete_path(comp_argv, len, buf, type);
 
-    fflush(stdout);
+    /* ============================================================
+       Redraw ONLY if buffer changed
+       ============================================================ */
+    if (strcmp(oldbuf, buf) != 0)
+    {
+        printf("\033[%d;%dH", terminal_rows, PROMPT_COL);
+        for (size_t i = 0; i < *len; i++)
+            terminal_slow_putc(buf[i]);
+
+        printf("\033[%d;%dH", terminal_rows, PROMPT_COL + (int)*len);
+        fflush(stdout);
+    }
 }
 
 static int input_read_char(void)
@@ -195,6 +358,10 @@ void input_read_line(char *buf, size_t maxlen)
 
         case '\t':     // TAB COMPLETION
             input_handle_tab(buf, &len);
+            // after completion, just move cursor to end of buffer and show any new chars
+            printf("\033[%d;%dH", terminal_rows, PROMPT_COL);
+            for (size_t i = 0; i < len; i++)
+                terminal_slow_putc(buf[i]);
             printf("\033[%d;%dH", terminal_rows, PROMPT_COL + (int)len);
             fflush(stdout);
             break;
