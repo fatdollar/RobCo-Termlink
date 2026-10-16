@@ -198,17 +198,20 @@ void input_autocomplete_path(char **argv, size_t *len, char *buf, autocomplete_t
         terminal_slow_print(matches[i]);
 }
 
-void input_autocomplete_tab(char *buf, size_t *len)
+void input_autocomplete_tab(input_state *st)
 {
     char temp[PATH_MAX];
     char *argv[MAX_ARGS];
+    char *buf = st->buf;
+    size_t *len = &st->len;
 
     /* Clear scroll region for match printing */
     terminal_clear_scroll();
     terminal_cursor_line = terminal_scroll_top;
 
     /* Parse arguments from buffer */
-    snprintf(temp, sizeof(temp), "%s", buf);
+    /* Copy only up to cursor for parsing */
+    snprintf(temp, sizeof(temp), "%.*s", (int)st->cursor, st->buf);
     int argc = input_parse_args(temp, argv, MAX_ARGS);
     if (argc == 0)
         return;
@@ -266,11 +269,14 @@ void input_autocomplete_tab(char *buf, size_t *len)
        ============================================================ */
     if (strcmp(oldbuf, buf) != 0)
     {
+        /* After completion, cursor should be at end of buffer for now */
+        st->cursor = *len;
+
         printf("\033[%d;%dH", terminal_rows, PROMPT_COL);
         for (size_t i = 0; i < *len; i++)
             terminal_slow_putc(buf[i]);
 
-        printf("\033[%d;%dH", terminal_rows, PROMPT_COL + (int)*len);
+        printf("\033[%d;%dH", terminal_rows, PROMPT_COL + (int)st->cursor);
         fflush(stdout);
     }
 }

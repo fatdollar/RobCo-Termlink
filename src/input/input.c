@@ -24,6 +24,13 @@ static int input_read_char(void)
 
     if (c2 == 'A') return KEY_UP;
     if (c2 == 'B') return KEY_DOWN;
+    if (c2 == 'C') return KEY_RIGHT;
+    if (c2 == 'D') return KEY_LEFT;
+
+    if (c2 == '3') {
+        int c3 = getchar();
+        if (c3 == '~') return KEY_DEL;
+    }
 
     ungetc(c2, stdin);
     ungetc('[', stdin);
@@ -82,7 +89,7 @@ void input_read_line(char *buf, size_t maxlen)
             break;
 
         case '\t':
-            input_autocomplete_tab(st.buf, &st.len);
+            input_autocomplete_tab(&st);
             printf("\033[%d;%dH", terminal_rows, PROMPT_COL);
             for (size_t i = 0; i < st.len; i++)
                 terminal_slow_putc(st.buf[i]);
@@ -110,6 +117,18 @@ void input_read_line(char *buf, size_t maxlen)
             printf("\033[%d;%dH", terminal_rows, PROMPT_COL);
             printf("%s", st.buf);
             fflush(stdout);
+            break;
+
+        case KEY_LEFT:
+            input_cursor_left(&st);
+            break;
+
+        case KEY_RIGHT:
+            input_cursor_right(&st);
+            break;
+
+        case KEY_DEL:
+            input_buffer_delete(&st);
             break;
 
         default:
