@@ -1,8 +1,8 @@
 #ifndef AUTOCOMPLETE_H
 #define AUTOCOMPLETE_H
 
-#include <stddef.h>
-#include <limits.h>
+#include "main.h"
+#include "input_state.h"
 
 #define MAX_COMPLETIONS 128
 
@@ -21,7 +21,7 @@ extern autocomplete_entry input_autocomplete_table[];
 extern int input_autocomplete_count;
 
 void input_autocomplete_path(char **argv, size_t *len, char *buf, autocomplete_type type);
-void input_autocomplete_tab(char *buf, size_t *len);
+void input_autocomplete_tab(input_state *st);
 autocomplete_entry *input_autocomplete_lookup(const char *cmd);
 
 #endif

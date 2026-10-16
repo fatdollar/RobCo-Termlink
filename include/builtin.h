@@ -1,8 +1,6 @@
 #ifndef BUILTIN_H
 #define BUILTIN_H
 
-#include <limits.h>
-
 #define MAX_EXTERNAL_CMDS 1024
 
 extern char builtin_external_cmds[][PATH_MAX];

@@ -1,8 +1,6 @@
 #ifndef TERMINAL_H
 #define TERMINAL_H
 
-#include <termios.h>
-
 extern struct termios terminal_orig_termios;
 
 extern int terminal_rows;

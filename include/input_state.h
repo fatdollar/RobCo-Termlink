@@ -1,8 +1,6 @@
 #ifndef INPUT_STATE_H
 #define INPUT_STATE_H
 
-#include <stddef.h>
-
 typedef struct {
     char *buf;          // pointer to input buffer
     size_t len;         // current length of buffer
