@@ -261,6 +261,15 @@ void input_autocomplete_tab(input_state *st)
     char oldbuf[PATH_MAX];
     snprintf(oldbuf, sizeof(oldbuf), "%s", buf);
 
+    /* ===== Save suffix after cursor and limit completion to prefix ===== */
+    char suffix[PATH_MAX];
+    snprintf(suffix, sizeof(suffix), "%s", buf + st->cursor);
+
+    size_t original_len = *len;
+    *len = st->cursor;
+    buf[*len] = '\0';
+    /* ======================================================================= */
+
     /* Perform completion */
     input_autocomplete_path(comp_argv, len, buf, type);
 
@@ -269,15 +278,39 @@ void input_autocomplete_tab(input_state *st)
        ============================================================ */
     if (strcmp(oldbuf, buf) != 0)
     {
-        /* After completion, cursor should be at end of buffer for now */
-        st->cursor = *len;
+        /* ===== NEW: reattach suffix after completed prefix ===== */
+        size_t prefix_len = *len;
+        size_t suffix_len = strlen(suffix);
+
+        if (prefix_len + suffix_len < PATH_MAX)
+        {
+            memcpy(buf + prefix_len, suffix, suffix_len + 1); /* +1 for '\0' */
+            *len = prefix_len + suffix_len;
+        }
+        else
+        {
+            memcpy(buf + prefix_len, suffix, PATH_MAX - prefix_len - 1);
+            *len = PATH_MAX - 1;
+            buf[*len] = '\0';
+        }
+
+        /* After completion, cursor should be at end of completed prefix */
+        st->cursor = prefix_len;
+        /* ======================================================== */
 
         printf("\033[%d;%dH", terminal_rows, PROMPT_COL);
+        printf("\033[K");
         for (size_t i = 0; i < *len; i++)
             terminal_slow_putc(buf[i]);
 
         printf("\033[%d;%dH", terminal_rows, PROMPT_COL + (int)st->cursor);
         fflush(stdout);
+    }
+    else
+    {
+        /* restore len if no change */
+        *len = original_len;
+        buf[*len] = '\0';
     }
 }
 
