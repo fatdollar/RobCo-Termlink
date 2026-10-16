@@ -1,6 +1,8 @@
 #ifndef INPUT_STATE_H
 #define INPUT_STATE_H
 
+#include "history.h"
+
 typedef struct {
     char *buf;          // pointer to input buffer
     size_t len;         // current length of buffer
@@ -10,6 +12,8 @@ typedef struct {
 
     int insert_mode;    // always 1 for now, but allows replace-mode later
     int tab_active;     // for multi-step completions (Phase 5)
+
+	history_entry hist; // history tracking struct
 } input_state;
 
 #endif

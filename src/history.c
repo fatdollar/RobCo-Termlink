@@ -1,110 +1,146 @@
 #include "main.h"
 #include "history.h"
 
-static char history[HISTORY_MAX][PATH_MAX];
-static int history_count = 0;
-static int history_index = 0;
-static char history_path[PATH_MAX];
-
-static void history_init_path(void)
+static void history_init_path(history_entry *hist)
 {
-    const char *home = getenv("HOME");
-    if (!home) {
-        history_path[0] = '\0';
-        return;
-    }
+	const char *home = getenv("HOME");
+	if (!home)
+	{
+		hist->history_path[0] = '\0';
+		return;
+	}
 
-    snprintf(history_path, sizeof(history_path), "%s/%s", home, HISTORY_FILE);
+	snprintf(hist->history_path, sizeof(hist->history_path), "%s/%s", home, HISTORY_FILE);
 }
 
-void history_load(void)
+void history_load(history_entry *hist)
 {
-    history_init_path();
-    if (history_path[0] == '\0')
-        return;
+	hist->history_count = 0;
+	hist->history_index = 0;
+	hist->history_edit_saved = 0;
 
-    FILE *fp = fopen(history_path, "r");
-    if (!fp)
-        return;
+	const char *home = getenv("HOME");
+	if (!home)
+	{
+		hist->history_path[0] = '\0';
+		return;
+	}
 
-    char buf[PATH_MAX];
+	snprintf(hist->history_path, sizeof(hist->history_path),
+			 "%s/%s", home, HISTORY_FILE);
 
-    while (fgets(buf, sizeof(buf), fp)) {
-        buf[strcspn(buf, "\n")] = '\0'; // strip newline
+	FILE *fp = fopen(hist->history_path, "r");
+	if (!fp)
+		return;
 
-        if (history_count < HISTORY_MAX && buf[0] != '\0') {
-            snprintf(history[history_count], PATH_MAX, "%s", buf);
-            history_count++;
-        }
-    }
+	char buf[PATH_MAX];
 
-    fclose(fp);
-    history_index = history_count;
+	while (fgets(buf, sizeof(buf), fp))
+	{
+		buf[strcspn(buf, "\n")] = '\0';
+
+		if (hist->history_count < HISTORY_MAX && buf[0] != '\0')
+		{
+			snprintf(hist->history[hist->history_count],
+					 PATH_MAX, "%s", buf);
+			hist->history_count++;
+		}
+	}
+
+	fclose(fp);
+	hist->history_index = hist->history_count;
 }
 
-void history_save(void)
+void history_save(history_entry *hist)
 {
-    history_init_path();
-    if (history_path[0] == '\0')
-        return;
+	if (hist->history_path[0] == '\0')
+		return;
 
-    FILE *fp = fopen(history_path, "w");
-    if (!fp)
-        return;
+	FILE *fp = fopen(hist->history_path, "w");
+	if (!fp)
+		return;
 
-    for (int i = 0; i < history_count; i++)
-        fprintf(fp, "%s\n", history[i]);
+	for (int i = 0; i < hist->history_count; i++)
+		fprintf(fp, "%s\n", hist->history[i]);
 
-    fclose(fp);
+	fclose(fp);
 }
 
-void history_add(const char *cmd)
+void history_add(history_entry *hist, const char *cmd)
 {
-    if (!cmd || !*cmd)
-        return;
+	if (!cmd || !*cmd)
+		return;
 
-    // Avoid duplicate consecutive entries
-    if (history_count > 0 && strcmp(history[history_count - 1], cmd) == 0)
-        return;
+	if (hist->history_count > 0 &&
+		strcmp(hist->history[hist->history_count - 1], cmd) == 0)
+		return;
 
-    if (history_count < HISTORY_MAX) {
-        snprintf(history[history_count], PATH_MAX, "%s", cmd);
-        history_count++;
-    } else {
-        for (int i = 1; i < HISTORY_MAX; i++)
-            memmove(history[i - 1], history[i], PATH_MAX);
+	if (hist->history_count < HISTORY_MAX)
+	{
+		snprintf(hist->history[hist->history_count],
+				 PATH_MAX, "%s", cmd);
+		hist->history_count++;
+	}
+	else
+	{
+		for (int i = 1; i < HISTORY_MAX; i++)
+			memmove(hist->history[i - 1],
+					hist->history[i], PATH_MAX);
 
-        snprintf(history[HISTORY_MAX - 1], PATH_MAX, "%s", cmd);
-    }
+		snprintf(hist->history[HISTORY_MAX - 1],
+				 PATH_MAX, "%s", cmd);
+	}
 
-    history_index = history_count; // reset to empty prompt
+	hist->history_index = hist->history_count;
+	hist->history_edit_saved = 0;
 }
 
-void history_prev(char *buf, size_t maxlen)
+void history_prev(history_entry *hist, char *buf, size_t maxlen)
 {
-    if (history_count == 0)
-        return;
+	if (!hist->history_edit_saved &&
+		hist->history_index >= hist->history_count)
+	{
+		snprintf(hist->history_edit_buf, PATH_MAX, "%s", buf);
+		hist->history_edit_saved = 1;
+	}
 
-    // If we're at the empty prompt, jump to last entry
-    if (history_index == history_count)
-        history_index = history_count - 1;
-    else if (history_index > 0)
-        history_index--;
+	if (hist->history_index == hist->history_count)
+		hist->history_index = hist->history_count - 1;
+	else if (hist->history_index > 0)
+		hist->history_index--;
 
-    snprintf(buf, maxlen, "%s", history[history_index]);
+	snprintf(buf, maxlen,
+			 "%s", hist->history[hist->history_index]);
 }
 
-void history_next(char *buf, size_t maxlen)
+void history_next(history_entry *hist, char *buf, size_t maxlen)
 {
-    if (history_count == 0)
-        return;
+	if (hist->history_index < hist->history_count - 1)
+	{
+		hist->history_index++;
+		snprintf(buf, maxlen, "%s", hist->history[hist->history_index]);
+		return;
+	}
 
-    if (history_index < history_count - 1) {
-        history_index++;
-        snprintf(buf, maxlen, "%s", history[history_index]);
-    } else {
-        // Move to empty prompt
-        history_index = history_count;
-        buf[0] = '\0';
-    }
+	if (hist->history_index == hist->history_count - 1)
+	{
+		hist->history_index = hist->history_count;
+
+		if (hist->history_edit_saved)
+		{
+			snprintf(buf, maxlen, "%s", hist->history_edit_buf);
+		}
+		else
+		{
+			buf[0] = '\0';
+		}
+
+		hist->history_edit_saved = 0;
+		return;
+	}
+
+	if (hist->history_index == hist->history_count)
+	{
+		return;
+	}
 }

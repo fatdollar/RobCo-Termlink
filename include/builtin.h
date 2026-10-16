@@ -1,6 +1,8 @@
 #ifndef BUILTIN_H
 #define BUILTIN_H
 
+#include "input_state.h"
+
 #define MAX_EXTERNAL_CMDS 1024
 
 extern char builtin_external_cmds[][PATH_MAX];
@@ -29,6 +31,6 @@ int builtin_unset(int argc, char **argv);
 
 int builtin_try(int argc, char **argv);
 void builtin_run_external(char **argv);
-void builtin_process(const char *cmd);
+void builtin_process(input_state *st, const char *cmd);
 
 #endif

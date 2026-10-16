@@ -58,16 +58,14 @@ int input_parse_args(char *line, char **argv, int max_args) {
     return argc;
 }
 
-void input_read_line(char *buf, size_t maxlen)
+void input_read_line(input_state *st, char *buf, size_t maxlen)
 {
-    input_state st = {
-        .buf = buf,
-        .len = 0,
-        .maxlen = maxlen,
-        .cursor = 0,
-        .insert_mode = 1,
-        .tab_active = 0
-    };
+    st->buf = buf;
+    st->len = 0;
+    st->cursor = 0;
+    st->maxlen = maxlen;
+    st->insert_mode = 1;
+    st->tab_active = 0;
 
     terminal_draw_prompt();
     printf("\033[%d;%dH", terminal_rows, PROMPT_COL);
@@ -79,61 +77,75 @@ void input_read_line(char *buf, size_t maxlen)
 
         case '\n':
         case '\r':
-            st.buf[st.len] = '\0';
+            st->buf[st->len] = '\0';
             terminal_draw_prompt();
             return;
 
         case 127:
         case '\b':
-            input_buffer_backspace(&st);
+            input_buffer_backspace(st);
             break;
 
         case '\t':
-            input_autocomplete_tab(&st);
+            input_autocomplete_tab(st);
             printf("\033[%d;%dH", terminal_rows, PROMPT_COL);
-            for (size_t i = 0; i < st.len; i++)
-                terminal_slow_putc(st.buf[i]);
-            printf("\033[%d;%dH", terminal_rows, PROMPT_COL + (int)st.len);
+            for (size_t i = 0; i < st->len; i++)
+                terminal_slow_putc(st->buf[i]);
+            printf("\033[%d;%dH", terminal_rows, PROMPT_COL + (int)st->len);
             fflush(stdout);
             break;
 
         case KEY_UP:
-            history_prev(st.buf, st.maxlen);
-            st.len = strlen(st.buf);
-            st.cursor = st.len;
+            if (st->hist.history_count == 0)
+            {
+                buf[0] = '\0';
+                break;
+            }
+
+            history_prev(&st->hist, st->buf, st->maxlen);
+            st->len = strlen(st->buf);
+            st->cursor = st->len;
 
             terminal_draw_prompt();
             printf("\033[%d;%dH", terminal_rows, PROMPT_COL);
-            printf("%s", st.buf);
+            printf("\033[K");
+            printf("%s", st->buf);
             fflush(stdout);
             break;
 
         case KEY_DOWN:
-            history_next(st.buf, st.maxlen);
-            st.len = strlen(st.buf);
-            st.cursor = st.len;
+            if (st->hist.history_count == 0)
+            {
+                buf[0] = '\0';
+                break;
+            }
+
+            history_next(&st->hist, st->buf, st->maxlen);
+            st->len = strlen(st->buf);
+            st->cursor = st->len;
 
             terminal_draw_prompt();
             printf("\033[%d;%dH", terminal_rows, PROMPT_COL);
-            printf("%s", st.buf);
+            printf("\033[K");
+            printf("%s", st->buf);
             fflush(stdout);
             break;
 
         case KEY_LEFT:
-            input_cursor_left(&st);
+            input_cursor_left(st);
             break;
 
         case KEY_RIGHT:
-            input_cursor_right(&st);
+            input_cursor_right(st);
             break;
 
         case KEY_DEL:
-            input_buffer_delete(&st);
+            input_buffer_delete(st);
             break;
 
         default:
             if (ch >= 32 && ch < 127) {
-                input_buffer_insert(&st, (char)ch);
+                input_buffer_insert(st, (char)ch);
             }
             break;
         }

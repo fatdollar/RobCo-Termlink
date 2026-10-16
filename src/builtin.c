@@ -4,6 +4,7 @@
 #include "util.h"
 #include "history.h"
 #include "input.h"
+#include "input_state.h"
 
 char builtin_external_cmds[MAX_EXTERNAL_CMDS][PATH_MAX];
 int builtin_external_cmd_count = 0;
@@ -316,7 +317,7 @@ void builtin_run_external(char **argv)
 	waitpid(pid, &status, 0);
 }
 
-void builtin_process(const char *cmd)
+void builtin_process(input_state *st, const char *cmd)
 {
 	char buf[PATH_MAX];
 	char *argv[MAX_ARGS];
@@ -330,7 +331,8 @@ void builtin_process(const char *cmd)
 
 	// always clear before executing a command
 	terminal_clear_scroll();
-	history_add(cmd);
+	history_add(&st->hist, cmd);
+	history_save(&st->hist);
 	terminal_cursor_line = terminal_scroll_top;
 
 	if (builtin_try(argc, argv))
