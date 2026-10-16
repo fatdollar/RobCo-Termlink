@@ -2,7 +2,6 @@
 #include "buffer.h"
 #include "terminal.h"
 
-
 void input_buffer_insert(input_state *st, char c)
 {
     if (st->len >= st->maxlen - 1)
@@ -17,12 +16,20 @@ void input_buffer_insert(input_state *st, char c)
     st->cursor++;
     st->len++;
 
-    /* Redraw entire line */
-    printf("\033[%d;%dH", terminal_rows, PROMPT_COL);
-    for (size_t i = 0; i < st->len; i++)
-        terminal_slow_putc(st->buf[i]);
+    /* Move to prompt line + cursor */
+    printf("\033[%d;%dH", terminal_rows, PROMPT_COL + (int)(st->cursor - 1));
 
-    /* Move cursor to correct position */
+    /* Print inserted char */
+    putchar(c);
+
+    /* Print the rest of the buffer (the shifted part) */
+    for (size_t i = st->cursor; i < st->len; i++)
+        putchar(st->buf[i]);
+
+    /* Clear trailing char */
+    putchar(' ');
+
+    /* Restore cursor */
     printf("\033[%d;%dH", terminal_rows, PROMPT_COL + (int)st->cursor);
     fflush(stdout);
 }
@@ -44,10 +51,10 @@ void input_buffer_backspace(input_state *st)
     /* Redraw */
     printf("\033[%d;%dH", terminal_rows, PROMPT_COL);
     for (size_t i = 0; i < st->len; i++)
-        terminal_slow_putc(st->buf[i]);
+        putchar(st->buf[i]);
 
     /* Clear trailing char */
-    terminal_slow_putc(' ');
+    putchar(' ');
 
     /* Restore cursor */
     printf("\033[%d;%dH", terminal_rows, PROMPT_COL + (int)st->cursor);
@@ -69,9 +76,9 @@ void input_buffer_delete(input_state *st)
     /* Redraw */
     printf("\033[%d;%dH", terminal_rows, PROMPT_COL);
     for (size_t i = 0; i < st->len; i++)
-        terminal_slow_putc(st->buf[i]);
+        putchar(st->buf[i]);
 
-    terminal_slow_putc(' ');
+    putchar(' ');
 
     printf("\033[%d;%dH", terminal_rows, PROMPT_COL + (int)st->cursor);
     fflush(stdout);
