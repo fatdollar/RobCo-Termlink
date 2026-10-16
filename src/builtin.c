@@ -11,26 +11,26 @@ int builtin_external_cmd_count = 0;
 
 static void expand_tilde(const char **target)
 {
-    if ((*target)[0] == '~')
-    {
-        const char *home = getenv("HOME");
-        if (!home)
-            home = "/";
+	if ((*target)[0] == '~')
+	{
+		const char *home = getenv("HOME");
+		if (!home)
+			home = "/";
 
-        static char expanded[PATH_MAX];
+		static char expanded[PATH_MAX];
 
-        if ((*target)[1] == '/' || (*target)[1] == '\0')
-        {
-            // "~" or "~/something"
-            snprintf(expanded, sizeof(expanded), "%s%s", home, (*target) + 1);
-            *target = expanded;
-        }
-        else
-        {
-            // "~user" (optional, skip for now)
-            // For now, treat "~user" as literal.
-        }
-    }
+		if ((*target)[1] == '/' || (*target)[1] == '\0')
+		{
+			// "~" or "~/something"
+			snprintf(expanded, sizeof(expanded), "%s%s", home, (*target) + 1);
+			*target = expanded;
+		}
+		else
+		{
+			// "~user" (optional, skip for now)
+			// For now, treat "~user" as literal.
+		}
+	}
 }
 
 void builtin_register_external(const char *name)
@@ -88,66 +88,66 @@ void builtin_load_external_from_path(void)
 #ifdef TL_CD
 int builtin_cd(int argc, char **argv)
 {
-    const char *target = NULL;
+	const char *target = NULL;
 
-    /* Case 1: cd with no args → HOME */
-    if (argc == 1)
-    {
-        target = getenv("HOME");
-        if (!target)
-        {
-            terminal_slow_print("cd: HOME not set");
-            return 1;
-        }
-    }
-    /* Case 2: cd - → OLDPWD */
-    else if (strcmp(argv[1], "-") == 0)
-    {
-        target = getenv("OLDPWD");
-        if (!target)
-        {
-            terminal_slow_print("cd: OLDPWD not set");
-            return 1;
-        }
+	/* Case 1: cd with no args → HOME */
+	if (argc == 1)
+	{
+		target = getenv("HOME");
+		if (!target)
+		{
+			terminal_slow_print("cd: HOME not set");
+			return 1;
+		}
+	}
+	/* Case 2: cd - → OLDPWD */
+	else if (strcmp(argv[1], "-") == 0)
+	{
+		target = getenv("OLDPWD");
+		if (!target)
+		{
+			terminal_slow_print("cd: OLDPWD not set");
+			return 1;
+		}
 
-        /* Print OLDPWD after switching */
-        terminal_slow_print(target);
-    }
-    /* Case 3: cd DIR */
-    else
-    {
-        target = argv[1];
-    }
+		/* Print OLDPWD after switching */
+		terminal_slow_print(target);
+	}
+	/* Case 3: cd DIR */
+	else
+	{
+		target = argv[1];
+	}
 
 	/* Expand ~ to HOME dir path */
 	expand_tilde(&target);
 
-    /* Save old PWD before changing */
-    const char *oldpwd = getenv("PWD");
-    if (!oldpwd)
-        oldpwd = "";
+	/* Save old PWD before changing */
+	const char *oldpwd = getenv("PWD");
+	if (!oldpwd)
+		oldpwd = "";
 
-    /* Attempt to change directory */
-    if (chdir(target) != 0)
-    {
-        char buf[256];
-        snprintf(buf, sizeof(buf), "cd: cannot change directory to %s", target);
-        terminal_slow_print(buf);
-        return 1;
-    }
-
-    /* Update OLDPWD */
-    setenv("OLDPWD", oldpwd, 1);
-
-    /* Update PWD */
-    char newpwd[PATH_MAX];
-    if (getcwd(newpwd, sizeof(newpwd)))
+	/* Attempt to change directory */
+	if (chdir(target) != 0)
 	{
-        setenv("PWD", newpwd, 1);
+		char buf[256];
+		snprintf(buf, sizeof(buf), "cd: cannot change directory to %s", target);
+		terminal_slow_print(buf);
+		return 1;
 	}
-    else
+
+	/* Update OLDPWD */
+	setenv("OLDPWD", oldpwd, 1);
+
+	/* Update PWD */
+	char newpwd[PATH_MAX];
+	if (getcwd(newpwd, sizeof(newpwd)))
 	{
-        setenv("PWD", target, 1);  /* fallback */
+		setenv("PWD", newpwd, 1);
+	}
+	else
+	{
+		setenv("PWD", target, 1); /* fallback */
 	}
 
 	if (argc == 1 || strcmp(argv[1], "-") != 0)
@@ -155,7 +155,7 @@ int builtin_cd(int argc, char **argv)
 		terminal_slow_print(getenv("PWD"));
 	}
 
-    return 1;
+	return 1;
 }
 #endif
 
@@ -233,45 +233,45 @@ int builtin_unset(int argc, char **argv)
 
 int builtin_try(int argc, char **argv)
 {
-    if (argc == 0)
-        return 1;
+	if (argc == 0)
+		return 1;
 
 #ifdef TL_CD
-    if (strcmp(argv[0], "cd") == 0)
-        return builtin_cd(argc, argv);
+	if (strcmp(argv[0], "cd") == 0)
+		return builtin_cd(argc, argv);
 #endif
 
 #ifdef TL_EXIT
-    if (strcmp(argv[0], "exit") == 0)
-        return builtin_exit(argc, argv);
+	if (strcmp(argv[0], "exit") == 0)
+		return builtin_exit(argc, argv);
 #endif
 
 #ifdef TL_CLEAR
-    if (strcmp(argv[0], "clear") == 0)
-        return builtin_clear(argc, argv);
+	if (strcmp(argv[0], "clear") == 0)
+		return builtin_clear(argc, argv);
 #endif
 
 #ifdef TL_EXPORT
-    if (strcmp(argv[0], "export") == 0)
-        return builtin_export(argc, argv);
+	if (strcmp(argv[0], "export") == 0)
+		return builtin_export(argc, argv);
 #endif
 
 #ifdef TL_UNSET
-    if (strcmp(argv[0], "unset") == 0)
-        return builtin_unset(argc, argv);
+	if (strcmp(argv[0], "unset") == 0)
+		return builtin_unset(argc, argv);
 #endif
 
-    if (strcmp(argv[0], "help") == 0)
-        return builtin_help(argc, argv);
+	if (strcmp(argv[0], "help") == 0)
+		return builtin_help(argc, argv);
 
-    return 0;  // not a builtin
+	return 0; // not a builtin
 }
 
 void builtin_run_external(char **argv)
 {
 #ifndef TL_EXTERNAL_CMDS
-    terminal_slow_print("External commands are disabled.");
-    return;
+	terminal_slow_print("External commands are disabled.");
+	return;
 #endif
 	int pipefd[2];
 	if (pipe(pipefd) < 0)

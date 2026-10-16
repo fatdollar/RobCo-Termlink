@@ -6,15 +6,17 @@
 
 #define MAX_COMPLETIONS 128
 
-typedef enum {
-    AUTOCOMPLETE_FILES_AND_DIRS = 0,
-    AUTOCOMPLETE_DIRS,
-    AUTOCOMPLETE_FILES
+typedef enum
+{
+	AUTOCOMPLETE_FILES_AND_DIRS = 0,
+	AUTOCOMPLETE_DIRS,
+	AUTOCOMPLETE_FILES
 } autocomplete_type;
 
-typedef struct {
-    char cmd[64];
-    autocomplete_type type;
+typedef struct
+{
+	char cmd[64];
+	autocomplete_type type;
 } autocomplete_entry;
 
 extern autocomplete_entry input_autocomplete_table[];
