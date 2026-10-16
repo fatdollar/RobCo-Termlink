@@ -3,6 +3,7 @@
 #include "terminal.h"
 #include "util.h"
 #include "history.h"
+#include "input.h"
 
 char builtin_external_cmds[MAX_EXTERNAL_CMDS][PATH_MAX];
 int builtin_external_cmd_count = 0;
@@ -140,9 +141,13 @@ int builtin_cd(int argc, char **argv)
     /* Update PWD */
     char newpwd[PATH_MAX];
     if (getcwd(newpwd, sizeof(newpwd)))
+	{
         setenv("PWD", newpwd, 1);
+	}
     else
+	{
         setenv("PWD", target, 1);  /* fallback */
+	}
 
 	if (argc == 1 || strcmp(argv[1], "-") != 0)
 	{

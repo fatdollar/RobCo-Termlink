@@ -1,6 +1,7 @@
 #include "main.h"
 #include "util.h"
 #include "input.h"
+#include "autocomplete.h"
 
 int util_is_executable(const char *path) {
     struct stat st;
@@ -11,19 +12,19 @@ int util_is_executable(const char *path) {
            (st.st_mode & S_IXOTH);
 }
 
-completion_type util_parse_completion_type(const char *value) {
-    if (strcmp(value, "dirs") == 0) return COMPLETE_DIRS;
-    if (strcmp(value, "files") == 0) return COMPLETE_FILES;
-    return COMPLETE_FILES_AND_DIRS;
+autocomplete_type util_parse_completion_type(const char *value) {
+    if (strcmp(value, "dirs") == 0) return AUTOCOMPLETE_DIRS;
+    if (strcmp(value, "files") == 0) return AUTOCOMPLETE_FILES;
+    return AUTOCOMPLETE_FILES_AND_DIRS;
 }
 
-void util_register_completion(const char *cmd, completion_type type) {
-    if (input_completion_count >= MAX_COMPLETIONS) return;
-    snprintf(input_completion_table[input_completion_count].cmd,
-             sizeof(input_completion_table[input_completion_count].cmd),
+void util_register_completion(const char *cmd, autocomplete_type type) {
+    if (input_autocomplete_count >= MAX_COMPLETIONS) return;
+    snprintf(input_autocomplete_table[input_autocomplete_count].cmd,
+             sizeof(input_autocomplete_table[input_autocomplete_count].cmd),
              "%s", cmd);
-    input_completion_table[input_completion_count].type = type;
-    input_completion_count++;
+    input_autocomplete_table[input_autocomplete_count].type = type;
+    input_autocomplete_count++;
 }
 
 void util_load_completions_dir(const char *dirpath) {
@@ -50,7 +51,7 @@ void util_load_completions_dir(const char *dirpath) {
         if (!f) continue;
 
         char line[256];
-        completion_type type = COMPLETE_FILES_AND_DIRS;
+        autocomplete_type type = AUTOCOMPLETE_FILES_AND_DIRS;
         while (fgets(line, sizeof(line), f)) {
             char *nl = strchr(line, '\n');
             if (nl) *nl = '\0';
@@ -80,5 +81,5 @@ void util_load_completions(void) {
     }
 
     /* built-in defaults if no files exist */
-    util_register_completion("cd", COMPLETE_DIRS);
+    util_register_completion("cd", AUTOCOMPLETE_DIRS);
 }

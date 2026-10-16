@@ -1,47 +1,20 @@
 #include "main.h"
+#include "autocomplete.h"
 #include "input.h"
 #include "terminal.h"
-#include "util.h"
 #include "history.h"
+#include "util.h"
 
-completion_entry input_completion_table[MAX_COMPLETIONS];
-int input_completion_count = 0;
-
-int input_parse_args(char *line, char **argv, int max_args) {
-    int argc = 0;
-    char *p = line;
-
-    while (*p && argc < max_args - 1) {
-        while (*p == ' ' || *p == '\t') p++;
-        if (!*p) break;
-
-        argv[argc++] = p;
-
-        while (*p && *p != ' ' && *p != '\t') p++;
-        if (*p) {
-            *p = '\0';
-            p++;
-        }
-    }
-
-    argv[argc] = NULL;
-    return argc;
-}
-
-completion_entry *input_lookup_completion(const char *cmd) {
-    for (int i = 0; i < input_completion_count; i++) {
-        if (strcmp(input_completion_table[i].cmd, cmd) == 0)
-            return &input_completion_table[i];
-    }
-    return NULL;
-}
+autocomplete_entry input_autocomplete_table[MAX_COMPLETIONS];
+int input_autocomplete_count = 0;
 
 static int cmp_match(const void *a, const void *b) {
     const char *sa = (const char *)a;
     const char *sb = (const char *)b;
     return strcmp(sa, sb);
 }
-void input_complete_path(char **argv, size_t *len, char *buf, completion_type type)
+
+void input_autocomplete_path(char **argv, size_t *len, char *buf, autocomplete_type type)
 {
     const char *prefix = (argv[1]) ? argv[1] : "";
 
@@ -150,9 +123,9 @@ void input_complete_path(char **argv, size_t *len, char *buf, completion_type ty
         if (stat(fullpath, &st) != 0)
             continue;
 
-        if (type == COMPLETE_DIRS && !S_ISDIR(st.st_mode))
+        if (type == AUTOCOMPLETE_DIRS && !S_ISDIR(st.st_mode))
             continue;
-        if (type == COMPLETE_FILES && !S_ISREG(st.st_mode))
+        if (type == AUTOCOMPLETE_FILES && !S_ISREG(st.st_mode))
             continue;
 
         snprintf(matches[match_count], PATH_MAX, "%s", ent->d_name);
@@ -225,7 +198,7 @@ void input_complete_path(char **argv, size_t *len, char *buf, completion_type ty
         terminal_slow_print(matches[i]);
 }
 
-void input_handle_tab(char *buf, size_t *len)
+void input_autocomplete_tab(char *buf, size_t *len)
 {
     char temp[PATH_MAX];
     char *argv[MAX_ARGS];
@@ -241,8 +214,8 @@ void input_handle_tab(char *buf, size_t *len)
         return;
 
     /* Determine completion type from command */
-    completion_type type = COMPLETE_FILES_AND_DIRS;
-    completion_entry *ce = input_lookup_completion(argv[0]);
+    autocomplete_type type = AUTOCOMPLETE_FILES_AND_DIRS;
+    autocomplete_entry *ce = input_autocomplete_lookup(argv[0]);
     if (ce)
         type = ce->type;
 
@@ -286,7 +259,7 @@ void input_handle_tab(char *buf, size_t *len)
     snprintf(oldbuf, sizeof(oldbuf), "%s", buf);
 
     /* Perform completion */
-    input_complete_path(comp_argv, len, buf, type);
+    input_autocomplete_path(comp_argv, len, buf, type);
 
     /* ============================================================
        Redraw ONLY if buffer changed
@@ -302,103 +275,10 @@ void input_handle_tab(char *buf, size_t *len)
     }
 }
 
-static int input_read_char(void)
-{
-    int c = getchar();
-
-    if (c != 27)   // not ESC
-        return c;
-
-    int c1 = getchar();
-    if (c1 != '[') {
-        // Not an arrow sequence: put it back and return ESC
-        ungetc(c1, stdin);
-        return 27;
+autocomplete_entry *input_autocomplete_lookup(const char *cmd) {
+    for (int i = 0; i < input_autocomplete_count; i++) {
+        if (strcmp(input_autocomplete_table[i].cmd, cmd) == 0)
+            return &input_autocomplete_table[i];
     }
-
-    int c2 = getchar();
-
-    if (c2 == 'A') return KEY_UP;
-    if (c2 == 'B') return KEY_DOWN;
-
-    ungetc(c2, stdin);
-    ungetc('[', stdin);
-    return 27;
-}
-
-void input_read_line(char *buf, size_t maxlen)
-{
-    size_t len = 0;
-    int ch;
-
-    terminal_draw_prompt();
-    printf("\033[%d;%dH", terminal_rows, PROMPT_COL);
-
-    while (1) {
-        ch = input_read_char();
-
-        switch (ch) {
-
-        case '\n':
-        case '\r':
-            buf[len] = '\0';
-            terminal_draw_prompt();
-            return;
-
-        case 127:      // BACKSPACE
-        case '\b':
-            if (len > 0) {
-                len--;
-                printf("\033[%d;%dH", terminal_rows, PROMPT_COL + (int)len);
-                terminal_slow_putc(' ');
-                printf("\033[%d;%dH", terminal_rows, PROMPT_COL + (int)len);
-                fflush(stdout);
-            }
-            break;
-
-        case '\t':     // TAB COMPLETION
-            input_handle_tab(buf, &len);
-            // after completion, just move cursor to end of buffer and show any new chars
-            printf("\033[%d;%dH", terminal_rows, PROMPT_COL);
-            for (size_t i = 0; i < len; i++)
-                terminal_slow_putc(buf[i]);
-            printf("\033[%d;%dH", terminal_rows, PROMPT_COL + (int)len);
-            fflush(stdout);
-            break;
-
-        // ============================
-        //        HISTORY KEYS
-        // ============================
-        case KEY_UP:
-            history_prev(buf, maxlen);
-            len = strlen(buf);
-
-            terminal_draw_prompt();
-            printf("\033[%d;%dH", terminal_rows, PROMPT_COL);
-            printf("%s", buf);
-            fflush(stdout);
-            break;
-
-        case KEY_DOWN:
-            history_next(buf, maxlen);
-            len = strlen(buf);
-
-            terminal_draw_prompt();
-            printf("\033[%d;%dH", terminal_rows, PROMPT_COL);
-            printf("%s", buf);
-            fflush(stdout);
-            break;
-
-        // ============================
-        //        NORMAL CHAR
-        // ============================
-        default:
-            if (len + 1 < maxlen && ch >= 32 && ch < 127) {
-                buf[len++] = (char)ch;
-                printf("\033[%d;%dH", terminal_rows, PROMPT_COL + (int)(len - 1));
-                terminal_slow_putc((char)ch);
-            }
-            break;
-        }
-    }
+    return NULL;
 }
