@@ -8,4 +8,6 @@
 // #define TL_EXPORT
 // #define TL_UNSET
 
+#define TL_EXTERNAL_CMDS
+
 #endif /* TERMLINK_CONFIG_H */

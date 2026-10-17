@@ -27,6 +27,8 @@ extern int terminal_scroll_top;
 extern int terminal_scroll_bottom;
 extern int terminal_cursor_line;
 
+extern int termlink_job_control_enabled;
+
 void terminal_sigint(int sig);
 
 void terminal_restore(void);

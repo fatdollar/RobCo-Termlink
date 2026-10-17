@@ -18,6 +18,8 @@ int terminal_scroll_top = 5;
 int terminal_scroll_bottom = 0;
 int terminal_cursor_line = 5;
 
+int termlink_job_control_enabled = 0;
+
 void terminal_sigint(int sig)
 {
 	LOG("terminal_sigint: sigint skipped for termlink");
@@ -31,6 +33,7 @@ void terminal_restore(void)
 void terminal_setup(void)
 {
 	struct termios t;
+
 	LOG("terminal_setup: entering raw mode");
 	tcgetattr(STDIN_FILENO, &terminal_orig_termios);
 	atexit(terminal_restore);
@@ -41,6 +44,24 @@ void terminal_setup(void)
 	t.c_cc[VMIN] = 1;
 	t.c_cc[VTIME] = 0;
 	tcsetattr(STDIN_FILENO, TCSANOW, &t);
+
+	if (termlink_job_control_enabled)
+	{
+		pid_t shell_pgid = getpid();
+		setpgid(shell_pgid, shell_pgid);
+		tcsetpgrp(STDIN_FILENO, shell_pgid);
+
+		struct sigaction sa;
+		memset(&sa, 0, sizeof(sa));
+		sa.sa_handler = SIG_IGN;
+		sigaction(SIGINT, &sa, NULL);
+
+		LOG("terminal_setup: job control active");
+	}
+	else
+	{
+		LOG("terminal_setup: fallback mode (no job control)");
+	}
 
 	theme_apply_default();
 	LOG("terminal_setup: rows=%d cols=%d", terminal_rows, terminal_cols);

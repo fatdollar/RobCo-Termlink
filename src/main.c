@@ -18,15 +18,30 @@ int main(void)
 	debug_init();
 #endif
 
-	struct sigaction sa;
-	sa.sa_handler = terminal_sigint;
-	sigaction(SIGINT, &sa, NULL);
+	// Try to become session leader
+	if (setsid() >= 0)
+	{
+		// Try to acquire controlling terminal
+		if (ioctl(STDIN_FILENO, TIOCSCTTY, 0) >= 0)
+		{
+			termlink_job_control_enabled = 1;
+			LOG("Job control enabled (session leader)");
+		}
+		else
+		{
+			LOG("TIOCSCTTY failed — fallback mode");
+		}
+	}
+	else
+	{
+		LOG("setsid failed — fallback mode");
+	}
 
 	terminal_setup();
 	terminal_update_size();
 	terminal_print_header();
 
-	terminal_slow_print_at(terminal_rows, "Accessing system...");
+	terminal_slow_print_at(terminal_rows, "Accessing systems...");
 
 	history_load(&st.hist);
 	util_load_completions();

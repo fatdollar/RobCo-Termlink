@@ -43,7 +43,7 @@ void external_load_from_path(void)
     while (dir)
     {
         LOG("load_external_from_path: scanning '%s'", dir);
-        builtin_load_commands_from_dir(dir);
+        external_load_commands_from_dir(dir);
         dir = strtok_r(NULL, ":", &saveptr);
     }
 #endif
@@ -83,8 +83,7 @@ void external_run(char **argv)
     LOG("run_external: cmd='%s'", argv[0]);
 
 #ifndef TL_EXTERNAL_CMDS
-    LOG("run_external: external commands disabled");
-    terminal_slow_print("External commands are disabled.");
+    terminal_slow_print("External commands are disabled.\n");
     return;
 #endif
 
@@ -105,12 +104,20 @@ void external_run(char **argv)
     if (pid == 0)
     {
         // --- CHILD ---
-        setpgid(0, 0);                     // child becomes its own process group
-        tcsetpgrp(STDIN_FILENO, getpid()); // give terminal control to child
+        if (termlink_job_control_enabled)
+        {
+            // child gets its own process group
+            setpgid(0, 0);
+        }
+
+        // restore default SIGINT so Ctrl-C kills the child
+        struct sigaction sa;
+        memset(&sa, 0, sizeof(sa));
+        sa.sa_handler = SIG_DFL;
+        sigaction(SIGINT, &sa, NULL);
 
         close(pipefd[0]); // close read end
 
-        // redirect stdout/stderr into pipe
         dup2(pipefd[1], STDOUT_FILENO);
         dup2(pipefd[1], STDERR_FILENO);
         close(pipefd[1]);
@@ -121,15 +128,18 @@ void external_run(char **argv)
     }
 
     // --- PARENT ---
-    setpgid(pid, pid);            // ensure group is set
-    tcsetpgrp(STDIN_FILENO, pid); // give terminal to child
-
     close(pipefd[1]); // close write end
+
+    if (termlink_job_control_enabled)
+    {
+        // give terminal to child
+        setpgid(pid, pid);
+        tcsetpgrp(STDIN_FILENO, pid);
+    }
 
     char buffer[256];
     ssize_t n;
 
-    // read child's output
     while ((n = read(pipefd[0], buffer, sizeof(buffer) - 1)) > 0)
     {
         buffer[n] = '\0';
@@ -139,9 +149,13 @@ void external_run(char **argv)
     close(pipefd[0]);
 
     int status;
-    waitpid(pid, &status, 0); // wait for child
+    waitpid(pid, &status, 0);
 
-    tcsetpgrp(STDIN_FILENO, getpgrp()); // return terminal to shell
+    if (termlink_job_control_enabled)
+    {
+        // return terminal to shell
+        tcsetpgrp(STDIN_FILENO, getpgrp());
+    }
 
     LOG("run_external: child exited status=%d", status);
 }
