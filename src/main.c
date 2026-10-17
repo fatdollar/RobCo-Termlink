@@ -31,6 +31,7 @@ int main(void)
 	builtin_load_external_from_path();
 
 	terminal_draw_prompt();
+	input_redraw(&st, true);
 
 	while (1)
 	{

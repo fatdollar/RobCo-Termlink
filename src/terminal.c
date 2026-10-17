@@ -83,14 +83,15 @@ void terminal_slow_print(const char *s)
 
 void terminal_clear_scroll(void)
 {
-	LOG("terminal_clear_scroll: clearing lines %d to %d",
-		terminal_scroll_top, terminal_scroll_bottom);
+	int last_scroll_line = terminal_rows - 1; // bottom row is prompt
 
-	for (int i = terminal_scroll_top; i < terminal_scroll_bottom; i++)
+	LOG("terminal_clear_scroll: clearing lines %d to %d",
+		terminal_scroll_top, last_scroll_line - 1);
+
+	for (int i = terminal_scroll_top; i < last_scroll_line; i++)
 	{
 		printf("\033[%d;1H", i);
-		for (int c = 0; c < terminal_cols; c++)
-			putchar(' ');
+		printf("\033[2K"); // clear entire line
 	}
 
 	terminal_cursor_line = terminal_scroll_top;
@@ -105,10 +106,7 @@ void terminal_draw_prompt(void)
 	terminal_cursor_line = terminal_scroll_top;
 
 	LOG("terminal_draw_prompt: printing prompt '>'");
-	terminal_slow_putc('>');
-
-	LOG("terminal_draw_prompt: clearing line");
-	printf("\033[K");
+	putchar('>');
 }
 
 void terminal_print_header(void)

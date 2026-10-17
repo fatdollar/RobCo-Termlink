@@ -24,9 +24,6 @@ void input_read_line(input_state *st, char *buf, size_t maxlen)
 
 	LOG("read_line: state initialized");
 
-	terminal_draw_prompt();
-	LOG("read_line: prompt drawn");
-
 	while (1)
 	{
 		int ch = input_read_char();
@@ -38,7 +35,6 @@ void input_read_line(input_state *st, char *buf, size_t maxlen)
 		case '\r':
 			LOG("read_line: newline");
 			st->buf[st->len] = '\0';
-			terminal_draw_prompt();
 			LOG("read_line: returning line='%s'", st->buf);
 			return;
 

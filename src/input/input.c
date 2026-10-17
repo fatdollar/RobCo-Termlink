@@ -8,26 +8,20 @@ void input_redraw(input_state *st, bool place_cursor)
 	LOG("input_redraw: buf='%s' len=%zu cursor=%zu place_cursor=%d",
 		st->buf, st->len, st->cursor, place_cursor);
 
-	terminal_draw_prompt();
-	LOG("input_redraw: drew prompt");
-
+	// Move to buffer start (right of prompt)
 	printf("\033[%d;%dH", terminal_rows, PROMPT_COL);
-	printf("\033[K");
 
-	/* Print only st->len characters, not relying on '\0' */
+	// Clear only buffer area
+	printf("\033[0K");
+
+	// Print buffer
 	for (size_t i = 0; i < st->len; i++)
 		putchar(st->buf[i]);
 
-	LOG("input_redraw: printed buffer");
-
 	if (place_cursor)
-	{
-		LOG("input_redraw: placing cursor at %zu", st->cursor);
 		printf("\033[%d;%zuH", terminal_rows, PROMPT_COL + st->cursor);
-	}
 
 	fflush(stdout);
-	LOG("input_redraw: redraw complete");
 }
 
 int input_parse_args(char *line, char **argv, int max_args)

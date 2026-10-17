@@ -414,6 +414,12 @@ void builtin_process(input_state *st, const char *cmd)
 	snprintf(buf, sizeof(buf), "%s", cmd);
 	LOG("builtin_process: buf='%s'", buf);
 
+	st->buf[0] = '\0';
+	st->len = 0;
+	st->cursor = 0;
+	input_redraw(st, false);
+	LOG("builtin_process: redraw input");
+
 	argc = input_parse_args(buf, argv, MAX_ARGS);
 	LOG("builtin_process: argc=%d", argc);
 
@@ -424,7 +430,7 @@ void builtin_process(input_state *st, const char *cmd)
 	}
 
 	// always clear before executing a command
-	LOG("builtin_process: clearing scroll");
+	LOG("builtin_process: clearing scroll and buffer");
 	terminal_clear_scroll();
 
 	LOG("builtin_process: adding to history");
@@ -439,14 +445,16 @@ void builtin_process(input_state *st, const char *cmd)
 	LOG("builtin_process: trying builtin");
 	if (builtin_try(argc, argv))
 	{
-		LOG("builtin_process: builtin executed, drawing prompt");
-		terminal_draw_prompt();
+		LOG("builtin_process: builtin executed");
+		input_cursor_redraw(st);
 		return;
 	}
 
 	LOG("builtin_process: running external command");
 	builtin_run_external(argv);
 
-	LOG("builtin_process: external done, drawing prompt");
-	terminal_draw_prompt();
+	LOG("builtin_process: external done");
+
+	input_cursor_redraw(st);
+	return;
 }

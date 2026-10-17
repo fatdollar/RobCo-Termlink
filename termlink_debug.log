@@ -931,3 +931,29 @@
 [src/terminal.c:107:terminal_draw_prompt] terminal_draw_prompt: printing prompt '>'
 [src/terminal.c:110:terminal_draw_prompt] terminal_draw_prompt: clearing line
 [src/input/read_char.c:7:input_read_char] read_char: waiting for getchar()
+[src/history.c:25:history_load] HIST: load: start
+[src/history.c:32:history_load] HIST: load: HOME='/home/fatdollar'
+[src/history.c:44:history_load] HIST: load: path='/home/fatdollar/.termlink_history'
+[src/history.c:58:history_load] HIST: load: read='cd include/'
+[src/history.c:64:history_load] HIST: load: stored[0]='cd include/'
+[src/history.c:58:history_load] HIST: load: read='cd'
+[src/history.c:64:history_load] HIST: load: stored[1]='cd'
+[src/history.c:58:history_load] HIST: load: read='testing for flicker.'
+[src/history.c:64:history_load] HIST: load: stored[2]='testing for flicker.'
+[src/history.c:58:history_load] HIST: load: read='it still f'
+[src/history.c:64:history_load] HIST: load: stored[3]='it still f'
+[src/history.c:73:history_load] HIST: load: count=4 index=4
+[src/util.c:140:util_load_completions] util_load_completions: start
+[src/util.c:67:util_load_completions_dir] util_load_completions_dir: dir='/usr/share/termlink/completions'
+[src/util.c:72:util_load_completions_dir] util_load_completions_dir: cannot open
+[src/util.c:67:util_load_completions_dir] util_load_completions_dir: dir='/etc/termlink/completions'
+[src/util.c:72:util_load_completions_dir] util_load_completions_dir: cannot open
+[src/util.c:146:util_load_completions] util_load_completions: HOME='/home/fatdollar'
+[src/util.c:152:util_load_completions] util_load_completions: user dir='/home/fatdollar/.termlink/completions'
+[src/util.c:67:util_load_completions_dir] util_load_completions_dir: dir='/home/fatdollar/.termlink/completions'
+[src/util.c:72:util_load_completions_dir] util_load_completions_dir: cannot open
+[src/util.c:156:util_load_completions] util_load_completions: adding built-in 'cd'
+[src/util.c:47:util_register_completion] util_register_completion: cmd='cd' type=1
+[src/util.c:62:util_register_completion] util_register_completion: count=1
+[src/util.c:159:util_load_completions] util_load_completions: done
+[src/input/read_char.c:7:input_read_char] read_char: waiting for getchar()
