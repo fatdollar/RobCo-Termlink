@@ -8,21 +8,21 @@ int external_cmd_count = 0;
 
 void external_register(const char *name)
 {
-	LOG("register_external: '%s'", name);
+    LOG("register_external: '%s'", name);
 
-	if (external_cmd_count >= MAX_EXTERNAL_CMDS)
-	{
-		LOG("register_external: MAX_EXTERNAL_CMDS reached");
-		return;
-	}
+    if (external_cmd_count >= MAX_EXTERNAL_CMDS)
+    {
+        LOG("register_external: MAX_EXTERNAL_CMDS reached");
+        return;
+    }
 
-	snprintf(external_cmds[external_cmd_count],
-			 sizeof(external_cmds[external_cmd_count]),
-			 "%s", name);
+    snprintf(external_cmds[external_cmd_count],
+             sizeof(external_cmds[external_cmd_count]),
+             "%s", name);
 
-	external_cmd_count++;
+    external_cmd_count++;
 
-	LOG("register_external: count=%d", external_cmd_count);
+    LOG("register_external: count=%d", external_cmd_count);
 }
 
 void external_load_from_path(void)
@@ -91,51 +91,57 @@ void external_run(char **argv)
     int pipefd[2];
     if (pipe(pipefd) < 0)
     {
-        LOG("run_external: pipe failed");
-        terminal_slow_print("Error: pipe failed");
+        terminal_slow_print("Error: pipe failed\n");
         return;
     }
 
     pid_t pid = fork();
     if (pid < 0)
     {
-        LOG("run_external: fork failed");
-        terminal_slow_print("Error: fork failed");
+        terminal_slow_print("Error: fork failed\n");
         return;
     }
 
     if (pid == 0)
     {
-        LOG("run_external: child exec '%s'", argv[0]);
-        close(pipefd[0]);
+        // --- CHILD ---
+        setpgid(0, 0);                     // child becomes its own process group
+        tcsetpgrp(STDIN_FILENO, getpid()); // give terminal control to child
 
+        close(pipefd[0]); // close read end
+
+        // redirect stdout/stderr into pipe
         dup2(pipefd[1], STDOUT_FILENO);
         dup2(pipefd[1], STDERR_FILENO);
         close(pipefd[1]);
 
         execvp(argv[0], argv);
         perror("execvp");
-        exit(1);
+        _exit(127);
     }
 
-    LOG("run_external: parent waiting");
+    // --- PARENT ---
+    setpgid(pid, pid);            // ensure group is set
+    tcsetpgrp(STDIN_FILENO, pid); // give terminal to child
 
-    close(pipefd[1]);
+    close(pipefd[1]); // close write end
 
     char buffer[256];
     ssize_t n;
 
+    // read child's output
     while ((n = read(pipefd[0], buffer, sizeof(buffer) - 1)) > 0)
     {
         buffer[n] = '\0';
-        LOG("run_external: output='%s'", buffer);
         terminal_slow_print(buffer);
     }
 
     close(pipefd[0]);
 
     int status;
-    waitpid(pid, &status, 0);
+    waitpid(pid, &status, 0); // wait for child
+
+    tcsetpgrp(STDIN_FILENO, getpgrp()); // return terminal to shell
 
     LOG("run_external: child exited status=%d", status);
 }

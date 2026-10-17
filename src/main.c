@@ -18,6 +18,10 @@ int main(void)
 	debug_init();
 #endif
 
+	struct sigaction sa;
+	sa.sa_handler = terminal_sigint;
+	sigaction(SIGINT, &sa, NULL);
+
 	terminal_setup();
 	terminal_update_size();
 	terminal_print_header();

@@ -18,6 +18,11 @@ int terminal_scroll_top = 5;
 int terminal_scroll_bottom = 0;
 int terminal_cursor_line = 5;
 
+void terminal_sigint(int sig)
+{
+	LOG("terminal_sigint: sigint skipped for termlink");
+}
+
 void terminal_restore(void)
 {
 	tcsetattr(STDIN_FILENO, TCSANOW, &terminal_orig_termios);
@@ -32,6 +37,7 @@ void terminal_setup(void)
 
 	t = terminal_orig_termios;
 	t.c_lflag &= ~(ICANON | ECHO);
+	t.c_lflag |= ISIG;
 	t.c_cc[VMIN] = 1;
 	t.c_cc[VTIME] = 0;
 	tcsetattr(STDIN_FILENO, TCSANOW, &t);
@@ -205,12 +211,6 @@ void terminal_process(input_state *st, const char *cmd)
 	snprintf(buf, sizeof(buf), "%s", cmd);
 	LOG("terminal_process: buf='%s'", buf);
 
-	st->buf[0] = '\0';
-	st->len = 0;
-	st->cursor = 0;
-	input_redraw(st, false);
-	LOG("terminal_process: redraw input");
-
 	argc = input_parse_args(buf, argv, MAX_ARGS);
 	LOG("terminal_process: argc=%d", argc);
 
@@ -229,6 +229,12 @@ void terminal_process(input_state *st, const char *cmd)
 
 	LOG("terminal_process: saving history");
 	history_save(&st->hist);
+
+	st->buf[0] = '\0';
+	st->len = 0;
+	st->cursor = 0;
+	input_redraw(st, false);
+	LOG("terminal_process: redraw input");
 
 	terminal_cursor_line = terminal_scroll_top;
 	LOG("terminal_process: cursor_line reset to %d", terminal_cursor_line);

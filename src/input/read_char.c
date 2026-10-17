@@ -1,7 +1,6 @@
 #include "main.h"
 #include "input.h"
 
-
 int input_read_char(void)
 {
     LOG("read_char: waiting for getchar()");
@@ -23,6 +22,10 @@ int input_read_char(void)
     {
         LOG("read_char: CTRL+Y");
         return CTRL_Y;
+    }
+    if (c == EOF && errno == EINTR)
+    {
+        return CTRL_C;
     }
 
     // CTRL+Backspace (^H)

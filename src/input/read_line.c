@@ -136,6 +136,15 @@ void input_read_line(input_state *st, char *buf, size_t maxlen)
 			input_redraw(st, true);
 			break;
 
+		case CTRL_C:
+			st->len = 0;
+			st->cursor = 0;
+			st->buf[0] = '\0';
+
+			terminal_slow_print("\n");
+			input_redraw(st, false);
+			continue;
+
 		case CTRL_U:
 			LOG("read_line: CTRL_U");
 			input_tokens_kill_to_begin(st);

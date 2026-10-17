@@ -27,6 +27,8 @@ extern int terminal_scroll_top;
 extern int terminal_scroll_bottom;
 extern int terminal_cursor_line;
 
+void terminal_sigint(int sig);
+
 void terminal_restore(void);
 void terminal_setup(void);
 void terminal_update_size(void);

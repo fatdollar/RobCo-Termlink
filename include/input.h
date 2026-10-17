@@ -19,6 +19,7 @@ enum
 	CTRL_DELETE,
 	ALT_BACKSPACE,
 	ALT_D,
+	CTRL_C,
 	CTRL_U,
 	CTRL_K,
 	CTRL_Y,
