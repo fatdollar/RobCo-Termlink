@@ -8,6 +8,7 @@ SRC = \
 	src/history.c \
 	src/builtin.c \
 	src/util.c \
+	src/debug.c \
 	$(wildcard src/input/*.c)
 
 OBJ = $(patsubst src/%.c, build/%.o, $(SRC))
@@ -31,3 +32,7 @@ run: $(BIN)
 
 clean:
 	rm -rf build
+
+# --- Debug build target ---
+debug: CFLAGS += -DTERMLINK_DEBUG
+debug: $(BIN)

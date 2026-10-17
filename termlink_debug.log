@@ -1,0 +1,933 @@
+[src/terminal.c:23:terminal_setup] terminal_setup: entering raw mode
+[src/terminal.c:34:terminal_setup] terminal_setup: rows=24 cols=80
+[src/terminal.c:39:terminal_update_size] terminal_update_size: before ioctl rows=24 cols=80
+[src/terminal.c:46:terminal_update_size] terminal_update_size: ioctl rows=30 cols=120
+[src/terminal.c:51:terminal_update_size] terminal_update_size: scroll_top=5 scroll_bottom=29 cursor_line=5
+[src/terminal.c:116:terminal_print_header] terminal_print_header: clearing screen
+[src/terminal.c:119:terminal_print_header] terminal_print_header: printing header
+[src/terminal.c:70:terminal_slow_print_at] terminal_slow_print_at: line=1 text='============================================='
+[src/terminal.c:70:terminal_slow_print_at] terminal_slow_print_at: line=2 text='      RobCo Industries (TM) Termlink v1.0'
+[src/terminal.c:70:terminal_slow_print_at] terminal_slow_print_at: line=3 text='============================================='
+[src/terminal.c:70:terminal_slow_print_at] terminal_slow_print_at: line=4 text=''
+[src/terminal.c:125:terminal_print_header] terminal_print_header: clearing scroll region
+[src/terminal.c:86:terminal_clear_scroll] terminal_clear_scroll: clearing lines 5 to 29
+[src/terminal.c:97:terminal_clear_scroll] terminal_clear_scroll: cursor_line=5
+[src/terminal.c:70:terminal_slow_print_at] terminal_slow_print_at: line=30 text='Accessing system...'
+[src/history.c:25:history_load] HIST: load: start
+[src/history.c:32:history_load] HIST: load: HOME='/home/fatdollar'
+[src/history.c:44:history_load] HIST: load: path='/home/fatdollar/.termlink_history'
+[src/history.c:49:history_load] HIST: load: no history file
+[src/util.c:140:util_load_completions] util_load_completions: start
+[src/util.c:67:util_load_completions_dir] util_load_completions_dir: dir='/usr/share/termlink/completions'
+[src/util.c:72:util_load_completions_dir] util_load_completions_dir: cannot open
+[src/util.c:67:util_load_completions_dir] util_load_completions_dir: dir='/etc/termlink/completions'
+[src/util.c:72:util_load_completions_dir] util_load_completions_dir: cannot open
+[src/util.c:146:util_load_completions] util_load_completions: HOME='/home/fatdollar'
+[src/util.c:152:util_load_completions] util_load_completions: user dir='/home/fatdollar/.termlink/completions'
+[src/util.c:67:util_load_completions_dir] util_load_completions_dir: dir='/home/fatdollar/.termlink/completions'
+[src/util.c:72:util_load_completions_dir] util_load_completions_dir: cannot open
+[src/util.c:156:util_load_completions] util_load_completions: adding built-in 'cd'
+[src/util.c:47:util_register_completion] util_register_completion: cmd='cd' type=1
+[src/util.c:62:util_register_completion] util_register_completion: count=1
+[src/util.c:159:util_load_completions] util_load_completions: done
+[src/terminal.c:102:terminal_draw_prompt] terminal_draw_prompt: moving cursor to bottom row 30
+[src/terminal.c:107:terminal_draw_prompt] terminal_draw_prompt: printing prompt '>'
+[src/terminal.c:110:terminal_draw_prompt] terminal_draw_prompt: clearing line
+[src/terminal.c:102:terminal_draw_prompt] terminal_draw_prompt: moving cursor to bottom row 30
+[src/terminal.c:107:terminal_draw_prompt] terminal_draw_prompt: printing prompt '>'
+[src/terminal.c:110:terminal_draw_prompt] terminal_draw_prompt: clearing line
+[src/input/read_char.c:7:input_read_char] read_char: waiting for getchar()
+[src/input/read_char.c:9:input_read_char] read_char: got c=99 (0x63)
+[src/input/read_char.c:45:input_read_char] read_char: normal char 'c' (0x63)
+[src/input/input.c:8:input_redraw] input_redraw: buf='c' len=1 cursor=1 place_cursor=1
+[src/terminal.c:102:terminal_draw_prompt] terminal_draw_prompt: moving cursor to bottom row 30
+[src/terminal.c:107:terminal_draw_prompt] terminal_draw_prompt: printing prompt '>'
+[src/terminal.c:110:terminal_draw_prompt] terminal_draw_prompt: clearing line
+[src/input/input.c:12:input_redraw] input_redraw: drew prompt
+[src/input/input.c:21:input_redraw] input_redraw: printed buffer
+[src/input/input.c:25:input_redraw] input_redraw: placing cursor at 1
+[src/input/input.c:30:input_redraw] input_redraw: redraw complete
+[src/input/read_char.c:7:input_read_char] read_char: waiting for getchar()
+[src/input/read_char.c:9:input_read_char] read_char: got c=100 (0x64)
+[src/input/read_char.c:45:input_read_char] read_char: normal char 'd' (0x64)
+[src/input/input.c:8:input_redraw] input_redraw: buf='cd' len=2 cursor=2 place_cursor=1
+[src/terminal.c:102:terminal_draw_prompt] terminal_draw_prompt: moving cursor to bottom row 30
+[src/terminal.c:107:terminal_draw_prompt] terminal_draw_prompt: printing prompt '>'
+[src/terminal.c:110:terminal_draw_prompt] terminal_draw_prompt: clearing line
+[src/input/input.c:12:input_redraw] input_redraw: drew prompt
+[src/input/input.c:21:input_redraw] input_redraw: printed buffer
+[src/input/input.c:25:input_redraw] input_redraw: placing cursor at 2
+[src/input/input.c:30:input_redraw] input_redraw: redraw complete
+[src/input/read_char.c:7:input_read_char] read_char: waiting for getchar()
+[src/input/read_char.c:9:input_read_char] read_char: got c=32 (0x20)
+[src/input/read_char.c:45:input_read_char] read_char: normal char ' ' (0x20)
+[src/input/input.c:8:input_redraw] input_redraw: buf='cd ' len=3 cursor=3 place_cursor=1
+[src/terminal.c:102:terminal_draw_prompt] terminal_draw_prompt: moving cursor to bottom row 30
+[src/terminal.c:107:terminal_draw_prompt] terminal_draw_prompt: printing prompt '>'
+[src/terminal.c:110:terminal_draw_prompt] terminal_draw_prompt: clearing line
+[src/input/input.c:12:input_redraw] input_redraw: drew prompt
+[src/input/input.c:21:input_redraw] input_redraw: printed buffer
+[src/input/input.c:25:input_redraw] input_redraw: placing cursor at 3
+[src/input/input.c:30:input_redraw] input_redraw: redraw complete
+[src/input/read_char.c:7:input_read_char] read_char: waiting for getchar()
+[src/input/read_char.c:9:input_read_char] read_char: got c=105 (0x69)
+[src/input/read_char.c:45:input_read_char] read_char: normal char 'i' (0x69)
+[src/input/input.c:8:input_redraw] input_redraw: buf='cd i' len=4 cursor=4 place_cursor=1
+[src/terminal.c:102:terminal_draw_prompt] terminal_draw_prompt: moving cursor to bottom row 30
+[src/terminal.c:107:terminal_draw_prompt] terminal_draw_prompt: printing prompt '>'
+[src/terminal.c:110:terminal_draw_prompt] terminal_draw_prompt: clearing line
+[src/input/input.c:12:input_redraw] input_redraw: drew prompt
+[src/input/input.c:21:input_redraw] input_redraw: printed buffer
+[src/input/input.c:25:input_redraw] input_redraw: placing cursor at 4
+[src/input/input.c:30:input_redraw] input_redraw: redraw complete
+[src/input/read_char.c:7:input_read_char] read_char: waiting for getchar()
+[src/input/read_char.c:9:input_read_char] read_char: got c=110 (0x6E)
+[src/input/read_char.c:45:input_read_char] read_char: normal char 'n' (0x6E)
+[src/input/input.c:8:input_redraw] input_redraw: buf='cd in' len=5 cursor=5 place_cursor=1
+[src/terminal.c:102:terminal_draw_prompt] terminal_draw_prompt: moving cursor to bottom row 30
+[src/terminal.c:107:terminal_draw_prompt] terminal_draw_prompt: printing prompt '>'
+[src/terminal.c:110:terminal_draw_prompt] terminal_draw_prompt: clearing line
+[src/input/input.c:12:input_redraw] input_redraw: drew prompt
+[src/input/input.c:21:input_redraw] input_redraw: printed buffer
+[src/input/input.c:25:input_redraw] input_redraw: placing cursor at 5
+[src/input/input.c:30:input_redraw] input_redraw: redraw complete
+[src/input/read_char.c:7:input_read_char] read_char: waiting for getchar()
+[src/input/read_char.c:9:input_read_char] read_char: got c=9 (0x09)
+[src/input/read_char.c:45:input_read_char] read_char: normal char '	' (0x09)
+[src/input/autocomplete.c:241:input_autocomplete_tab] autocomplete_tab: buf='cd in' len=5 cursor=5
+[src/input/autocomplete.c:250:input_autocomplete_tab] autocomplete_tab: clearing scroll region
+[src/terminal.c:86:terminal_clear_scroll] terminal_clear_scroll: clearing lines 5 to 29
+[src/terminal.c:97:terminal_clear_scroll] terminal_clear_scroll: cursor_line=5
+[src/input/autocomplete.c:257:input_autocomplete_tab] autocomplete_tab: temp='cd in'
+[src/input/input.c:35:input_parse_args] parse_args: line='cd in' max_args=64
+[src/input/input.c:48:input_parse_args] parse_args: arg[0]='cd in'
+[src/input/input.c:48:input_parse_args] parse_args: arg[1]='in'
+[src/input/input.c:61:input_parse_args] parse_args: argc=2
+[src/input/autocomplete.c:260:input_autocomplete_tab] autocomplete_tab: argc=2
+[src/input/autocomplete.c:392:input_autocomplete_lookup] autocomplete_lookup: cmd='cd'
+[src/input/autocomplete.c:396:input_autocomplete_lookup] autocomplete_lookup: checking 'cd'
+[src/input/autocomplete.c:401:input_autocomplete_lookup] autocomplete_lookup: match
+[src/input/autocomplete.c:271:input_autocomplete_tab] autocomplete_tab: lookup cmd='cd' result=0x5af31540c0c0
+[src/input/autocomplete.c:276:input_autocomplete_tab] autocomplete_tab: type=1
+[src/input/autocomplete.c:307:input_autocomplete_tab] autocomplete_tab: completing argv[1]
+[src/input/autocomplete.c:316:input_autocomplete_tab] autocomplete_tab: comp_argv='cd' 'in'
+[src/input/autocomplete.c:321:input_autocomplete_tab] autocomplete_tab: oldbuf='cd in'
+[src/input/autocomplete.c:326:input_autocomplete_tab] autocomplete_tab: suffix=''
+[src/input/autocomplete.c:329:input_autocomplete_tab] autocomplete_tab: original_len=5
+[src/input/autocomplete.c:333:input_autocomplete_tab] autocomplete_tab: prefix='cd in' new_len=5
+[src/input/autocomplete.c:338:input_autocomplete_tab] autocomplete_tab: calling input_autocomplete_path()
+[src/input/autocomplete.c:20:input_autocomplete_path] autocomplete_path: argv0='cd' argv1='in' type=1 len=5 buf='cd in'
+[src/input/autocomplete.c:24:input_autocomplete_path] autocomplete_path: prefix='in'
+[src/input/autocomplete.c:31:input_autocomplete_path] autocomplete_path: sanitized prefix='in'
+[src/input/autocomplete.c:56:input_autocomplete_path] autocomplete_path: computing dirname/partial
+[src/input/autocomplete.c:105:input_autocomplete_path] autocomplete_path: dirname='/home/fatdollar/RobCo-Termlink' partial='in'
+[src/input/autocomplete.c:114:input_autocomplete_path] autocomplete_path: scanning directory
+[src/input/autocomplete.c:125:input_autocomplete_path] autocomplete_path: entry='src'
+[src/input/autocomplete.c:125:input_autocomplete_path] autocomplete_path: entry='..'
+[src/input/autocomplete.c:125:input_autocomplete_path] autocomplete_path: entry='.'
+[src/input/autocomplete.c:125:input_autocomplete_path] autocomplete_path: entry='resources'
+[src/input/autocomplete.c:125:input_autocomplete_path] autocomplete_path: entry='.git'
+[src/input/autocomplete.c:125:input_autocomplete_path] autocomplete_path: entry='Makefile'
+[src/input/autocomplete.c:125:input_autocomplete_path] autocomplete_path: entry='.gitignore'
+[src/input/autocomplete.c:125:input_autocomplete_path] autocomplete_path: entry='README.md'
+[src/input/autocomplete.c:125:input_autocomplete_path] autocomplete_path: entry='include'
+[src/input/autocomplete.c:131:input_autocomplete_path] autocomplete_path: match='include'
+[src/input/autocomplete.c:125:input_autocomplete_path] autocomplete_path: entry='build'
+[src/input/autocomplete.c:125:input_autocomplete_path] autocomplete_path: entry='.gitattributes'
+[src/input/autocomplete.c:125:input_autocomplete_path] autocomplete_path: entry='termlink_debug.log'
+[src/input/autocomplete.c:167:input_autocomplete_path] autocomplete_path: match_count=1
+[src/input/autocomplete.c:175:input_autocomplete_path] autocomplete_path: sorting matches
+[src/input/autocomplete.c:184:input_autocomplete_path] autocomplete_path: single match='include'
+[src/input/autocomplete.c:223:input_autocomplete_path] autocomplete_path: completed buf='cd include/' len=11
+[src/input/autocomplete.c:341:input_autocomplete_tab] autocomplete_tab: after path buf='cd include/' len=11
+[src/input/autocomplete.c:348:input_autocomplete_tab] autocomplete_tab: buffer changed, reattaching suffix
+[src/input/autocomplete.c:354:input_autocomplete_tab] autocomplete_tab: prefix_len=11 suffix_len=0
+[src/input/autocomplete.c:370:input_autocomplete_tab] autocomplete_tab: final buf='cd include/' len=11 cursor=11
+[src/input/input.c:8:input_redraw] input_redraw: buf='cd include/' len=11 cursor=11 place_cursor=1
+[src/terminal.c:102:terminal_draw_prompt] terminal_draw_prompt: moving cursor to bottom row 30
+[src/terminal.c:107:terminal_draw_prompt] terminal_draw_prompt: printing prompt '>'
+[src/terminal.c:110:terminal_draw_prompt] terminal_draw_prompt: clearing line
+[src/input/input.c:12:input_redraw] input_redraw: drew prompt
+[src/input/input.c:21:input_redraw] input_redraw: printed buffer
+[src/input/input.c:25:input_redraw] input_redraw: placing cursor at 11
+[src/input/input.c:30:input_redraw] input_redraw: redraw complete
+[src/input/read_char.c:7:input_read_char] read_char: waiting for getchar()
+[src/input/read_char.c:9:input_read_char] read_char: got c=10 (0x0A)
+[src/input/read_char.c:45:input_read_char] read_char: normal char '
+' (0x0A)
+[src/terminal.c:102:terminal_draw_prompt] terminal_draw_prompt: moving cursor to bottom row 30
+[src/terminal.c:107:terminal_draw_prompt] terminal_draw_prompt: printing prompt '>'
+[src/terminal.c:110:terminal_draw_prompt] terminal_draw_prompt: clearing line
+[src/builtin.c:408:builtin_process] builtin_process: cmd='cd include/'
+[src/builtin.c:415:builtin_process] builtin_process: buf='cd include/'
+[src/input/input.c:35:input_parse_args] parse_args: line='cd include/' max_args=64
+[src/input/input.c:48:input_parse_args] parse_args: arg[0]='cd include/'
+[src/input/input.c:48:input_parse_args] parse_args: arg[1]='include/'
+[src/input/input.c:61:input_parse_args] parse_args: argc=2
+[src/builtin.c:418:builtin_process] builtin_process: argc=2
+[src/builtin.c:427:builtin_process] builtin_process: clearing scroll
+[src/terminal.c:86:terminal_clear_scroll] terminal_clear_scroll: clearing lines 5 to 29
+[src/terminal.c:97:terminal_clear_scroll] terminal_clear_scroll: cursor_line=5
+[src/builtin.c:430:builtin_process] builtin_process: adding to history
+[src/history.c:106:history_add] HIST: add: cmd='cd include/'
+[src/history.c:123:history_add] HIST: add: storing at 0
+[src/history.c:142:history_add] HIST: add: count=1 index=1 edit_saved=0
+[src/builtin.c:433:builtin_process] builtin_process: saving history
+[src/history.c:79:history_save] HIST: save: path='/home/fatdollar/.termlink_history'
+[src/history.c:96:history_save] HIST: save: writing[0]='cd include/'
+[src/history.c:101:history_save] HIST: save: done
+[src/builtin.c:437:builtin_process] builtin_process: cursor_line reset to 5
+[src/builtin.c:439:builtin_process] builtin_process: trying builtin
+[src/builtin.c:292:builtin_try] builtin_try: argc=2 cmd='cd'
+[src/builtin.c:297:builtin_try] builtin_try: matched cd
+[src/builtin.c:123:builtin_cd] cd: argc=2 argv1='include/'
+[src/builtin.c:161:builtin_cd] cd: using explicit dir 'include/'
+[src/builtin.c:166:builtin_cd] cd: before tilde expansion target='include/'
+[src/builtin.c:15:expand_tilde] expand_tilde: input='include/'
+[src/builtin.c:45:expand_tilde] expand_tilde: final='include/'
+[src/builtin.c:168:builtin_cd] cd: after tilde expansion target='include/'
+[src/builtin.c:172:builtin_cd] cd: oldpwd='/home/fatdollar/RobCo-Termlink'
+[src/builtin.c:177:builtin_cd] cd: attempting chdir('include/')
+[src/builtin.c:187:builtin_cd] cd: chdir succeeded
+[src/builtin.c:190:builtin_cd] cd: setting OLDPWD='/home/fatdollar/RobCo-Termlink'
+[src/builtin.c:197:builtin_cd] cd: newpwd='/home/fatdollar/RobCo-Termlink/include'
+[src/builtin.c:209:builtin_cd] cd: printing new PWD='/home/fatdollar/RobCo-Termlink/include'
+[src/terminal.c:70:terminal_slow_print_at] terminal_slow_print_at: line=5 text='/home/fatdollar/RobCo-Termlink/include'
+[src/builtin.c:213:builtin_cd] cd: done
+[src/builtin.c:442:builtin_process] builtin_process: builtin executed, drawing prompt
+[src/terminal.c:102:terminal_draw_prompt] terminal_draw_prompt: moving cursor to bottom row 30
+[src/terminal.c:107:terminal_draw_prompt] terminal_draw_prompt: printing prompt '>'
+[src/terminal.c:110:terminal_draw_prompt] terminal_draw_prompt: clearing line
+[src/terminal.c:102:terminal_draw_prompt] terminal_draw_prompt: moving cursor to bottom row 30
+[src/terminal.c:107:terminal_draw_prompt] terminal_draw_prompt: printing prompt '>'
+[src/terminal.c:110:terminal_draw_prompt] terminal_draw_prompt: clearing line
+[src/input/read_char.c:7:input_read_char] read_char: waiting for getchar()
+[src/input/read_char.c:9:input_read_char] read_char: got c=99 (0x63)
+[src/input/read_char.c:45:input_read_char] read_char: normal char 'c' (0x63)
+[src/input/input.c:8:input_redraw] input_redraw: buf='c' len=1 cursor=1 place_cursor=1
+[src/terminal.c:102:terminal_draw_prompt] terminal_draw_prompt: moving cursor to bottom row 30
+[src/terminal.c:107:terminal_draw_prompt] terminal_draw_prompt: printing prompt '>'
+[src/terminal.c:110:terminal_draw_prompt] terminal_draw_prompt: clearing line
+[src/input/input.c:12:input_redraw] input_redraw: drew prompt
+[src/input/input.c:21:input_redraw] input_redraw: printed buffer
+[src/input/input.c:25:input_redraw] input_redraw: placing cursor at 1
+[src/input/input.c:30:input_redraw] input_redraw: redraw complete
+[src/input/read_char.c:7:input_read_char] read_char: waiting for getchar()
+[src/input/read_char.c:9:input_read_char] read_char: got c=100 (0x64)
+[src/input/read_char.c:45:input_read_char] read_char: normal char 'd' (0x64)
+[src/input/input.c:8:input_redraw] input_redraw: buf='cd' len=2 cursor=2 place_cursor=1
+[src/terminal.c:102:terminal_draw_prompt] terminal_draw_prompt: moving cursor to bottom row 30
+[src/terminal.c:107:terminal_draw_prompt] terminal_draw_prompt: printing prompt '>'
+[src/terminal.c:110:terminal_draw_prompt] terminal_draw_prompt: clearing line
+[src/input/input.c:12:input_redraw] input_redraw: drew prompt
+[src/input/input.c:21:input_redraw] input_redraw: printed buffer
+[src/input/input.c:25:input_redraw] input_redraw: placing cursor at 2
+[src/input/input.c:30:input_redraw] input_redraw: redraw complete
+[src/input/read_char.c:7:input_read_char] read_char: waiting for getchar()
+[src/input/read_char.c:9:input_read_char] read_char: got c=10 (0x0A)
+[src/input/read_char.c:45:input_read_char] read_char: normal char '
+' (0x0A)
+[src/terminal.c:102:terminal_draw_prompt] terminal_draw_prompt: moving cursor to bottom row 30
+[src/terminal.c:107:terminal_draw_prompt] terminal_draw_prompt: printing prompt '>'
+[src/terminal.c:110:terminal_draw_prompt] terminal_draw_prompt: clearing line
+[src/builtin.c:408:builtin_process] builtin_process: cmd='cd'
+[src/builtin.c:415:builtin_process] builtin_process: buf='cd'
+[src/input/input.c:35:input_parse_args] parse_args: line='cd' max_args=64
+[src/input/input.c:48:input_parse_args] parse_args: arg[0]='cd'
+[src/input/input.c:61:input_parse_args] parse_args: argc=1
+[src/builtin.c:418:builtin_process] builtin_process: argc=1
+[src/builtin.c:427:builtin_process] builtin_process: clearing scroll
+[src/terminal.c:86:terminal_clear_scroll] terminal_clear_scroll: clearing lines 5 to 29
+[src/terminal.c:97:terminal_clear_scroll] terminal_clear_scroll: cursor_line=5
+[src/builtin.c:430:builtin_process] builtin_process: adding to history
+[src/history.c:106:history_add] HIST: add: cmd='cd'
+[src/history.c:123:history_add] HIST: add: storing at 1
+[src/history.c:142:history_add] HIST: add: count=2 index=2 edit_saved=0
+[src/builtin.c:433:builtin_process] builtin_process: saving history
+[src/history.c:79:history_save] HIST: save: path='/home/fatdollar/.termlink_history'
+[src/history.c:96:history_save] HIST: save: writing[0]='cd include/'
+[src/history.c:96:history_save] HIST: save: writing[1]='cd'
+[src/history.c:101:history_save] HIST: save: done
+[src/builtin.c:437:builtin_process] builtin_process: cursor_line reset to 5
+[src/builtin.c:439:builtin_process] builtin_process: trying builtin
+[src/builtin.c:292:builtin_try] builtin_try: argc=1 cmd='cd'
+[src/builtin.c:297:builtin_try] builtin_try: matched cd
+[src/builtin.c:123:builtin_cd] cd: argc=1 argv1='(none)'
+[src/builtin.c:130:builtin_cd] cd: no args, using HOME
+[src/builtin.c:132:builtin_cd] cd: HOME='/home/fatdollar'
+[src/builtin.c:166:builtin_cd] cd: before tilde expansion target='/home/fatdollar'
+[src/builtin.c:15:expand_tilde] expand_tilde: input='/home/fatdollar'
+[src/builtin.c:45:expand_tilde] expand_tilde: final='/home/fatdollar'
+[src/builtin.c:168:builtin_cd] cd: after tilde expansion target='/home/fatdollar'
+[src/builtin.c:172:builtin_cd] cd: oldpwd='/home/fatdollar/RobCo-Termlink/include'
+[src/builtin.c:177:builtin_cd] cd: attempting chdir('/home/fatdollar')
+[src/builtin.c:187:builtin_cd] cd: chdir succeeded
+[src/builtin.c:190:builtin_cd] cd: setting OLDPWD='/home/fatdollar/RobCo-Termlink/include'
+[src/builtin.c:197:builtin_cd] cd: newpwd='/home/fatdollar'
+[src/builtin.c:209:builtin_cd] cd: printing new PWD='/home/fatdollar'
+[src/terminal.c:70:terminal_slow_print_at] terminal_slow_print_at: line=5 text='/home/fatdollar'
+[src/builtin.c:213:builtin_cd] cd: done
+[src/builtin.c:442:builtin_process] builtin_process: builtin executed, drawing prompt
+[src/terminal.c:102:terminal_draw_prompt] terminal_draw_prompt: moving cursor to bottom row 30
+[src/terminal.c:107:terminal_draw_prompt] terminal_draw_prompt: printing prompt '>'
+[src/terminal.c:110:terminal_draw_prompt] terminal_draw_prompt: clearing line
+[src/terminal.c:102:terminal_draw_prompt] terminal_draw_prompt: moving cursor to bottom row 30
+[src/terminal.c:107:terminal_draw_prompt] terminal_draw_prompt: printing prompt '>'
+[src/terminal.c:110:terminal_draw_prompt] terminal_draw_prompt: clearing line
+[src/input/read_char.c:7:input_read_char] read_char: waiting for getchar()
+[src/input/read_char.c:9:input_read_char] read_char: got c=27 (0x1B)
+[src/input/read_char.c:49:input_read_char] read_char: ESC detected, reading next byte
+[src/input/read_char.c:52:input_read_char] read_char: ESC c1=91 (0x5B)
+[src/input/read_char.c:76:input_read_char] read_char: ESC [ detected, reading c2
+[src/input/read_char.c:79:input_read_char] read_char: ESC [ c2=65 (0x41)
+[src/input/read_char.c:84:input_read_char] read_char: UP
+[src/history.c:150:history_prev] HIST: prev: index=2 count=2 edit_saved=0 buf=''
+[src/history.c:159:history_prev] HIST: prev: saving edit buffer ''
+[src/history.c:167:history_prev] HIST: prev: moved to last index=1
+[src/history.c:176:history_prev] HIST: prev: result='cd'
+[src/input/input.c:8:input_redraw] input_redraw: buf='cd' len=2 cursor=2 place_cursor=0
+[src/terminal.c:102:terminal_draw_prompt] terminal_draw_prompt: moving cursor to bottom row 30
+[src/terminal.c:107:terminal_draw_prompt] terminal_draw_prompt: printing prompt '>'
+[src/terminal.c:110:terminal_draw_prompt] terminal_draw_prompt: clearing line
+[src/input/input.c:12:input_redraw] input_redraw: drew prompt
+[src/input/input.c:21:input_redraw] input_redraw: printed buffer
+[src/input/input.c:30:input_redraw] input_redraw: redraw complete
+[src/input/read_char.c:7:input_read_char] read_char: waiting for getchar()
+[src/input/read_char.c:9:input_read_char] read_char: got c=27 (0x1B)
+[src/input/read_char.c:49:input_read_char] read_char: ESC detected, reading next byte
+[src/input/read_char.c:52:input_read_char] read_char: ESC c1=91 (0x5B)
+[src/input/read_char.c:76:input_read_char] read_char: ESC [ detected, reading c2
+[src/input/read_char.c:79:input_read_char] read_char: ESC [ c2=65 (0x41)
+[src/input/read_char.c:84:input_read_char] read_char: UP
+[src/history.c:150:history_prev] HIST: prev: index=1 count=2 edit_saved=1 buf='cd'
+[src/history.c:172:history_prev] HIST: prev: moved to index=0
+[src/history.c:176:history_prev] HIST: prev: result='cd include/'
+[src/input/input.c:8:input_redraw] input_redraw: buf='cd include/' len=11 cursor=11 place_cursor=0
+[src/terminal.c:102:terminal_draw_prompt] terminal_draw_prompt: moving cursor to bottom row 30
+[src/terminal.c:107:terminal_draw_prompt] terminal_draw_prompt: printing prompt '>'
+[src/terminal.c:110:terminal_draw_prompt] terminal_draw_prompt: clearing line
+[src/input/input.c:12:input_redraw] input_redraw: drew prompt
+[src/input/input.c:21:input_redraw] input_redraw: printed buffer
+[src/input/input.c:30:input_redraw] input_redraw: redraw complete
+[src/input/read_char.c:7:input_read_char] read_char: waiting for getchar()
+[src/input/read_char.c:9:input_read_char] read_char: got c=27 (0x1B)
+[src/input/read_char.c:49:input_read_char] read_char: ESC detected, reading next byte
+[src/input/read_char.c:52:input_read_char] read_char: ESC c1=91 (0x5B)
+[src/input/read_char.c:76:input_read_char] read_char: ESC [ detected, reading c2
+[src/input/read_char.c:79:input_read_char] read_char: ESC [ c2=65 (0x41)
+[src/input/read_char.c:84:input_read_char] read_char: UP
+[src/history.c:150:history_prev] HIST: prev: index=0 count=2 edit_saved=1 buf='cd include/'
+[src/history.c:176:history_prev] HIST: prev: result='cd include/'
+[src/input/input.c:8:input_redraw] input_redraw: buf='cd include/' len=11 cursor=11 place_cursor=0
+[src/terminal.c:102:terminal_draw_prompt] terminal_draw_prompt: moving cursor to bottom row 30
+[src/terminal.c:107:terminal_draw_prompt] terminal_draw_prompt: printing prompt '>'
+[src/terminal.c:110:terminal_draw_prompt] terminal_draw_prompt: clearing line
+[src/input/input.c:12:input_redraw] input_redraw: drew prompt
+[src/input/input.c:21:input_redraw] input_redraw: printed buffer
+[src/input/input.c:30:input_redraw] input_redraw: redraw complete
+[src/input/read_char.c:7:input_read_char] read_char: waiting for getchar()
+[src/input/read_char.c:9:input_read_char] read_char: got c=27 (0x1B)
+[src/input/read_char.c:49:input_read_char] read_char: ESC detected, reading next byte
+[src/input/read_char.c:52:input_read_char] read_char: ESC c1=91 (0x5B)
+[src/input/read_char.c:76:input_read_char] read_char: ESC [ detected, reading c2
+[src/input/read_char.c:79:input_read_char] read_char: ESC [ c2=66 (0x42)
+[src/input/read_char.c:89:input_read_char] read_char: DOWN
+[src/history.c:181:history_next] HIST: next: index=0 count=2 edit_saved=1 buf='cd include/'
+[src/history.c:190:history_next] HIST: next: moved to index=1
+[src/history.c:192:history_next] HIST: next: result='cd'
+[src/input/input.c:8:input_redraw] input_redraw: buf='cd' len=2 cursor=2 place_cursor=0
+[src/terminal.c:102:terminal_draw_prompt] terminal_draw_prompt: moving cursor to bottom row 30
+[src/terminal.c:107:terminal_draw_prompt] terminal_draw_prompt: printing prompt '>'
+[src/terminal.c:110:terminal_draw_prompt] terminal_draw_prompt: clearing line
+[src/input/input.c:12:input_redraw] input_redraw: drew prompt
+[src/input/input.c:21:input_redraw] input_redraw: printed buffer
+[src/input/input.c:30:input_redraw] input_redraw: redraw complete
+[src/input/read_char.c:7:input_read_char] read_char: waiting for getchar()
+[src/input/read_char.c:9:input_read_char] read_char: got c=27 (0x1B)
+[src/input/read_char.c:49:input_read_char] read_char: ESC detected, reading next byte
+[src/input/read_char.c:52:input_read_char] read_char: ESC c1=91 (0x5B)
+[src/input/read_char.c:76:input_read_char] read_char: ESC [ detected, reading c2
+[src/input/read_char.c:79:input_read_char] read_char: ESC [ c2=66 (0x42)
+[src/input/read_char.c:89:input_read_char] read_char: DOWN
+[src/history.c:181:history_next] HIST: next: index=1 count=2 edit_saved=1 buf='cd'
+[src/history.c:199:history_next] HIST: next: moved to edit buffer index=2
+[src/history.c:203:history_next] HIST: next: restoring edit buffer ''
+[src/input/input.c:8:input_redraw] input_redraw: buf='' len=0 cursor=0 place_cursor=0
+[src/terminal.c:102:terminal_draw_prompt] terminal_draw_prompt: moving cursor to bottom row 30
+[src/terminal.c:107:terminal_draw_prompt] terminal_draw_prompt: printing prompt '>'
+[src/terminal.c:110:terminal_draw_prompt] terminal_draw_prompt: clearing line
+[src/input/input.c:12:input_redraw] input_redraw: drew prompt
+[src/input/input.c:21:input_redraw] input_redraw: printed buffer
+[src/input/input.c:30:input_redraw] input_redraw: redraw complete
+[src/input/read_char.c:7:input_read_char] read_char: waiting for getchar()
+[src/input/read_char.c:9:input_read_char] read_char: got c=116 (0x74)
+[src/input/read_char.c:45:input_read_char] read_char: normal char 't' (0x74)
+[src/input/input.c:8:input_redraw] input_redraw: buf='t' len=1 cursor=1 place_cursor=1
+[src/terminal.c:102:terminal_draw_prompt] terminal_draw_prompt: moving cursor to bottom row 30
+[src/terminal.c:107:terminal_draw_prompt] terminal_draw_prompt: printing prompt '>'
+[src/terminal.c:110:terminal_draw_prompt] terminal_draw_prompt: clearing line
+[src/input/input.c:12:input_redraw] input_redraw: drew prompt
+[src/input/input.c:21:input_redraw] input_redraw: printed buffer
+[src/input/input.c:25:input_redraw] input_redraw: placing cursor at 1
+[src/input/input.c:30:input_redraw] input_redraw: redraw complete
+[src/input/read_char.c:7:input_read_char] read_char: waiting for getchar()
+[src/input/read_char.c:9:input_read_char] read_char: got c=101 (0x65)
+[src/input/read_char.c:45:input_read_char] read_char: normal char 'e' (0x65)
+[src/input/input.c:8:input_redraw] input_redraw: buf='te' len=2 cursor=2 place_cursor=1
+[src/terminal.c:102:terminal_draw_prompt] terminal_draw_prompt: moving cursor to bottom row 30
+[src/terminal.c:107:terminal_draw_prompt] terminal_draw_prompt: printing prompt '>'
+[src/terminal.c:110:terminal_draw_prompt] terminal_draw_prompt: clearing line
+[src/input/input.c:12:input_redraw] input_redraw: drew prompt
+[src/input/input.c:21:input_redraw] input_redraw: printed buffer
+[src/input/input.c:25:input_redraw] input_redraw: placing cursor at 2
+[src/input/input.c:30:input_redraw] input_redraw: redraw complete
+[src/input/read_char.c:7:input_read_char] read_char: waiting for getchar()
+[src/input/read_char.c:9:input_read_char] read_char: got c=115 (0x73)
+[src/input/read_char.c:45:input_read_char] read_char: normal char 's' (0x73)
+[src/input/input.c:8:input_redraw] input_redraw: buf='tes' len=3 cursor=3 place_cursor=1
+[src/terminal.c:102:terminal_draw_prompt] terminal_draw_prompt: moving cursor to bottom row 30
+[src/terminal.c:107:terminal_draw_prompt] terminal_draw_prompt: printing prompt '>'
+[src/terminal.c:110:terminal_draw_prompt] terminal_draw_prompt: clearing line
+[src/input/input.c:12:input_redraw] input_redraw: drew prompt
+[src/input/input.c:21:input_redraw] input_redraw: printed buffer
+[src/input/input.c:25:input_redraw] input_redraw: placing cursor at 3
+[src/input/input.c:30:input_redraw] input_redraw: redraw complete
+[src/input/read_char.c:7:input_read_char] read_char: waiting for getchar()
+[src/input/read_char.c:9:input_read_char] read_char: got c=116 (0x74)
+[src/input/read_char.c:45:input_read_char] read_char: normal char 't' (0x74)
+[src/input/input.c:8:input_redraw] input_redraw: buf='test' len=4 cursor=4 place_cursor=1
+[src/terminal.c:102:terminal_draw_prompt] terminal_draw_prompt: moving cursor to bottom row 30
+[src/terminal.c:107:terminal_draw_prompt] terminal_draw_prompt: printing prompt '>'
+[src/terminal.c:110:terminal_draw_prompt] terminal_draw_prompt: clearing line
+[src/input/input.c:12:input_redraw] input_redraw: drew prompt
+[src/input/input.c:21:input_redraw] input_redraw: printed buffer
+[src/input/input.c:25:input_redraw] input_redraw: placing cursor at 4
+[src/input/input.c:30:input_redraw] input_redraw: redraw complete
+[src/input/read_char.c:7:input_read_char] read_char: waiting for getchar()
+[src/input/read_char.c:9:input_read_char] read_char: got c=105 (0x69)
+[src/input/read_char.c:45:input_read_char] read_char: normal char 'i' (0x69)
+[src/input/input.c:8:input_redraw] input_redraw: buf='testi' len=5 cursor=5 place_cursor=1
+[src/terminal.c:102:terminal_draw_prompt] terminal_draw_prompt: moving cursor to bottom row 30
+[src/terminal.c:107:terminal_draw_prompt] terminal_draw_prompt: printing prompt '>'
+[src/terminal.c:110:terminal_draw_prompt] terminal_draw_prompt: clearing line
+[src/input/input.c:12:input_redraw] input_redraw: drew prompt
+[src/input/input.c:21:input_redraw] input_redraw: printed buffer
+[src/input/input.c:25:input_redraw] input_redraw: placing cursor at 5
+[src/input/input.c:30:input_redraw] input_redraw: redraw complete
+[src/input/read_char.c:7:input_read_char] read_char: waiting for getchar()
+[src/input/read_char.c:9:input_read_char] read_char: got c=110 (0x6E)
+[src/input/read_char.c:45:input_read_char] read_char: normal char 'n' (0x6E)
+[src/input/input.c:8:input_redraw] input_redraw: buf='testin' len=6 cursor=6 place_cursor=1
+[src/terminal.c:102:terminal_draw_prompt] terminal_draw_prompt: moving cursor to bottom row 30
+[src/terminal.c:107:terminal_draw_prompt] terminal_draw_prompt: printing prompt '>'
+[src/terminal.c:110:terminal_draw_prompt] terminal_draw_prompt: clearing line
+[src/input/input.c:12:input_redraw] input_redraw: drew prompt
+[src/input/input.c:21:input_redraw] input_redraw: printed buffer
+[src/input/input.c:25:input_redraw] input_redraw: placing cursor at 6
+[src/input/input.c:30:input_redraw] input_redraw: redraw complete
+[src/input/read_char.c:7:input_read_char] read_char: waiting for getchar()
+[src/input/read_char.c:9:input_read_char] read_char: got c=103 (0x67)
+[src/input/read_char.c:45:input_read_char] read_char: normal char 'g' (0x67)
+[src/input/input.c:8:input_redraw] input_redraw: buf='testing' len=7 cursor=7 place_cursor=1
+[src/terminal.c:102:terminal_draw_prompt] terminal_draw_prompt: moving cursor to bottom row 30
+[src/terminal.c:107:terminal_draw_prompt] terminal_draw_prompt: printing prompt '>'
+[src/terminal.c:110:terminal_draw_prompt] terminal_draw_prompt: clearing line
+[src/input/input.c:12:input_redraw] input_redraw: drew prompt
+[src/input/input.c:21:input_redraw] input_redraw: printed buffer
+[src/input/input.c:25:input_redraw] input_redraw: placing cursor at 7
+[src/input/input.c:30:input_redraw] input_redraw: redraw complete
+[src/input/read_char.c:7:input_read_char] read_char: waiting for getchar()
+[src/input/read_char.c:9:input_read_char] read_char: got c=32 (0x20)
+[src/input/read_char.c:45:input_read_char] read_char: normal char ' ' (0x20)
+[src/input/input.c:8:input_redraw] input_redraw: buf='testing ' len=8 cursor=8 place_cursor=1
+[src/terminal.c:102:terminal_draw_prompt] terminal_draw_prompt: moving cursor to bottom row 30
+[src/terminal.c:107:terminal_draw_prompt] terminal_draw_prompt: printing prompt '>'
+[src/terminal.c:110:terminal_draw_prompt] terminal_draw_prompt: clearing line
+[src/input/input.c:12:input_redraw] input_redraw: drew prompt
+[src/input/input.c:21:input_redraw] input_redraw: printed buffer
+[src/input/input.c:25:input_redraw] input_redraw: placing cursor at 8
+[src/input/input.c:30:input_redraw] input_redraw: redraw complete
+[src/input/read_char.c:7:input_read_char] read_char: waiting for getchar()
+[src/input/read_char.c:9:input_read_char] read_char: got c=102 (0x66)
+[src/input/read_char.c:45:input_read_char] read_char: normal char 'f' (0x66)
+[src/input/input.c:8:input_redraw] input_redraw: buf='testing f' len=9 cursor=9 place_cursor=1
+[src/terminal.c:102:terminal_draw_prompt] terminal_draw_prompt: moving cursor to bottom row 30
+[src/terminal.c:107:terminal_draw_prompt] terminal_draw_prompt: printing prompt '>'
+[src/terminal.c:110:terminal_draw_prompt] terminal_draw_prompt: clearing line
+[src/input/input.c:12:input_redraw] input_redraw: drew prompt
+[src/input/input.c:21:input_redraw] input_redraw: printed buffer
+[src/input/input.c:25:input_redraw] input_redraw: placing cursor at 9
+[src/input/input.c:30:input_redraw] input_redraw: redraw complete
+[src/input/read_char.c:7:input_read_char] read_char: waiting for getchar()
+[src/input/read_char.c:9:input_read_char] read_char: got c=111 (0x6F)
+[src/input/read_char.c:45:input_read_char] read_char: normal char 'o' (0x6F)
+[src/input/input.c:8:input_redraw] input_redraw: buf='testing fo' len=10 cursor=10 place_cursor=1
+[src/terminal.c:102:terminal_draw_prompt] terminal_draw_prompt: moving cursor to bottom row 30
+[src/terminal.c:107:terminal_draw_prompt] terminal_draw_prompt: printing prompt '>'
+[src/terminal.c:110:terminal_draw_prompt] terminal_draw_prompt: clearing line
+[src/input/input.c:12:input_redraw] input_redraw: drew prompt
+[src/input/input.c:21:input_redraw] input_redraw: printed buffer
+[src/input/input.c:25:input_redraw] input_redraw: placing cursor at 10
+[src/input/input.c:30:input_redraw] input_redraw: redraw complete
+[src/input/read_char.c:7:input_read_char] read_char: waiting for getchar()
+[src/input/read_char.c:9:input_read_char] read_char: got c=114 (0x72)
+[src/input/read_char.c:45:input_read_char] read_char: normal char 'r' (0x72)
+[src/input/input.c:8:input_redraw] input_redraw: buf='testing for' len=11 cursor=11 place_cursor=1
+[src/terminal.c:102:terminal_draw_prompt] terminal_draw_prompt: moving cursor to bottom row 30
+[src/terminal.c:107:terminal_draw_prompt] terminal_draw_prompt: printing prompt '>'
+[src/terminal.c:110:terminal_draw_prompt] terminal_draw_prompt: clearing line
+[src/input/input.c:12:input_redraw] input_redraw: drew prompt
+[src/input/input.c:21:input_redraw] input_redraw: printed buffer
+[src/input/input.c:25:input_redraw] input_redraw: placing cursor at 11
+[src/input/input.c:30:input_redraw] input_redraw: redraw complete
+[src/input/read_char.c:7:input_read_char] read_char: waiting for getchar()
+[src/input/read_char.c:9:input_read_char] read_char: got c=32 (0x20)
+[src/input/read_char.c:45:input_read_char] read_char: normal char ' ' (0x20)
+[src/input/input.c:8:input_redraw] input_redraw: buf='testing for ' len=12 cursor=12 place_cursor=1
+[src/terminal.c:102:terminal_draw_prompt] terminal_draw_prompt: moving cursor to bottom row 30
+[src/terminal.c:107:terminal_draw_prompt] terminal_draw_prompt: printing prompt '>'
+[src/terminal.c:110:terminal_draw_prompt] terminal_draw_prompt: clearing line
+[src/input/input.c:12:input_redraw] input_redraw: drew prompt
+[src/input/input.c:21:input_redraw] input_redraw: printed buffer
+[src/input/input.c:25:input_redraw] input_redraw: placing cursor at 12
+[src/input/input.c:30:input_redraw] input_redraw: redraw complete
+[src/input/read_char.c:7:input_read_char] read_char: waiting for getchar()
+[src/input/read_char.c:9:input_read_char] read_char: got c=102 (0x66)
+[src/input/read_char.c:45:input_read_char] read_char: normal char 'f' (0x66)
+[src/input/input.c:8:input_redraw] input_redraw: buf='testing for f' len=13 cursor=13 place_cursor=1
+[src/terminal.c:102:terminal_draw_prompt] terminal_draw_prompt: moving cursor to bottom row 30
+[src/terminal.c:107:terminal_draw_prompt] terminal_draw_prompt: printing prompt '>'
+[src/terminal.c:110:terminal_draw_prompt] terminal_draw_prompt: clearing line
+[src/input/input.c:12:input_redraw] input_redraw: drew prompt
+[src/input/input.c:21:input_redraw] input_redraw: printed buffer
+[src/input/input.c:25:input_redraw] input_redraw: placing cursor at 13
+[src/input/input.c:30:input_redraw] input_redraw: redraw complete
+[src/input/read_char.c:7:input_read_char] read_char: waiting for getchar()
+[src/input/read_char.c:9:input_read_char] read_char: got c=108 (0x6C)
+[src/input/read_char.c:45:input_read_char] read_char: normal char 'l' (0x6C)
+[src/input/input.c:8:input_redraw] input_redraw: buf='testing for fl' len=14 cursor=14 place_cursor=1
+[src/terminal.c:102:terminal_draw_prompt] terminal_draw_prompt: moving cursor to bottom row 30
+[src/terminal.c:107:terminal_draw_prompt] terminal_draw_prompt: printing prompt '>'
+[src/terminal.c:110:terminal_draw_prompt] terminal_draw_prompt: clearing line
+[src/input/input.c:12:input_redraw] input_redraw: drew prompt
+[src/input/input.c:21:input_redraw] input_redraw: printed buffer
+[src/input/input.c:25:input_redraw] input_redraw: placing cursor at 14
+[src/input/input.c:30:input_redraw] input_redraw: redraw complete
+[src/input/read_char.c:7:input_read_char] read_char: waiting for getchar()
+[src/input/read_char.c:9:input_read_char] read_char: got c=105 (0x69)
+[src/input/read_char.c:45:input_read_char] read_char: normal char 'i' (0x69)
+[src/input/input.c:8:input_redraw] input_redraw: buf='testing for fli' len=15 cursor=15 place_cursor=1
+[src/terminal.c:102:terminal_draw_prompt] terminal_draw_prompt: moving cursor to bottom row 30
+[src/terminal.c:107:terminal_draw_prompt] terminal_draw_prompt: printing prompt '>'
+[src/terminal.c:110:terminal_draw_prompt] terminal_draw_prompt: clearing line
+[src/input/input.c:12:input_redraw] input_redraw: drew prompt
+[src/input/input.c:21:input_redraw] input_redraw: printed buffer
+[src/input/input.c:25:input_redraw] input_redraw: placing cursor at 15
+[src/input/input.c:30:input_redraw] input_redraw: redraw complete
+[src/input/read_char.c:7:input_read_char] read_char: waiting for getchar()
+[src/input/read_char.c:9:input_read_char] read_char: got c=99 (0x63)
+[src/input/read_char.c:45:input_read_char] read_char: normal char 'c' (0x63)
+[src/input/input.c:8:input_redraw] input_redraw: buf='testing for flic' len=16 cursor=16 place_cursor=1
+[src/terminal.c:102:terminal_draw_prompt] terminal_draw_prompt: moving cursor to bottom row 30
+[src/terminal.c:107:terminal_draw_prompt] terminal_draw_prompt: printing prompt '>'
+[src/terminal.c:110:terminal_draw_prompt] terminal_draw_prompt: clearing line
+[src/input/input.c:12:input_redraw] input_redraw: drew prompt
+[src/input/input.c:21:input_redraw] input_redraw: printed buffer
+[src/input/input.c:25:input_redraw] input_redraw: placing cursor at 16
+[src/input/input.c:30:input_redraw] input_redraw: redraw complete
+[src/input/read_char.c:7:input_read_char] read_char: waiting for getchar()
+[src/input/read_char.c:9:input_read_char] read_char: got c=107 (0x6B)
+[src/input/read_char.c:45:input_read_char] read_char: normal char 'k' (0x6B)
+[src/input/input.c:8:input_redraw] input_redraw: buf='testing for flick' len=17 cursor=17 place_cursor=1
+[src/terminal.c:102:terminal_draw_prompt] terminal_draw_prompt: moving cursor to bottom row 30
+[src/terminal.c:107:terminal_draw_prompt] terminal_draw_prompt: printing prompt '>'
+[src/terminal.c:110:terminal_draw_prompt] terminal_draw_prompt: clearing line
+[src/input/input.c:12:input_redraw] input_redraw: drew prompt
+[src/input/input.c:21:input_redraw] input_redraw: printed buffer
+[src/input/input.c:25:input_redraw] input_redraw: placing cursor at 17
+[src/input/input.c:30:input_redraw] input_redraw: redraw complete
+[src/input/read_char.c:7:input_read_char] read_char: waiting for getchar()
+[src/input/read_char.c:9:input_read_char] read_char: got c=101 (0x65)
+[src/input/read_char.c:45:input_read_char] read_char: normal char 'e' (0x65)
+[src/input/input.c:8:input_redraw] input_redraw: buf='testing for flicke' len=18 cursor=18 place_cursor=1
+[src/terminal.c:102:terminal_draw_prompt] terminal_draw_prompt: moving cursor to bottom row 30
+[src/terminal.c:107:terminal_draw_prompt] terminal_draw_prompt: printing prompt '>'
+[src/terminal.c:110:terminal_draw_prompt] terminal_draw_prompt: clearing line
+[src/input/input.c:12:input_redraw] input_redraw: drew prompt
+[src/input/input.c:21:input_redraw] input_redraw: printed buffer
+[src/input/input.c:25:input_redraw] input_redraw: placing cursor at 18
+[src/input/input.c:30:input_redraw] input_redraw: redraw complete
+[src/input/read_char.c:7:input_read_char] read_char: waiting for getchar()
+[src/input/read_char.c:9:input_read_char] read_char: got c=114 (0x72)
+[src/input/read_char.c:45:input_read_char] read_char: normal char 'r' (0x72)
+[src/input/input.c:8:input_redraw] input_redraw: buf='testing for flicker' len=19 cursor=19 place_cursor=1
+[src/terminal.c:102:terminal_draw_prompt] terminal_draw_prompt: moving cursor to bottom row 30
+[src/terminal.c:107:terminal_draw_prompt] terminal_draw_prompt: printing prompt '>'
+[src/terminal.c:110:terminal_draw_prompt] terminal_draw_prompt: clearing line
+[src/input/input.c:12:input_redraw] input_redraw: drew prompt
+[src/input/input.c:21:input_redraw] input_redraw: printed buffer
+[src/input/input.c:25:input_redraw] input_redraw: placing cursor at 19
+[src/input/input.c:30:input_redraw] input_redraw: redraw complete
+[src/input/read_char.c:7:input_read_char] read_char: waiting for getchar()
+[src/input/read_char.c:9:input_read_char] read_char: got c=46 (0x2E)
+[src/input/read_char.c:45:input_read_char] read_char: normal char '.' (0x2E)
+[src/input/input.c:8:input_redraw] input_redraw: buf='testing for flicker.' len=20 cursor=20 place_cursor=1
+[src/terminal.c:102:terminal_draw_prompt] terminal_draw_prompt: moving cursor to bottom row 30
+[src/terminal.c:107:terminal_draw_prompt] terminal_draw_prompt: printing prompt '>'
+[src/terminal.c:110:terminal_draw_prompt] terminal_draw_prompt: clearing line
+[src/input/input.c:12:input_redraw] input_redraw: drew prompt
+[src/input/input.c:21:input_redraw] input_redraw: printed buffer
+[src/input/input.c:25:input_redraw] input_redraw: placing cursor at 20
+[src/input/input.c:30:input_redraw] input_redraw: redraw complete
+[src/input/read_char.c:7:input_read_char] read_char: waiting for getchar()
+[src/input/read_char.c:9:input_read_char] read_char: got c=10 (0x0A)
+[src/input/read_char.c:45:input_read_char] read_char: normal char '
+' (0x0A)
+[src/terminal.c:102:terminal_draw_prompt] terminal_draw_prompt: moving cursor to bottom row 30
+[src/terminal.c:107:terminal_draw_prompt] terminal_draw_prompt: printing prompt '>'
+[src/terminal.c:110:terminal_draw_prompt] terminal_draw_prompt: clearing line
+[src/builtin.c:408:builtin_process] builtin_process: cmd='testing for flicker.'
+[src/builtin.c:415:builtin_process] builtin_process: buf='testing for flicker.'
+[src/input/input.c:35:input_parse_args] parse_args: line='testing for flicker.' max_args=64
+[src/input/input.c:48:input_parse_args] parse_args: arg[0]='testing for flicker.'
+[src/input/input.c:48:input_parse_args] parse_args: arg[1]='for flicker.'
+[src/input/input.c:48:input_parse_args] parse_args: arg[2]='flicker.'
+[src/input/input.c:61:input_parse_args] parse_args: argc=3
+[src/builtin.c:418:builtin_process] builtin_process: argc=3
+[src/builtin.c:427:builtin_process] builtin_process: clearing scroll
+[src/terminal.c:86:terminal_clear_scroll] terminal_clear_scroll: clearing lines 5 to 29
+[src/terminal.c:97:terminal_clear_scroll] terminal_clear_scroll: cursor_line=5
+[src/builtin.c:430:builtin_process] builtin_process: adding to history
+[src/history.c:106:history_add] HIST: add: cmd='testing for flicker.'
+[src/history.c:123:history_add] HIST: add: storing at 2
+[src/history.c:142:history_add] HIST: add: count=3 index=3 edit_saved=0
+[src/builtin.c:433:builtin_process] builtin_process: saving history
+[src/history.c:79:history_save] HIST: save: path='/home/fatdollar/.termlink_history'
+[src/history.c:96:history_save] HIST: save: writing[0]='cd include/'
+[src/history.c:96:history_save] HIST: save: writing[1]='cd'
+[src/history.c:96:history_save] HIST: save: writing[2]='testing for flicker.'
+[src/history.c:101:history_save] HIST: save: done
+[src/builtin.c:437:builtin_process] builtin_process: cursor_line reset to 5
+[src/builtin.c:439:builtin_process] builtin_process: trying builtin
+[src/builtin.c:292:builtin_try] builtin_try: argc=3 cmd='testing'
+[src/builtin.c:340:builtin_try] builtin_try: not a builtin
+[src/builtin.c:447:builtin_process] builtin_process: running external command
+[src/builtin.c:346:builtin_run_external] run_external: cmd='testing'
+[src/builtin.c:349:builtin_run_external] run_external: external commands disabled
+[src/terminal.c:70:terminal_slow_print_at] terminal_slow_print_at: line=5 text='External commands are disabled.'
+[src/builtin.c:450:builtin_process] builtin_process: external done, drawing prompt
+[src/terminal.c:102:terminal_draw_prompt] terminal_draw_prompt: moving cursor to bottom row 30
+[src/terminal.c:107:terminal_draw_prompt] terminal_draw_prompt: printing prompt '>'
+[src/terminal.c:110:terminal_draw_prompt] terminal_draw_prompt: clearing line
+[src/terminal.c:102:terminal_draw_prompt] terminal_draw_prompt: moving cursor to bottom row 30
+[src/terminal.c:107:terminal_draw_prompt] terminal_draw_prompt: printing prompt '>'
+[src/terminal.c:110:terminal_draw_prompt] terminal_draw_prompt: clearing line
+[src/input/read_char.c:7:input_read_char] read_char: waiting for getchar()
+[src/input/read_char.c:9:input_read_char] read_char: got c=105 (0x69)
+[src/input/read_char.c:45:input_read_char] read_char: normal char 'i' (0x69)
+[src/input/input.c:8:input_redraw] input_redraw: buf='i' len=1 cursor=1 place_cursor=1
+[src/terminal.c:102:terminal_draw_prompt] terminal_draw_prompt: moving cursor to bottom row 30
+[src/terminal.c:107:terminal_draw_prompt] terminal_draw_prompt: printing prompt '>'
+[src/terminal.c:110:terminal_draw_prompt] terminal_draw_prompt: clearing line
+[src/input/input.c:12:input_redraw] input_redraw: drew prompt
+[src/input/input.c:21:input_redraw] input_redraw: printed buffer
+[src/input/input.c:25:input_redraw] input_redraw: placing cursor at 1
+[src/input/input.c:30:input_redraw] input_redraw: redraw complete
+[src/input/read_char.c:7:input_read_char] read_char: waiting for getchar()
+[src/input/read_char.c:9:input_read_char] read_char: got c=116 (0x74)
+[src/input/read_char.c:45:input_read_char] read_char: normal char 't' (0x74)
+[src/input/input.c:8:input_redraw] input_redraw: buf='it' len=2 cursor=2 place_cursor=1
+[src/terminal.c:102:terminal_draw_prompt] terminal_draw_prompt: moving cursor to bottom row 30
+[src/terminal.c:107:terminal_draw_prompt] terminal_draw_prompt: printing prompt '>'
+[src/terminal.c:110:terminal_draw_prompt] terminal_draw_prompt: clearing line
+[src/input/input.c:12:input_redraw] input_redraw: drew prompt
+[src/input/input.c:21:input_redraw] input_redraw: printed buffer
+[src/input/input.c:25:input_redraw] input_redraw: placing cursor at 2
+[src/input/input.c:30:input_redraw] input_redraw: redraw complete
+[src/input/read_char.c:7:input_read_char] read_char: waiting for getchar()
+[src/input/read_char.c:9:input_read_char] read_char: got c=32 (0x20)
+[src/input/read_char.c:45:input_read_char] read_char: normal char ' ' (0x20)
+[src/input/input.c:8:input_redraw] input_redraw: buf='it ' len=3 cursor=3 place_cursor=1
+[src/terminal.c:102:terminal_draw_prompt] terminal_draw_prompt: moving cursor to bottom row 30
+[src/terminal.c:107:terminal_draw_prompt] terminal_draw_prompt: printing prompt '>'
+[src/terminal.c:110:terminal_draw_prompt] terminal_draw_prompt: clearing line
+[src/input/input.c:12:input_redraw] input_redraw: drew prompt
+[src/input/input.c:21:input_redraw] input_redraw: printed buffer
+[src/input/input.c:25:input_redraw] input_redraw: placing cursor at 3
+[src/input/input.c:30:input_redraw] input_redraw: redraw complete
+[src/input/read_char.c:7:input_read_char] read_char: waiting for getchar()
+[src/input/read_char.c:9:input_read_char] read_char: got c=115 (0x73)
+[src/input/read_char.c:45:input_read_char] read_char: normal char 's' (0x73)
+[src/input/input.c:8:input_redraw] input_redraw: buf='it s' len=4 cursor=4 place_cursor=1
+[src/terminal.c:102:terminal_draw_prompt] terminal_draw_prompt: moving cursor to bottom row 30
+[src/terminal.c:107:terminal_draw_prompt] terminal_draw_prompt: printing prompt '>'
+[src/terminal.c:110:terminal_draw_prompt] terminal_draw_prompt: clearing line
+[src/input/input.c:12:input_redraw] input_redraw: drew prompt
+[src/input/input.c:21:input_redraw] input_redraw: printed buffer
+[src/input/input.c:25:input_redraw] input_redraw: placing cursor at 4
+[src/input/input.c:30:input_redraw] input_redraw: redraw complete
+[src/input/read_char.c:7:input_read_char] read_char: waiting for getchar()
+[src/input/read_char.c:9:input_read_char] read_char: got c=116 (0x74)
+[src/input/read_char.c:45:input_read_char] read_char: normal char 't' (0x74)
+[src/input/input.c:8:input_redraw] input_redraw: buf='it st' len=5 cursor=5 place_cursor=1
+[src/terminal.c:102:terminal_draw_prompt] terminal_draw_prompt: moving cursor to bottom row 30
+[src/terminal.c:107:terminal_draw_prompt] terminal_draw_prompt: printing prompt '>'
+[src/terminal.c:110:terminal_draw_prompt] terminal_draw_prompt: clearing line
+[src/input/input.c:12:input_redraw] input_redraw: drew prompt
+[src/input/input.c:21:input_redraw] input_redraw: printed buffer
+[src/input/input.c:25:input_redraw] input_redraw: placing cursor at 5
+[src/input/input.c:30:input_redraw] input_redraw: redraw complete
+[src/input/read_char.c:7:input_read_char] read_char: waiting for getchar()
+[src/input/read_char.c:9:input_read_char] read_char: got c=105 (0x69)
+[src/input/read_char.c:45:input_read_char] read_char: normal char 'i' (0x69)
+[src/input/input.c:8:input_redraw] input_redraw: buf='it sti' len=6 cursor=6 place_cursor=1
+[src/terminal.c:102:terminal_draw_prompt] terminal_draw_prompt: moving cursor to bottom row 30
+[src/terminal.c:107:terminal_draw_prompt] terminal_draw_prompt: printing prompt '>'
+[src/terminal.c:110:terminal_draw_prompt] terminal_draw_prompt: clearing line
+[src/input/input.c:12:input_redraw] input_redraw: drew prompt
+[src/input/input.c:21:input_redraw] input_redraw: printed buffer
+[src/input/input.c:25:input_redraw] input_redraw: placing cursor at 6
+[src/input/input.c:30:input_redraw] input_redraw: redraw complete
+[src/input/read_char.c:7:input_read_char] read_char: waiting for getchar()
+[src/input/read_char.c:9:input_read_char] read_char: got c=108 (0x6C)
+[src/input/read_char.c:45:input_read_char] read_char: normal char 'l' (0x6C)
+[src/input/input.c:8:input_redraw] input_redraw: buf='it stil' len=7 cursor=7 place_cursor=1
+[src/terminal.c:102:terminal_draw_prompt] terminal_draw_prompt: moving cursor to bottom row 30
+[src/terminal.c:107:terminal_draw_prompt] terminal_draw_prompt: printing prompt '>'
+[src/terminal.c:110:terminal_draw_prompt] terminal_draw_prompt: clearing line
+[src/input/input.c:12:input_redraw] input_redraw: drew prompt
+[src/input/input.c:21:input_redraw] input_redraw: printed buffer
+[src/input/input.c:25:input_redraw] input_redraw: placing cursor at 7
+[src/input/input.c:30:input_redraw] input_redraw: redraw complete
+[src/input/read_char.c:7:input_read_char] read_char: waiting for getchar()
+[src/input/read_char.c:9:input_read_char] read_char: got c=108 (0x6C)
+[src/input/read_char.c:45:input_read_char] read_char: normal char 'l' (0x6C)
+[src/input/input.c:8:input_redraw] input_redraw: buf='it still' len=8 cursor=8 place_cursor=1
+[src/terminal.c:102:terminal_draw_prompt] terminal_draw_prompt: moving cursor to bottom row 30
+[src/terminal.c:107:terminal_draw_prompt] terminal_draw_prompt: printing prompt '>'
+[src/terminal.c:110:terminal_draw_prompt] terminal_draw_prompt: clearing line
+[src/input/input.c:12:input_redraw] input_redraw: drew prompt
+[src/input/input.c:21:input_redraw] input_redraw: printed buffer
+[src/input/input.c:25:input_redraw] input_redraw: placing cursor at 8
+[src/input/input.c:30:input_redraw] input_redraw: redraw complete
+[src/input/read_char.c:7:input_read_char] read_char: waiting for getchar()
+[src/input/read_char.c:9:input_read_char] read_char: got c=32 (0x20)
+[src/input/read_char.c:45:input_read_char] read_char: normal char ' ' (0x20)
+[src/input/input.c:8:input_redraw] input_redraw: buf='it still ' len=9 cursor=9 place_cursor=1
+[src/terminal.c:102:terminal_draw_prompt] terminal_draw_prompt: moving cursor to bottom row 30
+[src/terminal.c:107:terminal_draw_prompt] terminal_draw_prompt: printing prompt '>'
+[src/terminal.c:110:terminal_draw_prompt] terminal_draw_prompt: clearing line
+[src/input/input.c:12:input_redraw] input_redraw: drew prompt
+[src/input/input.c:21:input_redraw] input_redraw: printed buffer
+[src/input/input.c:25:input_redraw] input_redraw: placing cursor at 9
+[src/input/input.c:30:input_redraw] input_redraw: redraw complete
+[src/input/read_char.c:7:input_read_char] read_char: waiting for getchar()
+[src/input/read_char.c:9:input_read_char] read_char: got c=102 (0x66)
+[src/input/read_char.c:45:input_read_char] read_char: normal char 'f' (0x66)
+[src/input/input.c:8:input_redraw] input_redraw: buf='it still f' len=10 cursor=10 place_cursor=1
+[src/terminal.c:102:terminal_draw_prompt] terminal_draw_prompt: moving cursor to bottom row 30
+[src/terminal.c:107:terminal_draw_prompt] terminal_draw_prompt: printing prompt '>'
+[src/terminal.c:110:terminal_draw_prompt] terminal_draw_prompt: clearing line
+[src/input/input.c:12:input_redraw] input_redraw: drew prompt
+[src/input/input.c:21:input_redraw] input_redraw: printed buffer
+[src/input/input.c:25:input_redraw] input_redraw: placing cursor at 10
+[src/input/input.c:30:input_redraw] input_redraw: redraw complete
+[src/input/read_char.c:7:input_read_char] read_char: waiting for getchar()
+[src/input/read_char.c:9:input_read_char] read_char: got c=108 (0x6C)
+[src/input/read_char.c:45:input_read_char] read_char: normal char 'l' (0x6C)
+[src/input/input.c:8:input_redraw] input_redraw: buf='it still fl' len=11 cursor=11 place_cursor=1
+[src/terminal.c:102:terminal_draw_prompt] terminal_draw_prompt: moving cursor to bottom row 30
+[src/terminal.c:107:terminal_draw_prompt] terminal_draw_prompt: printing prompt '>'
+[src/terminal.c:110:terminal_draw_prompt] terminal_draw_prompt: clearing line
+[src/input/input.c:12:input_redraw] input_redraw: drew prompt
+[src/input/input.c:21:input_redraw] input_redraw: printed buffer
+[src/input/input.c:25:input_redraw] input_redraw: placing cursor at 11
+[src/input/input.c:30:input_redraw] input_redraw: redraw complete
+[src/input/read_char.c:7:input_read_char] read_char: waiting for getchar()
+[src/input/read_char.c:9:input_read_char] read_char: got c=105 (0x69)
+[src/input/read_char.c:45:input_read_char] read_char: normal char 'i' (0x69)
+[src/input/input.c:8:input_redraw] input_redraw: buf='it still fli' len=12 cursor=12 place_cursor=1
+[src/terminal.c:102:terminal_draw_prompt] terminal_draw_prompt: moving cursor to bottom row 30
+[src/terminal.c:107:terminal_draw_prompt] terminal_draw_prompt: printing prompt '>'
+[src/terminal.c:110:terminal_draw_prompt] terminal_draw_prompt: clearing line
+[src/input/input.c:12:input_redraw] input_redraw: drew prompt
+[src/input/input.c:21:input_redraw] input_redraw: printed buffer
+[src/input/input.c:25:input_redraw] input_redraw: placing cursor at 12
+[src/input/input.c:30:input_redraw] input_redraw: redraw complete
+[src/input/read_char.c:7:input_read_char] read_char: waiting for getchar()
+[src/input/read_char.c:9:input_read_char] read_char: got c=99 (0x63)
+[src/input/read_char.c:45:input_read_char] read_char: normal char 'c' (0x63)
+[src/input/input.c:8:input_redraw] input_redraw: buf='it still flic' len=13 cursor=13 place_cursor=1
+[src/terminal.c:102:terminal_draw_prompt] terminal_draw_prompt: moving cursor to bottom row 30
+[src/terminal.c:107:terminal_draw_prompt] terminal_draw_prompt: printing prompt '>'
+[src/terminal.c:110:terminal_draw_prompt] terminal_draw_prompt: clearing line
+[src/input/input.c:12:input_redraw] input_redraw: drew prompt
+[src/input/input.c:21:input_redraw] input_redraw: printed buffer
+[src/input/input.c:25:input_redraw] input_redraw: placing cursor at 13
+[src/input/input.c:30:input_redraw] input_redraw: redraw complete
+[src/input/read_char.c:7:input_read_char] read_char: waiting for getchar()
+[src/input/read_char.c:9:input_read_char] read_char: got c=107 (0x6B)
+[src/input/read_char.c:45:input_read_char] read_char: normal char 'k' (0x6B)
+[src/input/input.c:8:input_redraw] input_redraw: buf='it still flick' len=14 cursor=14 place_cursor=1
+[src/terminal.c:102:terminal_draw_prompt] terminal_draw_prompt: moving cursor to bottom row 30
+[src/terminal.c:107:terminal_draw_prompt] terminal_draw_prompt: printing prompt '>'
+[src/terminal.c:110:terminal_draw_prompt] terminal_draw_prompt: clearing line
+[src/input/input.c:12:input_redraw] input_redraw: drew prompt
+[src/input/input.c:21:input_redraw] input_redraw: printed buffer
+[src/input/input.c:25:input_redraw] input_redraw: placing cursor at 14
+[src/input/input.c:30:input_redraw] input_redraw: redraw complete
+[src/input/read_char.c:7:input_read_char] read_char: waiting for getchar()
+[src/input/read_char.c:9:input_read_char] read_char: got c=101 (0x65)
+[src/input/read_char.c:45:input_read_char] read_char: normal char 'e' (0x65)
+[src/input/input.c:8:input_redraw] input_redraw: buf='it still flicke' len=15 cursor=15 place_cursor=1
+[src/terminal.c:102:terminal_draw_prompt] terminal_draw_prompt: moving cursor to bottom row 30
+[src/terminal.c:107:terminal_draw_prompt] terminal_draw_prompt: printing prompt '>'
+[src/terminal.c:110:terminal_draw_prompt] terminal_draw_prompt: clearing line
+[src/input/input.c:12:input_redraw] input_redraw: drew prompt
+[src/input/input.c:21:input_redraw] input_redraw: printed buffer
+[src/input/input.c:25:input_redraw] input_redraw: placing cursor at 15
+[src/input/input.c:30:input_redraw] input_redraw: redraw complete
+[src/input/read_char.c:7:input_read_char] read_char: waiting for getchar()
+[src/input/read_char.c:9:input_read_char] read_char: got c=114 (0x72)
+[src/input/read_char.c:45:input_read_char] read_char: normal char 'r' (0x72)
+[src/input/input.c:8:input_redraw] input_redraw: buf='it still flicker' len=16 cursor=16 place_cursor=1
+[src/terminal.c:102:terminal_draw_prompt] terminal_draw_prompt: moving cursor to bottom row 30
+[src/terminal.c:107:terminal_draw_prompt] terminal_draw_prompt: printing prompt '>'
+[src/terminal.c:110:terminal_draw_prompt] terminal_draw_prompt: clearing line
+[src/input/input.c:12:input_redraw] input_redraw: drew prompt
+[src/input/input.c:21:input_redraw] input_redraw: printed buffer
+[src/input/input.c:25:input_redraw] input_redraw: placing cursor at 16
+[src/input/input.c:30:input_redraw] input_redraw: redraw complete
+[src/input/read_char.c:7:input_read_char] read_char: waiting for getchar()
+[src/input/read_char.c:9:input_read_char] read_char: got c=115 (0x73)
+[src/input/read_char.c:45:input_read_char] read_char: normal char 's' (0x73)
+[src/input/input.c:8:input_redraw] input_redraw: buf='it still flickers' len=17 cursor=17 place_cursor=1
+[src/terminal.c:102:terminal_draw_prompt] terminal_draw_prompt: moving cursor to bottom row 30
+[src/terminal.c:107:terminal_draw_prompt] terminal_draw_prompt: printing prompt '>'
+[src/terminal.c:110:terminal_draw_prompt] terminal_draw_prompt: clearing line
+[src/input/input.c:12:input_redraw] input_redraw: drew prompt
+[src/input/input.c:21:input_redraw] input_redraw: printed buffer
+[src/input/input.c:25:input_redraw] input_redraw: placing cursor at 17
+[src/input/input.c:30:input_redraw] input_redraw: redraw complete
+[src/input/read_char.c:7:input_read_char] read_char: waiting for getchar()
+[src/input/read_char.c:9:input_read_char] read_char: got c=127 (0x7F)
+[src/input/read_char.c:38:input_read_char] read_char: Backspace (DEL)
+[src/input/input.c:8:input_redraw] input_redraw: buf='it still flicker' len=16 cursor=16 place_cursor=1
+[src/terminal.c:102:terminal_draw_prompt] terminal_draw_prompt: moving cursor to bottom row 30
+[src/terminal.c:107:terminal_draw_prompt] terminal_draw_prompt: printing prompt '>'
+[src/terminal.c:110:terminal_draw_prompt] terminal_draw_prompt: clearing line
+[src/input/input.c:12:input_redraw] input_redraw: drew prompt
+[src/input/input.c:21:input_redraw] input_redraw: printed buffer
+[src/input/input.c:25:input_redraw] input_redraw: placing cursor at 16
+[src/input/input.c:30:input_redraw] input_redraw: redraw complete
+[src/input/read_char.c:7:input_read_char] read_char: waiting for getchar()
+[src/input/read_char.c:9:input_read_char] read_char: got c=127 (0x7F)
+[src/input/read_char.c:38:input_read_char] read_char: Backspace (DEL)
+[src/input/input.c:8:input_redraw] input_redraw: buf='it still flicke' len=15 cursor=15 place_cursor=1
+[src/terminal.c:102:terminal_draw_prompt] terminal_draw_prompt: moving cursor to bottom row 30
+[src/terminal.c:107:terminal_draw_prompt] terminal_draw_prompt: printing prompt '>'
+[src/terminal.c:110:terminal_draw_prompt] terminal_draw_prompt: clearing line
+[src/input/input.c:12:input_redraw] input_redraw: drew prompt
+[src/input/input.c:21:input_redraw] input_redraw: printed buffer
+[src/input/input.c:25:input_redraw] input_redraw: placing cursor at 15
+[src/input/input.c:30:input_redraw] input_redraw: redraw complete
+[src/input/read_char.c:7:input_read_char] read_char: waiting for getchar()
+[src/input/read_char.c:9:input_read_char] read_char: got c=127 (0x7F)
+[src/input/read_char.c:38:input_read_char] read_char: Backspace (DEL)
+[src/input/input.c:8:input_redraw] input_redraw: buf='it still flick' len=14 cursor=14 place_cursor=1
+[src/terminal.c:102:terminal_draw_prompt] terminal_draw_prompt: moving cursor to bottom row 30
+[src/terminal.c:107:terminal_draw_prompt] terminal_draw_prompt: printing prompt '>'
+[src/terminal.c:110:terminal_draw_prompt] terminal_draw_prompt: clearing line
+[src/input/input.c:12:input_redraw] input_redraw: drew prompt
+[src/input/input.c:21:input_redraw] input_redraw: printed buffer
+[src/input/input.c:25:input_redraw] input_redraw: placing cursor at 14
+[src/input/input.c:30:input_redraw] input_redraw: redraw complete
+[src/input/read_char.c:7:input_read_char] read_char: waiting for getchar()
+[src/input/read_char.c:9:input_read_char] read_char: got c=127 (0x7F)
+[src/input/read_char.c:38:input_read_char] read_char: Backspace (DEL)
+[src/input/input.c:8:input_redraw] input_redraw: buf='it still flic' len=13 cursor=13 place_cursor=1
+[src/terminal.c:102:terminal_draw_prompt] terminal_draw_prompt: moving cursor to bottom row 30
+[src/terminal.c:107:terminal_draw_prompt] terminal_draw_prompt: printing prompt '>'
+[src/terminal.c:110:terminal_draw_prompt] terminal_draw_prompt: clearing line
+[src/input/input.c:12:input_redraw] input_redraw: drew prompt
+[src/input/input.c:21:input_redraw] input_redraw: printed buffer
+[src/input/input.c:25:input_redraw] input_redraw: placing cursor at 13
+[src/input/input.c:30:input_redraw] input_redraw: redraw complete
+[src/input/read_char.c:7:input_read_char] read_char: waiting for getchar()
+[src/input/read_char.c:9:input_read_char] read_char: got c=127 (0x7F)
+[src/input/read_char.c:38:input_read_char] read_char: Backspace (DEL)
+[src/input/input.c:8:input_redraw] input_redraw: buf='it still fli' len=12 cursor=12 place_cursor=1
+[src/terminal.c:102:terminal_draw_prompt] terminal_draw_prompt: moving cursor to bottom row 30
+[src/terminal.c:107:terminal_draw_prompt] terminal_draw_prompt: printing prompt '>'
+[src/terminal.c:110:terminal_draw_prompt] terminal_draw_prompt: clearing line
+[src/input/input.c:12:input_redraw] input_redraw: drew prompt
+[src/input/input.c:21:input_redraw] input_redraw: printed buffer
+[src/input/input.c:25:input_redraw] input_redraw: placing cursor at 12
+[src/input/input.c:30:input_redraw] input_redraw: redraw complete
+[src/input/read_char.c:7:input_read_char] read_char: waiting for getchar()
+[src/input/read_char.c:9:input_read_char] read_char: got c=127 (0x7F)
+[src/input/read_char.c:38:input_read_char] read_char: Backspace (DEL)
+[src/input/input.c:8:input_redraw] input_redraw: buf='it still fl' len=11 cursor=11 place_cursor=1
+[src/terminal.c:102:terminal_draw_prompt] terminal_draw_prompt: moving cursor to bottom row 30
+[src/terminal.c:107:terminal_draw_prompt] terminal_draw_prompt: printing prompt '>'
+[src/terminal.c:110:terminal_draw_prompt] terminal_draw_prompt: clearing line
+[src/input/input.c:12:input_redraw] input_redraw: drew prompt
+[src/input/input.c:21:input_redraw] input_redraw: printed buffer
+[src/input/input.c:25:input_redraw] input_redraw: placing cursor at 11
+[src/input/input.c:30:input_redraw] input_redraw: redraw complete
+[src/input/read_char.c:7:input_read_char] read_char: waiting for getchar()
+[src/input/read_char.c:9:input_read_char] read_char: got c=127 (0x7F)
+[src/input/read_char.c:38:input_read_char] read_char: Backspace (DEL)
+[src/input/input.c:8:input_redraw] input_redraw: buf='it still f' len=10 cursor=10 place_cursor=1
+[src/terminal.c:102:terminal_draw_prompt] terminal_draw_prompt: moving cursor to bottom row 30
+[src/terminal.c:107:terminal_draw_prompt] terminal_draw_prompt: printing prompt '>'
+[src/terminal.c:110:terminal_draw_prompt] terminal_draw_prompt: clearing line
+[src/input/input.c:12:input_redraw] input_redraw: drew prompt
+[src/input/input.c:21:input_redraw] input_redraw: printed buffer
+[src/input/input.c:25:input_redraw] input_redraw: placing cursor at 10
+[src/input/input.c:30:input_redraw] input_redraw: redraw complete
+[src/input/read_char.c:7:input_read_char] read_char: waiting for getchar()
+[src/input/read_char.c:9:input_read_char] read_char: got c=10 (0x0A)
+[src/input/read_char.c:45:input_read_char] read_char: normal char '
+' (0x0A)
+[src/terminal.c:102:terminal_draw_prompt] terminal_draw_prompt: moving cursor to bottom row 30
+[src/terminal.c:107:terminal_draw_prompt] terminal_draw_prompt: printing prompt '>'
+[src/terminal.c:110:terminal_draw_prompt] terminal_draw_prompt: clearing line
+[src/builtin.c:408:builtin_process] builtin_process: cmd='it still f'
+[src/builtin.c:415:builtin_process] builtin_process: buf='it still f'
+[src/input/input.c:35:input_parse_args] parse_args: line='it still f' max_args=64
+[src/input/input.c:48:input_parse_args] parse_args: arg[0]='it still f'
+[src/input/input.c:48:input_parse_args] parse_args: arg[1]='still f'
+[src/input/input.c:48:input_parse_args] parse_args: arg[2]='f'
+[src/input/input.c:61:input_parse_args] parse_args: argc=3
+[src/builtin.c:418:builtin_process] builtin_process: argc=3
+[src/builtin.c:427:builtin_process] builtin_process: clearing scroll
+[src/terminal.c:86:terminal_clear_scroll] terminal_clear_scroll: clearing lines 5 to 29
+[src/terminal.c:97:terminal_clear_scroll] terminal_clear_scroll: cursor_line=5
+[src/builtin.c:430:builtin_process] builtin_process: adding to history
+[src/history.c:106:history_add] HIST: add: cmd='it still f'
+[src/history.c:123:history_add] HIST: add: storing at 3
+[src/history.c:142:history_add] HIST: add: count=4 index=4 edit_saved=0
+[src/builtin.c:433:builtin_process] builtin_process: saving history
+[src/history.c:79:history_save] HIST: save: path='/home/fatdollar/.termlink_history'
+[src/history.c:96:history_save] HIST: save: writing[0]='cd include/'
+[src/history.c:96:history_save] HIST: save: writing[1]='cd'
+[src/history.c:96:history_save] HIST: save: writing[2]='testing for flicker.'
+[src/history.c:96:history_save] HIST: save: writing[3]='it still f'
+[src/history.c:101:history_save] HIST: save: done
+[src/builtin.c:437:builtin_process] builtin_process: cursor_line reset to 5
+[src/builtin.c:439:builtin_process] builtin_process: trying builtin
+[src/builtin.c:292:builtin_try] builtin_try: argc=3 cmd='it'
+[src/builtin.c:340:builtin_try] builtin_try: not a builtin
+[src/builtin.c:447:builtin_process] builtin_process: running external command
+[src/builtin.c:346:builtin_run_external] run_external: cmd='it'
+[src/builtin.c:349:builtin_run_external] run_external: external commands disabled
+[src/terminal.c:70:terminal_slow_print_at] terminal_slow_print_at: line=5 text='External commands are disabled.'
+[src/builtin.c:450:builtin_process] builtin_process: external done, drawing prompt
+[src/terminal.c:102:terminal_draw_prompt] terminal_draw_prompt: moving cursor to bottom row 30
+[src/terminal.c:107:terminal_draw_prompt] terminal_draw_prompt: printing prompt '>'
+[src/terminal.c:110:terminal_draw_prompt] terminal_draw_prompt: clearing line
+[src/terminal.c:102:terminal_draw_prompt] terminal_draw_prompt: moving cursor to bottom row 30
+[src/terminal.c:107:terminal_draw_prompt] terminal_draw_prompt: printing prompt '>'
+[src/terminal.c:110:terminal_draw_prompt] terminal_draw_prompt: clearing line
+[src/input/read_char.c:7:input_read_char] read_char: waiting for getchar()

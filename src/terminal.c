@@ -1,6 +1,7 @@
 #include "main.h"
 #include "terminal.h"
 #include "theme.h"
+#include "debug.h"
 
 struct termios terminal_orig_termios;
 
@@ -19,7 +20,7 @@ void terminal_restore(void)
 void terminal_setup(void)
 {
 	struct termios t;
-
+	LOG("terminal_setup: entering raw mode");
 	tcgetattr(STDIN_FILENO, &terminal_orig_termios);
 	atexit(terminal_restore);
 
@@ -30,19 +31,31 @@ void terminal_setup(void)
 	tcsetattr(STDIN_FILENO, TCSANOW, &t);
 
 	theme_apply_default();
+	LOG("terminal_setup: rows=%d cols=%d", terminal_rows, terminal_cols);
 }
 
 void terminal_update_size(void)
 {
+	LOG("terminal_update_size: before ioctl rows=%d cols=%d", terminal_rows, terminal_cols);
+
 	struct winsize ws;
 	if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) == 0)
 	{
 		terminal_rows = ws.ws_row;
 		terminal_cols = ws.ws_col;
+		LOG("terminal_update_size: ioctl rows=%d cols=%d", terminal_rows, terminal_cols);
 	}
+
 	terminal_scroll_bottom = terminal_rows - 1;
+
+	LOG("terminal_update_size: scroll_top=%d scroll_bottom=%d cursor_line=%d",
+		terminal_scroll_top, terminal_scroll_bottom, terminal_cursor_line);
+
 	if (terminal_cursor_line < terminal_scroll_top || terminal_cursor_line >= terminal_scroll_bottom)
+	{
+		LOG("terminal_update_size: cursor_line reset to scroll_top");
 		terminal_cursor_line = terminal_scroll_top;
+	}
 }
 
 void terminal_slow_putc(char c)
@@ -54,8 +67,10 @@ void terminal_slow_putc(char c)
 
 void terminal_slow_print_at(int line, const char *s)
 {
+	LOG("terminal_slow_print_at: line=%d text='%s'", line, s);
 	printf("\033[%d;1H", line);
 	fflush(stdout);
+
 	for (const char *p = s; *p; ++p)
 		terminal_slow_putc(*p);
 }
@@ -68,31 +83,45 @@ void terminal_slow_print(const char *s)
 
 void terminal_clear_scroll(void)
 {
+	LOG("terminal_clear_scroll: clearing lines %d to %d",
+		terminal_scroll_top, terminal_scroll_bottom);
+
 	for (int i = terminal_scroll_top; i < terminal_scroll_bottom; i++)
 	{
 		printf("\033[%d;1H", i);
 		for (int c = 0; c < terminal_cols; c++)
 			putchar(' ');
 	}
+
 	terminal_cursor_line = terminal_scroll_top;
+	LOG("terminal_clear_scroll: cursor_line=%d", terminal_cursor_line);
 }
 
 void terminal_draw_prompt(void)
 {
+	LOG("terminal_draw_prompt: moving cursor to bottom row %d", terminal_rows);
 	printf("\033[%d;1H", terminal_rows);
+
 	terminal_cursor_line = terminal_scroll_top;
+
+	LOG("terminal_draw_prompt: printing prompt '>'");
 	terminal_slow_putc('>');
+
+	LOG("terminal_draw_prompt: clearing line");
 	printf("\033[K");
 }
 
 void terminal_print_header(void)
 {
+	LOG("terminal_print_header: clearing screen");
 	printf("\033[2J\033[H");
 
+	LOG("terminal_print_header: printing header");
 	terminal_slow_print_at(1, "=============================================");
 	terminal_slow_print_at(2, "      RobCo Industries (TM) Termlink v1.0");
 	terminal_slow_print_at(3, "=============================================");
 	terminal_slow_print_at(4, "");
 
+	LOG("terminal_print_header: clearing scroll region");
 	terminal_clear_scroll();
 }

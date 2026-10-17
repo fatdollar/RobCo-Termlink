@@ -1,13 +1,16 @@
 #include "main.h"
 #include "buffer.h"
 #include "terminal.h"
+#include "debug.h"
 
 void input_buffer_insert(input_state *st, char c)
 {
+	LOG("buffer_insert: c='%c' cursor=%zu len=%zu maxlen=%zu buf='%s'",
+		c, st->cursor, st->len, st->maxlen, st->buf);
+
 	if (st->len >= st->maxlen - 1)
 		return;
 
-	/* Shift right from cursor */
 	memmove(st->buf + st->cursor + 1,
 			st->buf + st->cursor,
 			st->len - st->cursor);
@@ -16,53 +19,38 @@ void input_buffer_insert(input_state *st, char c)
 	st->cursor++;
 	st->len++;
 
-	/* Move to prompt line + cursor */
-	printf("\033[%d;%dH", terminal_rows, PROMPT_COL + (int)(st->cursor - 1));
+	st->buf[st->len] = '\0';
 
-	/* Print inserted char */
-	putchar(c);
-
-	/* Print the rest of the buffer (the shifted part) */
-	for (size_t i = st->cursor; i < st->len; i++)
-		putchar(st->buf[i]);
-
-	/* Clear trailing char */
-	putchar(' ');
-
-	/* Restore cursor */
-	printf("\033[%d;%dH", terminal_rows, PROMPT_COL + (int)st->cursor);
-	fflush(stdout);
+	LOG("buffer_insert: after insert buf='%s' cursor=%zu len=%zu",
+		st->buf, st->cursor, st->len);
 }
 
 void input_buffer_backspace(input_state *st)
 {
+	LOG("buffer_backspace: cursor=%zu len=%zu buf='%s'",
+		st->cursor, st->len, st->buf);
+
 	if (st->cursor == 0)
 		return;
 
-	/* Shift left */
 	memmove(st->buf + st->cursor - 1,
 			st->buf + st->cursor,
 			st->len - st->cursor);
 
 	st->cursor--;
 	st->len--;
+
 	st->buf[st->len] = '\0';
 
-	/* Redraw */
-	printf("\033[%d;%dH", terminal_rows, PROMPT_COL);
-	for (size_t i = 0; i < st->len; i++)
-		putchar(st->buf[i]);
-
-	/* Clear trailing char */
-	putchar(' ');
-
-	/* Restore cursor */
-	printf("\033[%d;%dH", terminal_rows, PROMPT_COL + (int)st->cursor);
-	fflush(stdout);
+	LOG("buffer_backspace: after delete buf='%s' cursor=%zu len=%zu",
+		st->buf, st->cursor, st->len);
 }
 
 void input_buffer_delete(input_state *st)
 {
+	LOG("buffer_delete: cursor=%zu len=%zu buf='%s'",
+		st->cursor, st->len, st->buf);
+
 	if (st->cursor >= st->len)
 		return;
 
@@ -71,15 +59,9 @@ void input_buffer_delete(input_state *st)
 			st->len - st->cursor - 1);
 
 	st->len--;
+	
 	st->buf[st->len] = '\0';
 
-	/* Redraw */
-	printf("\033[%d;%dH", terminal_rows, PROMPT_COL);
-	for (size_t i = 0; i < st->len; i++)
-		putchar(st->buf[i]);
-
-	putchar(' ');
-
-	printf("\033[%d;%dH", terminal_rows, PROMPT_COL + (int)st->cursor);
-	fflush(stdout);
+	LOG("buffer_delete: after delete buf='%s' cursor=%zu len=%zu",
+		st->buf, st->cursor, st->len);
 }

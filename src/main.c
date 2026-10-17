@@ -6,12 +6,19 @@
 #include "theme.h"
 #include "history.h"
 #include "read_line.h"
+#ifdef TERMLINK_DEBUG
+#include "debug.h"
+#endif
 
 int main(void)
 {
 	char input_buf[PATH_MAX];
 	input_state st;
 	memset(&st, 0, sizeof(st));
+
+#ifdef TERMLINK_DEBUG
+	debug_init();
+#endif
 
 	terminal_setup();
 	terminal_update_size();
