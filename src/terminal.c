@@ -5,6 +5,9 @@
 
 struct termios terminal_orig_termios;
 
+scroll_line scroll_lines[MAX_SCROLL_LINES];
+int scroll_line_count;
+
 int terminal_rows = 24;
 int terminal_cols = 80;
 
@@ -65,6 +68,13 @@ void terminal_slow_putc(char c)
 	usleep(PRINT_DELAY);
 }
 
+void terminal_slow_clear_putc()
+{
+	putchar(' ');
+	fflush(stdout);
+	usleep(PRINT_DELAY / 2);
+}
+
 void terminal_slow_print_at(int line, const char *s)
 {
 	LOG("terminal_slow_print_at: line=%d text='%s'", line, s);
@@ -73,6 +83,10 @@ void terminal_slow_print_at(int line, const char *s)
 
 	for (const char *p = s; *p; ++p)
 		terminal_slow_putc(*p);
+
+	// Record printed content length
+	if (scroll_line_count < MAX_SCROLL_LINES)
+		scroll_lines[scroll_line_count++] = (scroll_line){line, (int)strlen(s)};
 }
 
 void terminal_slow_print(const char *s)
@@ -83,16 +97,34 @@ void terminal_slow_print(const char *s)
 
 void terminal_clear_scroll(void)
 {
-	int last_scroll_line = terminal_rows - 1; // bottom row is prompt
+	int prompt_row = terminal_rows; // bottom row
 
-	LOG("terminal_clear_scroll: clearing lines %d to %d",
-		terminal_scroll_top, last_scroll_line - 1);
+	LOG("terminal_clear_scroll: slow-clearing %d lines", scroll_line_count);
 
-	for (int i = terminal_scroll_top; i < last_scroll_line; i++)
+	// Slow-clear only lines that contain content
+	for (int i = 0; i < scroll_line_count; i++)
 	{
-		printf("\033[%d;1H", i);
-		printf("\033[2K"); // clear entire line
+		int row = scroll_lines[i].row;
+		int len = scroll_lines[i].length;
+
+		if (row >= terminal_scroll_top && row < prompt_row)
+		{
+			printf("\033[%d;1H", row);
+
+			for (int c = 0; c < len; c++)
+				terminal_slow_clear_putc(' ');
+		}
 	}
+
+	// Fast-clear the rest of the scroll region
+	for (int row = terminal_scroll_top; row < prompt_row - 1; row++)
+	{
+		printf("\033[%d;1H", row);
+		printf("\033[2K");
+	}
+
+	// Reset scroll-line tracker
+	scroll_line_count = 0;
 
 	terminal_cursor_line = terminal_scroll_top;
 	LOG("terminal_clear_scroll: cursor_line=%d", terminal_cursor_line);
