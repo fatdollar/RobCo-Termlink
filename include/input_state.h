@@ -15,6 +15,9 @@ typedef struct
 	int tab_active;	 // for multi-step completions (Phase 5)
 
 	history_entry hist; // history tracking struct
+
+	char killbuf[1024]; // kill buffer to restor if needed
+	size_t kill_len; // length of kill buffer
 } input_state;
 
 #endif

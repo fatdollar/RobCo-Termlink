@@ -5,6 +5,7 @@
 #include "util.h"
 #include "theme.h"
 #include "history.h"
+#include "read_line.h"
 
 int main(void)
 {

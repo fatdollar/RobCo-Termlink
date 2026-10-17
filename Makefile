@@ -8,10 +8,7 @@ SRC = \
 	src/history.c \
 	src/builtin.c \
 	src/util.c \
-	src/input/input.c \
-	src/input/cursor.c \
-	src/input/buffer.c \
-	src/input/autocomplete.c
+	$(wildcard src/input/*.c)
 
 OBJ = $(patsubst src/%.c, build/%.o, $(SRC))
 

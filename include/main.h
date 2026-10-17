@@ -14,6 +14,7 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #include <limits.h>
+#include <ctype.h>
 
 #include "config.h"
 
