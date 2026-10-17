@@ -370,13 +370,7 @@ void input_autocomplete_tab(input_state *st)
 		LOG("autocomplete_tab: final buf='%s' len=%zu cursor=%zu",
 			buf, *len, st->cursor);
 
-		printf("\033[%d;%dH", terminal_rows, PROMPT_COL);
-		printf("\033[K");
-		for (size_t i = 0; i < *len; i++)
-			terminal_slow_putc(buf[i]);
-
-		printf("\033[%d;%dH", terminal_rows, PROMPT_COL + (int)st->cursor);
-		fflush(stdout);
+		input_redraw(st, true);
 	}
 	else
 	{
