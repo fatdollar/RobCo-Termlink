@@ -1,7 +1,10 @@
 #include "main.h"
 #include "terminal.h"
+#include "builtin.h"
+#include "external.h"
 #include "theme.h"
-#include "debug.h"
+#include "input.h"
+#include "cursor.h"
 
 struct termios terminal_orig_termios;
 
@@ -154,4 +157,95 @@ void terminal_print_header(void)
 
 	LOG("terminal_print_header: clearing scroll region");
 	terminal_clear_scroll();
+}
+
+void terminal_expand_tilde(const char **target)
+{
+	LOG("expand_tilde: input='%s'", *target);
+
+	if ((*target)[0] == '~')
+	{
+		LOG("expand_tilde: tilde detected");
+
+		const char *home = getenv("HOME");
+		LOG("expand_tilde: HOME='%s'", home ? home : "(null)");
+
+		if (!home)
+			home = "/";
+
+		static char expanded[PATH_MAX];
+
+		if ((*target)[1] == '/' || (*target)[1] == '\0')
+		{
+			// "~" or "~/something"
+			LOG("expand_tilde: expanding '~' or '~/'");
+			snprintf(expanded, sizeof(expanded), "%s%s", home, (*target) + 1);
+			*target = expanded;
+			LOG("expand_tilde: expanded='%s'", *target);
+		}
+		else
+		{
+			// "~user" (optional, skip for now)
+			// For now, treat "~user" as literal.
+			LOG("expand_tilde: '~user' form detected, leaving literal");
+		}
+	}
+
+	LOG("expand_tilde: final='%s'", *target);
+}
+
+void terminal_process(input_state *st, const char *cmd)
+{
+	LOG("terminal_process: cmd='%s'", cmd);
+
+	char buf[PATH_MAX];
+	char *argv[MAX_ARGS];
+	int argc;
+
+	snprintf(buf, sizeof(buf), "%s", cmd);
+	LOG("terminal_process: buf='%s'", buf);
+
+	st->buf[0] = '\0';
+	st->len = 0;
+	st->cursor = 0;
+	input_redraw(st, false);
+	LOG("terminal_process: redraw input");
+
+	argc = input_parse_args(buf, argv, MAX_ARGS);
+	LOG("terminal_process: argc=%d", argc);
+
+	if (argc == 0)
+	{
+		LOG("terminal_process: argc==0, abort");
+		return;
+	}
+
+	// always clear before executing a command
+	LOG("terminal_process: clearing scroll and buffer");
+	terminal_clear_scroll();
+
+	LOG("terminal_process: adding to history");
+	history_add(&st->hist, cmd);
+
+	LOG("terminal_process: saving history");
+	history_save(&st->hist);
+
+	terminal_cursor_line = terminal_scroll_top;
+	LOG("terminal_process: cursor_line reset to %d", terminal_cursor_line);
+
+	LOG("terminal_process: trying builtin");
+	if (builtin_try(argc, argv))
+	{
+		LOG("terminal_process: builtin executed");
+		input_cursor_redraw(st);
+		return;
+	}
+
+	LOG("terminal_process: running external command");
+	external_run(argv);
+
+	LOG("terminal_process: external done");
+
+	input_cursor_redraw(st);
+	return;
 }

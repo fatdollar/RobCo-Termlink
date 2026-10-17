@@ -6,7 +6,6 @@
 #include "buffer.h"
 #include "cursor.h"
 #include "autocomplete.h"
-#include "debug.h"
 
 void input_read_line(input_state *st, char *buf, size_t maxlen)
 {

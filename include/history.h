@@ -1,6 +1,8 @@
 #ifndef HISTORY_H
 #define HISTORY_H
 
+#include "main.h"
+
 #define HISTORY_MAX 256
 #define HISTORY_FILE ".termlink_history"
 

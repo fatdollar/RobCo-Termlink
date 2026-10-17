@@ -26,5 +26,6 @@ enum
 
 void input_redraw(input_state *st, bool place_cursor);
 int input_parse_args(char *line, char **argv, int max_args);
+void input_read_line(input_state *st, char *buf, size_t maxlen);
 
 #endif

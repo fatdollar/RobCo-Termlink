@@ -1,7 +1,7 @@
 #include "main.h"
 #include "input_state.h"
 #include "tokens.h"
-#include "debug.h"
+
 
 static int _is_operator_char(char c)
 {

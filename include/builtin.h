@@ -1,36 +1,54 @@
 #ifndef BUILTIN_H
 #define BUILTIN_H
 
-#include "input_state.h"
+#define MAX_BUILTINS 256
 
-#define MAX_EXTERNAL_CMDS 1024
+typedef int (*builtin_func)(int argc, char **argv);
 
-extern char builtin_external_cmds[][PATH_MAX];
-extern int builtin_external_cmd_count;
+typedef struct
+{
+    const char *name;
+    builtin_func func;
+} builtin_entry;
 
-void builtin_register_external(const char *name);
-void builtin_load_commands_from_dir(const char *dirpath);
-void builtin_load_external_from_path(void);
-
-#ifdef TL_CD
-int builtin_cd(int argc, char **argv);
-#endif
-#ifdef TL_EXIT
-int builtin_exit(int argc, char **argv);
-#endif
-int builtin_help(int argc, char **argv);
-#ifdef TL_CLEAR
-int builtin_clear(int argc, char **argv);
-#endif
-#ifdef TL_EXPORT
-int builtin_export(int argc, char **argv);
-#endif
-#ifdef TL_UNSET
-int builtin_unset(int argc, char **argv);
-#endif
-
+/* builtin registry */
 int builtin_try(int argc, char **argv);
-void builtin_run_external(char **argv);
-void builtin_process(input_state *st, const char *cmd);
+void builtin_init(void);
+void builtin_register(const char *name, builtin_func func);
+
+/* ============================================================
+ * POSIX REQUIRED BUILTINS
+ * ============================================================ */
+int builtin_cd(int argc, char **argv);
+int builtin_echo(int argc, char **argv);
+int builtin_exit(int argc, char **argv);
+int builtin_export(int argc, char **argv);
+int builtin_unset(int argc, char **argv);
+int builtin_pwd(int argc, char **argv);
+int builtin_type(int argc, char **argv);
+int builtin_set(int argc, char **argv);
+int builtin_shift(int argc, char **argv);
+int builtin_read(int argc, char **argv);
+int builtin_umask(int argc, char **argv);
+int builtin_alias(int argc, char **argv);
+int builtin_unalias(int argc, char **argv);
+int builtin_source(int argc, char **argv); /* '.' command */
+int builtin_trap(int argc, char **argv);
+int builtin_getopts(int argc, char **argv);
+
+/* ============================================================
+ * NON‑POSIX BUILTINS (TERMLINK CUSTOM)
+ * ============================================================ */
+int builtin_clear(int argc, char **argv);
+int builtin_help(int argc, char **argv);
+
+/* ============================================================
+ * POSIX JOB CONTROL BUILTINS
+ * ============================================================ */
+int builtin_jobs(int argc, char **argv);
+int builtin_fg(int argc, char **argv);
+int builtin_bg(int argc, char **argv);
+int builtin_kill(int argc, char **argv);
+int builtin_wait(int argc, char **argv);
 
 #endif

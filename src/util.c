@@ -2,7 +2,6 @@
 #include "util.h"
 #include "input.h"
 #include "autocomplete.h"
-#include "debug.h"
 
 int util_is_executable(const char *path)
 {

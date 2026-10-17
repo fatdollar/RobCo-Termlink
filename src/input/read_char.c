@@ -1,6 +1,6 @@
 #include "main.h"
 #include "input.h"
-#include "debug.h"
+
 
 int input_read_char(void)
 {

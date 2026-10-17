@@ -17,5 +17,6 @@
 #include <ctype.h>
 
 #include "config.h"
+#include "debug.h"
 
 #endif

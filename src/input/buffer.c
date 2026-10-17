@@ -1,7 +1,6 @@
 #include "main.h"
 #include "buffer.h"
 #include "terminal.h"
-#include "debug.h"
 
 void input_buffer_insert(input_state *st, char c)
 {

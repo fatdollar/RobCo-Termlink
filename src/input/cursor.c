@@ -1,7 +1,6 @@
 #include "main.h"
 #include "cursor.h"
 #include "terminal.h"
-#include "debug.h"
 
 void input_cursor_left(input_state *st)
 {

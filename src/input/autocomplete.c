@@ -4,7 +4,6 @@
 #include "terminal.h"
 #include "history.h"
 #include "util.h"
-#include "debug.h"
 
 autocomplete_entry input_autocomplete_table[MAX_COMPLETIONS];
 int input_autocomplete_count = 0;

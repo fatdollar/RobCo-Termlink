@@ -1,6 +1,8 @@
 #ifndef TERMINAL_H
 #define TERMINAL_H
 
+#include "input_state.h"
+
 #define PRINT_DELAY 7500
 #define MAX_ARGS 64
 #define MAX_COMPLETIONS 128
@@ -36,5 +38,9 @@ void terminal_slow_print(const char *s);
 void terminal_clear_scroll(void);
 void terminal_draw_prompt(void);
 void terminal_print_header(void);
+
+void terminal_expand_tilde(const char **target);
+
+void terminal_process(input_state *st, const char *cmd);
 
 #endif

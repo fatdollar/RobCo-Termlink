@@ -2,13 +2,11 @@
 #include "terminal.h"
 #include "input.h"
 #include "builtin.h"
+#include "external.h"
 #include "util.h"
 #include "theme.h"
 #include "history.h"
 #include "read_line.h"
-#ifdef TERMLINK_DEBUG
-#include "debug.h"
-#endif
 
 int main(void)
 {
@@ -28,7 +26,8 @@ int main(void)
 
 	history_load(&st.hist);
 	util_load_completions();
-	builtin_load_external_from_path();
+	builtin_init();
+	external_load_from_path();
 
 	terminal_draw_prompt();
 	input_redraw(&st, true);
@@ -36,7 +35,7 @@ int main(void)
 	while (1)
 	{
 		input_read_line(&st, input_buf, sizeof(input_buf));
-		builtin_process(&st, input_buf);
+		terminal_process(&st, input_buf);
 	}
 
 	return 0;

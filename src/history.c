@@ -1,6 +1,5 @@
 #include "main.h"
 #include "history.h"
-#include "debug.h"
 
 static void history_init_path(history_entry *hist)
 {
@@ -28,20 +27,7 @@ void history_load(history_entry *hist)
 	hist->history_index = 0;
 	hist->history_edit_saved = 0;
 
-	const char *home = getenv("HOME");
-	LOG_HISTORY("load: HOME='%s'", home ? home : "(null)");
-
-	if (!home)
-	{
-		LOG_HISTORY("load: no HOME, disabling history");
-		hist->history_path[0] = '\0';
-		return;
-	}
-
-	snprintf(hist->history_path, sizeof(hist->history_path),
-			 "%s/%s", home, HISTORY_FILE);
-
-	LOG_HISTORY("load: path='%s'", hist->history_path);
+	history_init_path(hist);
 
 	FILE *fp = fopen(hist->history_path, "r");
 	if (!fp)

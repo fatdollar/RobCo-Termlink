@@ -1,7 +1,6 @@
 #include "main.h"
 #include "input.h"
 #include "terminal.h"
-#include "debug.h"
 
 void input_redraw(input_state *st, bool place_cursor)
 {

@@ -6,10 +6,11 @@ SRC = \
 	src/terminal.c \
 	src/theme.c \
 	src/history.c \
-	src/builtin.c \
 	src/util.c \
 	src/debug.c \
-	$(wildcard src/input/*.c)
+	$(wildcard src/input/*.c) \
+	$(wildcard src/builtin/*.c) \
+	$(wildcard src/external/*.c) 
 
 OBJ = $(patsubst src/%.c, build/%.o, $(SRC))
 
