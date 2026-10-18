@@ -124,6 +124,33 @@ bool external_exists(const char *cmd)
     return false;
 }
 
+bool external_is_tty_interactive(const char *cmd)
+{
+    LOG("external_is_tty_interactive: checking '%s'", cmd);
+
+    // Simple heuristic list for now
+    const char *interactive[] = {
+        "bash", "sh", "zsh", "fish",
+        "nano", "vim", "vi",
+        "top", "htop",
+        "less", "more",
+        "ssh",
+        "python", "python3",
+        NULL};
+
+    for (int i = 0; interactive[i]; i++)
+    {
+        if (strcmp(cmd, interactive[i]) == 0)
+        {
+            LOG("external_is_tty_interactive: '%s' is known interactive", cmd);
+            return true;
+        }
+    }
+
+    LOG("external_is_tty_interactive: '%s' not in interactive list", cmd);
+    return false;
+}
+
 void external_run(char **argv)
 {
     LOG("run_external: cmd='%s'", argv[0]);
@@ -237,33 +264,7 @@ void external_run_paged(char **argv)
         if (p.quit)
             break;
 
-        terminal_clear_scroll();
-        pager_render(&p);
-
-        while (1)
-        {
-            int key;
-
-            if (!terminal_poll_key(&key))
-                key = input_read_char(); // BLOCK
-
-            int old_top = p.top;
-            pager_handle_key(&p, key);
-
-            if (p.quit)
-            {
-                // Exit immediately: no more renders
-                terminal_clear_scroll();
-                terminal_draw_prompt();
-                break;
-            }
-
-            if (p.top != old_top)
-            {
-                terminal_clear_scroll();
-                pager_render(&p);
-            }
-        }
+        pager_run(&p);
 
         if (p.quit)
             break;

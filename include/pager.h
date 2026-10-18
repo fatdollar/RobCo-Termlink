@@ -32,10 +32,14 @@ struct pager
     bool quit;
 };
 
+void pager_start(struct pager *p);
+void pager_print_line(struct pager *p, const char *s);
+void pager_finish(struct pager *p);
 void pager_init(struct pager *p, int rows, int cols);
 void pager_free(struct pager *p);
 void pager_feed(struct pager *p, const char *data, size_t n);
 void pager_render(struct pager *p);
 void pager_handle_key(struct pager *p, int key);
+void pager_run(struct pager *p);
 
 #endif

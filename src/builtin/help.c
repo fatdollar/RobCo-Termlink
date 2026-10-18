@@ -1,20 +1,41 @@
+#include "main.h"
 #include "terminal.h"
+#include "pager.h"
+#include "external.h"
 #include "builtin.h"
 
 int builtin_help(int argc, char **argv)
 {
-	terminal_slow_print("Available commands:");
+	LOG("builtin_help: generating help output");
 
-	terminal_slow_print("Built-ins:");
-	terminal_slow_print("  help");
-	terminal_slow_print("  clear");
-	terminal_slow_print("  exit");
-	terminal_slow_print("  cd");
-	terminal_slow_print("  export");
-	terminal_slow_print("  unset");
+	struct pager p;
+	pager_start(&p);
 
-	terminal_slow_print("");
-	terminal_slow_print("External commands:");
+	pager_print_line(&p, "Available commands:");
+	pager_print_line(&p, "");
+	pager_print_line(&p, "Built-ins:");
+	pager_print_line(&p, "  help");
+	pager_print_line(&p, "  clear");
+	pager_print_line(&p, "  exit");
+	pager_print_line(&p, "  cd");
+	pager_print_line(&p, "  export");
+	pager_print_line(&p, "  unset");
+	pager_print_line(&p, "");
+
+	pager_print_line(&p, "External commands:");
+
+	for (int i = 0; i < external_cmd_count; i++)
+	{
+		char buf[256];
+		snprintf(buf, sizeof(buf), "  %.240s", external_cmds[i]);
+		pager_print_line(&p, buf);
+
+		LOG("builtin_help: listed external '%s'", external_cmds[i]);
+	}
+
+	pager_finish(&p);
+	pager_run(&p);
+	pager_free(&p);
 
 	return 1;
 }

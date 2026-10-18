@@ -377,8 +377,20 @@ void terminal_process(input_state *st, const char *cmd)
 	LOG("terminal_process: checking external existence");
 	if (external_exists(argv[0]))
 	{
-		LOG("terminal_process: running external command");
-		external_run_paged(argv);
+		LOG("terminal_process: external exists");
+
+		if (external_is_tty_interactive(argv[0]))
+		{
+			LOG("terminal_process: external is TTY interactive");
+			terminal_slow_print("Interactive TTY programs are not yet supported: ");
+			terminal_slow_print(argv[0]);
+			terminal_slow_print("\n");
+		}
+		else
+		{
+			LOG("terminal_process: running external command");
+			external_run_paged(argv);
+		}
 	}
 	else
 	{
