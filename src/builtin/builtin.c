@@ -1,7 +1,6 @@
 #include "main.h"
 #include "builtin.h"
 #include "terminal.h"
-#include "util.h"
 #include "history.h"
 #include "input.h"
 #include "input_state.h"

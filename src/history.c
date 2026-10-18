@@ -1,7 +1,7 @@
 #include "main.h"
 #include "history.h"
 
-static void history_init_path(history_entry *hist)
+static void _history_init_path(history_entry *hist)
 {
 	LOG_HISTORY("init_path: HOME='%s'", getenv("HOME"));
 
@@ -27,7 +27,7 @@ void history_load(history_entry *hist)
 	hist->history_index = 0;
 	hist->history_edit_saved = 0;
 
-	history_init_path(hist);
+	_history_init_path(hist);
 
 	FILE *fp = fopen(hist->history_path, "r");
 	if (!fp)

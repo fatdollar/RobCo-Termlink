@@ -6,7 +6,6 @@ SRC = \
 	src/terminal.c \
 	src/theme.c \
 	src/history.c \
-	src/util.c \
 	src/debug.c \
 	src/pager.c \
 	$(wildcard src/input/*.c) \

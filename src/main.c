@@ -1,9 +1,9 @@
 #include "main.h"
+#include "autocomplete.h"
 #include "terminal.h"
 #include "input.h"
 #include "builtin.h"
 #include "external.h"
-#include "util.h"
 #include "theme.h"
 #include "history.h"
 #include "input.h"
@@ -38,17 +38,13 @@ int main(void)
 	}
 
 	terminal_setup();
-	terminal_update_size();
-	terminal_print_header();
-
-	terminal_slow_print_at(terminal_rows, "Accessing systems...");
 
 	history_load(&st.hist);
-	util_load_completions();
+	autocomplete_load_completions();
 	builtin_init();
 	external_load_from_path();
 
-	terminal_draw_prompt();
+	terminal_prompt_draw();
 	input_redraw(&st, true);
 
 	while (1)

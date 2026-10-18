@@ -3,13 +3,13 @@
 #include "tokens.h"
 
 
-static int _is_operator_char(char c)
+static int _input_tokens_is_operator_char(char c)
 {
 	LOG("tokens: _is_operator_char('%c')", c);
 	return (c == '|' || c == '&' || c == ';' || c == '>' || c == '<');
 }
 
-static int is_operator(const char *buf, int i)
+static int _input_tokens_is_operator(const char *buf, int i)
 {
 	LOG("tokens: is_operator buf='%s' i=%d", buf, i);
 
@@ -27,7 +27,7 @@ static int is_operator(const char *buf, int i)
 	}
 
 	// Single-char operators
-	if (_is_operator_char(buf[i]))
+	if (_input_tokens_is_operator_char(buf[i]))
 	{
 		LOG("tokens: single-char operator at %d", i);
 		return 1;
@@ -37,7 +37,7 @@ static int is_operator(const char *buf, int i)
 	return 0;
 }
 
-static int _scan_quote_left(const char *buf, int i)
+static int _input_tokens_quote_left(const char *buf, int i)
 {
 	LOG("tokens: scan_quote_left buf='%s' i=%d", buf, i);
 
@@ -58,7 +58,7 @@ static int _scan_quote_left(const char *buf, int i)
 	return 0;
 }
 
-static int _scan_quote_right(const char *buf, int len, int i)
+static int _input_tokens_quote_right(const char *buf, int len, int i)
 {
 	LOG("tokens: scan_quote_right buf='%s' len=%d i=%d", buf, len, i);
 
@@ -79,7 +79,7 @@ static int _scan_quote_right(const char *buf, int len, int i)
 	return len;
 }
 
-static int _scan_paren_left(const char *buf, int i)
+static int _input_tokens_paren_left(const char *buf, int i)
 {
 	LOG("tokens: scan_paren_left buf='%s' i=%d", buf, i);
 
@@ -106,7 +106,7 @@ static int _scan_paren_left(const char *buf, int i)
 	return 0;
 }
 
-static int _scan_paren_right(const char *buf, int len, int i)
+static int _input_tokens_paren_right(const char *buf, int len, int i)
 {
 	LOG("tokens: scan_paren_right buf='%s' len=%d i=%d", buf, len, i);
 
@@ -154,7 +154,7 @@ int input_tokens_prev(const char *buf, int cursor)
 	// Quoted string?
 	if (buf[i] == '"' || buf[i] == '\'')
 	{
-		int r = _scan_quote_left(buf, i);
+		int r = _input_tokens_quote_left(buf, i);
 		LOG("tokens_prev: quote-left result=%d", r);
 		return r;
 	}
@@ -162,13 +162,13 @@ int input_tokens_prev(const char *buf, int cursor)
 	// Subshell?
 	if (buf[i] == ')')
 	{
-		int r = _scan_paren_left(buf, i);
+		int r = _input_tokens_paren_left(buf, i);
 		LOG("tokens_prev: paren-left result=%d", r);
 		return r;
 	}
 
 	// Operator?
-	int op = is_operator(buf, i);
+	int op = _input_tokens_is_operator(buf, i);
 	if (op)
 	{
 		LOG("tokens_prev: operator size=%d", op);
@@ -176,10 +176,10 @@ int input_tokens_prev(const char *buf, int cursor)
 	}
 
 	// Normal token
-	while (i > 0 && !isspace((unsigned char)buf[i]) && !_is_operator_char(buf[i]))
+	while (i > 0 && !isspace((unsigned char)buf[i]) && !_input_tokens_is_operator_char(buf[i]))
 		i--;
 
-	if (isspace((unsigned char)buf[i]) || _is_operator_char(buf[i]))
+	if (isspace((unsigned char)buf[i]) || _input_tokens_is_operator_char(buf[i]))
 	{
 		LOG("tokens_prev: normal token start=%d", i + 1);
 		return i + 1;
@@ -217,7 +217,7 @@ int input_tokens_next(const char *buf, int cursor)
 	// Quoted string?
 	if (buf[i] == '"' || buf[i] == '\'')
 	{
-		int r = _scan_quote_right(buf, len, i);
+		int r = _input_tokens_quote_right(buf, len, i);
 		LOG("tokens_next: quote-right result=%d", r);
 		return r;
 	}
@@ -225,13 +225,13 @@ int input_tokens_next(const char *buf, int cursor)
 	// Subshell?
 	if (buf[i] == '(')
 	{
-		int r = _scan_paren_right(buf, len, i);
+		int r = _input_tokens_paren_right(buf, len, i);
 		LOG("tokens_next: paren-right result=%d", r);
 		return r;
 	}
 
 	// Operator?
-	int op = is_operator(buf, i);
+	int op = _input_tokens_is_operator(buf, i);
 	if (op)
 	{
 		LOG("tokens_next: operator size=%d", op);
@@ -239,7 +239,7 @@ int input_tokens_next(const char *buf, int cursor)
 	}
 
 	// Normal token
-	while (i < len && !isspace((unsigned char)buf[i]) && !_is_operator_char(buf[i]))
+	while (i < len && !isspace((unsigned char)buf[i]) && !_input_tokens_is_operator_char(buf[i]))
 		i++;
 
 	LOG("tokens_next: normal token end=%d", i);

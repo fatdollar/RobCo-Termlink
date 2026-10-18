@@ -1,13 +1,21 @@
 #include "main.h"
 #include "external.h"
 #include "terminal.h"
-#include "util.h"
 #include "pager.h"
+#include "input.h"
+
+/* ============================================================
+ * GLOBAL STATE
+ * ============================================================ */
 
 char external_cmds[MAX_EXTERNAL_CMDS][PATH_MAX];
 int external_cmd_count = 0;
 
-void external_register(const char *name)
+/* ============================================================
+ * INTERNAL HELPERS (static)
+ * ============================================================ */
+
+static void _external_register(const char *name)
 {
     LOG("register_external: '%s'", name);
 
@@ -25,6 +33,64 @@ void external_register(const char *name)
 
     LOG("register_external: count=%d", external_cmd_count);
 }
+
+static int _external_is_executable(const char *path)
+{
+    LOG("_external_is_executable: path='%s'", path);
+
+    struct stat st;
+    if (stat(path, &st) != 0)
+    {
+        LOG("_external_is_executable: stat failed");
+        return 0;
+    }
+
+    if (!S_ISREG(st.st_mode))
+    {
+        LOG("_external_is_executable: not a regular file");
+        return 0;
+    }
+
+    int exec = (st.st_mode & S_IXUSR) ||
+               (st.st_mode & S_IXGRP) ||
+               (st.st_mode & S_IXOTH);
+
+    LOG("_external_is_executable: exec=%d", exec);
+    return exec;
+}
+
+static void _external_load_commands_from_dir(const char *dirpath)
+{
+    LOG("load_commands_from_dir: '%s'", dirpath);
+
+    DIR *d = opendir(dirpath);
+    if (!d)
+    {
+        LOG("load_commands_from_dir: cannot open");
+        return;
+    }
+
+    struct dirent *ent;
+    while ((ent = readdir(d)) != NULL)
+    {
+        LOG("load_commands_from_dir: found '%s'", ent->d_name);
+
+        char fullpath[PATH_MAX];
+        snprintf(fullpath, sizeof(fullpath), "%s/%s", dirpath, ent->d_name);
+
+        if (_external_is_executable(fullpath))
+        {
+            LOG("load_commands_from_dir: executable '%s'", ent->d_name);
+            _external_register(ent->d_name);
+        }
+    }
+
+    closedir(d);
+}
+
+/* ============================================================
+ * PUBLIC API
+ * ============================================================ */
 
 void external_load_from_path(void)
 {
@@ -44,39 +110,10 @@ void external_load_from_path(void)
     while (dir)
     {
         LOG("load_external_from_path: scanning '%s'", dir);
-        external_load_commands_from_dir(dir);
+        _external_load_commands_from_dir(dir);
         dir = strtok_r(NULL, ":", &saveptr);
     }
 #endif
-}
-
-void external_load_commands_from_dir(const char *dirpath)
-{
-    LOG("load_commands_from_dir: '%s'", dirpath);
-
-    DIR *d = opendir(dirpath);
-    if (!d)
-    {
-        LOG("load_commands_from_dir: cannot open");
-        return;
-    }
-
-    struct dirent *ent;
-    while ((ent = readdir(d)) != NULL)
-    {
-        LOG("load_commands_from_dir: found '%s'", ent->d_name);
-
-        char fullpath[PATH_MAX];
-        snprintf(fullpath, sizeof(fullpath), "%s/%s", dirpath, ent->d_name);
-
-        if (util_is_executable(fullpath))
-        {
-            LOG("load_commands_from_dir: executable '%s'", ent->d_name);
-            external_register(ent->d_name);
-        }
-    }
-
-    closedir(d);
 }
 
 bool external_exists(const char *cmd)
@@ -97,7 +134,6 @@ bool external_exists(const char *cmd)
 
     while (*p)
     {
-        // Extract one PATH segment
         const char *start = p;
         while (*p && *p != ':')
             p++;
@@ -128,7 +164,6 @@ bool external_is_tty_interactive(const char *cmd)
 {
     LOG("external_is_tty_interactive: checking '%s'", cmd);
 
-    // Simple heuristic list for now
     const char *interactive[] = {
         "bash", "sh", "zsh", "fish",
         "nano", "vim", "vi",
@@ -176,20 +211,15 @@ void external_run(char **argv)
 
     if (pid == 0)
     {
-        // --- CHILD ---
         if (termlink_job_control_enabled)
-        {
-            // child gets its own process group
             setpgid(0, 0);
-        }
 
-        // restore default SIGINT so Ctrl-C kills the child
         struct sigaction sa;
         memset(&sa, 0, sizeof(sa));
         sa.sa_handler = SIG_DFL;
         sigaction(SIGINT, &sa, NULL);
 
-        close(pipefd[0]); // close read end
+        close(pipefd[0]);
 
         dup2(pipefd[1], STDOUT_FILENO);
         dup2(pipefd[1], STDERR_FILENO);
@@ -200,12 +230,10 @@ void external_run(char **argv)
         _exit(127);
     }
 
-    // --- PARENT ---
-    close(pipefd[1]); // close write end
+    close(pipefd[1]);
 
     if (termlink_job_control_enabled)
     {
-        // give terminal to child
         setpgid(pid, pid);
         tcsetpgrp(STDIN_FILENO, pid);
     }
@@ -225,10 +253,7 @@ void external_run(char **argv)
     waitpid(pid, &status, 0);
 
     if (termlink_job_control_enabled)
-    {
-        // return terminal to shell
         tcsetpgrp(STDIN_FILENO, getpgrp());
-    }
 
     LOG("run_external: child exited status=%d", status);
 }
@@ -270,12 +295,11 @@ void external_run_paged(char **argv)
             break;
     }
 
-    // If user quit, skip final render entirely
     if (!p.quit)
     {
         p.done = true;
 
-        terminal_clear_scroll();
+        terminal_scroll_clear();
         pager_render(&p);
 
         int key;
@@ -285,8 +309,8 @@ void external_run_paged(char **argv)
 
         if (p.quit)
         {
-            terminal_clear_scroll();
-            terminal_draw_prompt();
+            terminal_scroll_clear();
+            terminal_prompt_draw();
         }
     }
 

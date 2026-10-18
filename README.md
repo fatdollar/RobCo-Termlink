@@ -16,7 +16,6 @@ src/
     builtin.c
     pager.c
     external.c
-    util.c
 
 include/
     main.h
@@ -27,7 +26,6 @@ include/
     builtin.h
     pager.h
     external.h
-    util.h
 ```
 
 This README documents the current behavior and architecture.
@@ -48,7 +46,7 @@ This README documents the current behavior and architecture.
 
 ### **2. Scroll Region**
 - Output is restricted to a vertical region between `terminal_scroll_top` and `terminal_scroll_bottom`.
-- `terminal_clear_scroll()` wipes the region and resets the scroll cursor.
+- `terminal_scroll_clear()` wipes the region and resets the scroll cursor.
 - Built‑ins, external commands, and pager output all slow‑print inside this region.
 - Scroll region height is fixed at runtime based on terminal size.
 
@@ -212,13 +210,6 @@ Implements:
 - External command execution
 - Pipe reading
 - Paged output
-
-### **util.c**
-Implements:
-
-- Executable detection
-- Completion file loading
-- Completion type parsing
 
 ### **history.c**
 Implements a full command history system:

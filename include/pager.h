@@ -36,15 +36,15 @@ typedef struct
     bool quit;
 } pager;
 
+void pager_init(pager *p, int rows, int cols);
 void pager_start(pager *p);
 void pager_print_line(pager *p, const char *s);
 void pager_finish(pager *p);
-void pager_init(pager *p, int rows, int cols);
-void pager_free(pager *p);
 void pager_feed(pager *p, const char *data, size_t n);
-void pager_columns(char matches[][PATH_MAX], int count);
+void pager_run(pager *p);
 void pager_render(pager *p);
 void pager_handle_key(pager *p, int key);
-void pager_run(pager *p);
+void pager_free(pager *p);
+void pager_columns(char matches[][PATH_MAX], int count);
 
 #endif

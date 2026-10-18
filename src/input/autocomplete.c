@@ -1,21 +1,151 @@
 #include "main.h"
-#include "autocomplete.h"
 #include "input.h"
+#include "autocomplete.h"
 #include "terminal.h"
 #include "history.h"
-#include "util.h"
 #include "pager.h"
+
+/* ============================================================
+ * GLOBAL STATE
+ * ============================================================ */
 
 autocomplete_entry input_autocomplete_table[MAX_COMPLETIONS];
 int input_autocomplete_count = 0;
 
-static int cmp_match(const void *a, const void *b)
+/* ============================================================
+ * INTERNAL HELPERS (static)
+ * ============================================================ */
+
+static int _cmp_match(const void *a, const void *b)
 {
 	LOG("cmp_match: '%s' vs '%s'", (char *)a, (char *)b);
 	return strcmp((const char *)a, (const char *)b);
 }
 
-static void input_autocomplete_command(const char *prefix, size_t *len, char *buf)
+static autocomplete_type _autocomplete_parse_completion_type(const char *value)
+{
+	LOG("_autocomplete_parse_completion_type: value='%s'", value);
+
+	if (strcmp(value, "dirs") == 0)
+		return AUTOCOMPLETE_DIRS;
+	if (strcmp(value, "files") == 0)
+		return AUTOCOMPLETE_FILES;
+
+	LOG("_autocomplete_parse_completion_type: default");
+	return AUTOCOMPLETE_FILES_AND_DIRS;
+}
+
+static void _autocomplete_register_completion(char *cmd, autocomplete_type type)
+{
+	LOG("_autocomplete_register_completion: cmd='%s' type=%d", cmd, type);
+
+	if (input_autocomplete_count >= MAX_COMPLETIONS)
+	{
+		LOG("_autocomplete_register_completion: MAX_COMPLETIONS reached");
+		return;
+	}
+
+	input_autocomplete_table[input_autocomplete_count].cmd = cmd;
+	input_autocomplete_table[input_autocomplete_count].type = type;
+	input_autocomplete_count++;
+
+	LOG("_autocomplete_register_completion: count=%d", input_autocomplete_count);
+}
+
+void _autocomplete_load_completions_dir(const char *dirpath)
+{
+	LOG("_autocomplete_load_completions_dir: dir='%s'", dirpath);
+
+	DIR *d = opendir(dirpath);
+	if (!d)
+	{
+		LOG("_autocomplete_load_completions_dir: cannot open");
+		return;
+	}
+
+	struct dirent *ent;
+	while ((ent = readdir(d)) != NULL)
+	{
+		LOG("_autocomplete_load_completions_dir: found '%s'", ent->d_name);
+
+		const char *name = ent->d_name;
+		size_t len = strlen(name);
+
+		if (len <= 5)
+			continue;
+		if (strcmp(name + len - 5, ".comp") != 0)
+			continue;
+
+		LOG("_autocomplete_load_completions_dir: .comp file '%s'", name);
+
+		char cmd[64];
+		size_t cmdlen = len - 5;
+		if (cmdlen >= sizeof(cmd))
+			cmdlen = sizeof(cmd) - 1;
+		memcpy(cmd, name, cmdlen);
+		cmd[cmdlen] = '\0';
+
+		LOG("_autocomplete_load_completions_dir: cmd='%s'", cmd);
+
+		char path[PATH_MAX];
+		snprintf(path, sizeof(path), "%s/%s", dirpath, name);
+
+		FILE *f = fopen(path, "r");
+		if (!f)
+		{
+			LOG("_autocomplete_load_completions_dir: cannot open file '%s'", path);
+			continue;
+		}
+
+		char line[256];
+		autocomplete_type type = AUTOCOMPLETE_FILES_AND_DIRS;
+
+		while (fgets(line, sizeof(line), f))
+		{
+			LOG("_autocomplete_load_completions_dir: line='%s'", line);
+
+			char *nl = strchr(line, '\n');
+			if (nl)
+				*nl = '\0';
+
+			if (strncmp(line, "type=", 5) == 0)
+			{
+				const char *val = line + 5;
+				type = _autocomplete_parse_completion_type(val);
+				LOG("_autocomplete_load_completions_dir: parsed type=%d", type);
+				break;
+			}
+		}
+
+		fclose(f);
+
+		_autocomplete_register_completion(cmd, type);
+	}
+
+	closedir(d);
+}
+
+static autocomplete_entry *_input_autocomplete_lookup(const char *cmd)
+{
+	LOG("autocomplete_lookup: cmd='%s'", cmd);
+
+	for (int i = 0; i < input_autocomplete_count; i++)
+	{
+		LOG("autocomplete_lookup: checking '%s'",
+			input_autocomplete_table[i].cmd);
+
+		if (strcmp(input_autocomplete_table[i].cmd, cmd) == 0)
+		{
+			LOG("autocomplete_lookup: match");
+			return &input_autocomplete_table[i];
+		}
+	}
+
+	LOG("autocomplete_lookup: no match");
+	return NULL;
+}
+
+static void _input_autocomplete_command(const char *prefix, size_t *len, char *buf)
 {
 	LOG("autocomplete_cmd: prefix='%s' len=%zu buf='%s'", prefix, *len, buf);
 
@@ -120,7 +250,7 @@ static void input_autocomplete_command(const char *prefix, size_t *len, char *bu
 	if (match_count == 0)
 		return;
 
-	qsort(matches, match_count, PATH_MAX, cmp_match);
+	qsort(matches, match_count, PATH_MAX, _cmp_match);
 
 	if (match_count == 1)
 	{
@@ -146,11 +276,10 @@ static void input_autocomplete_command(const char *prefix, size_t *len, char *bu
 	}
 
 	/* Multiple matches → print list */
-	terminal_slow_print("Commands:");
 	pager_columns(matches, match_count);
 }
 
-void input_autocomplete_path(char **argv, size_t *len, char *buf, autocomplete_type type)
+static void _input_autocomplete_path(char **argv, size_t *len, char *buf, autocomplete_type type)
 {
 	LOG("autocomplete_path: argv0='%s' argv1='%s' type=%d len=%zu buf='%s'",
 		argv[0], argv[1], type, *len, buf);
@@ -308,7 +437,7 @@ void input_autocomplete_path(char **argv, size_t *len, char *buf, autocomplete_t
 	}
 
 	LOG("autocomplete_path: sorting matches");
-	qsort(matches, match_count, PATH_MAX, cmp_match);
+	qsort(matches, match_count, PATH_MAX, _cmp_match);
 
 	/* ============================================================
 	   Single match → complete it
@@ -363,8 +492,35 @@ void input_autocomplete_path(char **argv, size_t *len, char *buf, autocomplete_t
 	   Multiple matches → print list
 	   ============================================================ */
 	LOG("autocomplete_path: multiple matches");
-	terminal_slow_print("Matches:");
 	pager_columns(matches, match_count);
+}
+
+/* ============================================================
+ * PUBLIC API
+ * ============================================================ */
+
+void autocomplete_load_completions(void)
+{
+	LOG("autocomplete_load_completions: start");
+
+	_autocomplete_load_completions_dir("/usr/share/termlink/completions");
+	_autocomplete_load_completions_dir("/etc/termlink/completions");
+
+	const char *home = getenv("HOME");
+	LOG("autocomplete_load_completions: HOME='%s'", home ? home : "(null)");
+
+	if (home && *home)
+	{
+		char path[PATH_MAX];
+		snprintf(path, sizeof(path), "%s/.termlink/completions", home);
+		LOG("autocomplete_load_completions: user dir='%s'", path);
+		_autocomplete_load_completions_dir(path);
+	}
+
+	LOG("autocomplete_load_completions: adding built-in 'cd'");
+	_autocomplete_register_completion("cd", AUTOCOMPLETE_DIRS);
+
+	LOG("autocomplete_load_completions: done");
 }
 
 void input_autocomplete_tab(input_state *st)
@@ -379,7 +535,7 @@ void input_autocomplete_tab(input_state *st)
 
 	/* Clear scroll region for match printing */
 	LOG("autocomplete_tab: clearing scroll region");
-	terminal_clear_scroll();
+	terminal_scroll_clear();
 	terminal_cursor_line = terminal_scroll_top;
 
 	/* Parse arguments from buffer */
@@ -428,13 +584,13 @@ void input_autocomplete_tab(input_state *st)
 		}
 
 		LOG("autocomplete_tab: argc==1, command completion on argv[0]='%s'", argv[0]);
-		input_autocomplete_command(argv[0], len, buf);
+		_input_autocomplete_command(argv[0], len, buf);
 	}
 	else
 	{
 		/* Determine completion type from command */
 		autocomplete_type type = AUTOCOMPLETE_FILES_AND_DIRS;
-		autocomplete_entry *ce = input_autocomplete_lookup(argv[0]);
+		autocomplete_entry *ce = _input_autocomplete_lookup(argv[0]);
 		LOG("autocomplete_tab: lookup cmd='%s' result=%p", argv[0], ce);
 
 		if (ce)
@@ -470,7 +626,7 @@ void input_autocomplete_tab(input_state *st)
 		LOG("autocomplete_tab: comp_argv='%s' '%s'", comp_argv[0], comp_argv[1]);
 
 		LOG("autocomplete_tab: calling input_autocomplete_path()");
-		input_autocomplete_path(comp_argv, len, buf, type);
+		_input_autocomplete_path(comp_argv, len, buf, type);
 	}
 
 	LOG("autocomplete_tab: after completion buf='%s' len=%zu", buf, *len);
@@ -514,24 +670,4 @@ void input_autocomplete_tab(input_state *st)
 		*len = original_len;
 		buf[*len] = '\0';
 	}
-}
-
-autocomplete_entry *input_autocomplete_lookup(const char *cmd)
-{
-	LOG("autocomplete_lookup: cmd='%s'", cmd);
-
-	for (int i = 0; i < input_autocomplete_count; i++)
-	{
-		LOG("autocomplete_lookup: checking '%s'",
-			input_autocomplete_table[i].cmd);
-
-		if (strcmp(input_autocomplete_table[i].cmd, cmd) == 0)
-		{
-			LOG("autocomplete_lookup: match");
-			return &input_autocomplete_table[i];
-		}
-	}
-
-	LOG("autocomplete_lookup: no match");
-	return NULL;
 }
