@@ -30,6 +30,12 @@ static autocomplete_type _autocomplete_parse_completion_type(const char *value)
 		return AUTOCOMPLETE_DIRS;
 	if (strcmp(value, "files") == 0)
 		return AUTOCOMPLETE_FILES;
+	if (strcmp(value, "files_and_dirs") == 0)
+		return AUTOCOMPLETE_FILES_AND_DIRS;
+	if (strcmp(value, "executables") == 0)
+		return AUTOCOMPLETE_EXECUTABLES;
+	if (strcmp(value, "dynamic") == 0)
+		return AUTOCOMPLETE_DYNAMIC;
 
 	LOG("_autocomplete_parse_completion_type: default");
 	return AUTOCOMPLETE_FILES_AND_DIRS;
@@ -50,6 +56,26 @@ static void _autocomplete_register_completion(char *cmd, autocomplete_type type)
 	input_autocomplete_count++;
 
 	LOG("_autocomplete_register_completion: count=%d", input_autocomplete_count);
+}
+
+static autocomplete_entry *_input_autocomplete_lookup(const char *cmd)
+{
+	LOG("autocomplete_lookup: cmd='%s'", cmd);
+
+	for (int i = 0; i < input_autocomplete_count; i++)
+	{
+		LOG("autocomplete_lookup: checking '%s'",
+			input_autocomplete_table[i].cmd);
+
+		if (strcmp(input_autocomplete_table[i].cmd, cmd) == 0)
+		{
+			LOG("autocomplete_lookup: match");
+			return &input_autocomplete_table[i];
+		}
+	}
+
+	LOG("autocomplete_lookup: no match");
+	return NULL;
 }
 
 void _autocomplete_load_completions_dir(const char *dirpath)
@@ -97,8 +123,18 @@ void _autocomplete_load_completions_dir(const char *dirpath)
 			continue;
 		}
 
+		/* Defaults */
 		char line[256];
 		autocomplete_type type = AUTOCOMPLETE_FILES_AND_DIRS;
+		const char *dynamic_prog = NULL;
+
+		/* Temporary storage for options/extensions */
+		static char *options[64];
+		static char *extensions[64];
+		int opt_count = 0;
+		int ext_count = 0;
+
+		bool in_options_block = false;
 
 		while (fgets(line, sizeof(line), f))
 		{
@@ -108,41 +144,96 @@ void _autocomplete_load_completions_dir(const char *dirpath)
 			if (nl)
 				*nl = '\0';
 
-			if (strncmp(line, "type=", 5) == 0)
+			/* Skip comments */
+			if (line[0] == '#' || line[0] == '\0')
+				continue;
+
+			/* command: NAME */
+			if (strncmp(line, "command:", 8) == 0)
+			{
+				/* ignore, filename already gives command */
+				continue;
+			}
+
+			/* type: VALUE */
+			if (strncmp(line, "type:", 5) == 0)
 			{
 				const char *val = line + 5;
+				while (*val == ' ' || *val == '\t')
+					val++;
+
 				type = _autocomplete_parse_completion_type(val);
 				LOG("_autocomplete_load_completions_dir: parsed type=%d", type);
-				break;
+				continue;
+			}
+
+			/* extensions: ext1, ext2, ext3 */
+			if (strncmp(line, "extensions:", 11) == 0)
+			{
+				char *p = line + 11;
+				while (*p == ' ' || *p == '\t')
+					p++;
+
+				char *tok = strtok(p, ",");
+				while (tok && ext_count < 63)
+				{
+					while (*tok == ' ' || *tok == '\t')
+						tok++;
+					extensions[ext_count++] = strdup(tok);
+					tok = strtok(NULL, ",");
+				}
+				extensions[ext_count] = NULL;
+
+				LOG("_autocomplete_load_completions_dir: parsed %d extensions", ext_count);
+				continue;
+			}
+
+			/* options: (start block) */
+			if (strncmp(line, "options:", 8) == 0)
+			{
+				in_options_block = true;
+				continue;
+			}
+
+			/* options block entries: "  - something" */
+			if (in_options_block && strncmp(line, "  - ", 4) == 0)
+			{
+				if (opt_count < 63)
+				{
+					options[opt_count++] = strdup(line + 4);
+					LOG("_autocomplete_load_completions_dir: option='%s'", line + 4);
+				}
+				continue;
+			}
+
+			/* dynamic: helper_program */
+			if (strncmp(line, "dynamic:", 8) == 0)
+			{
+				const char *val = line + 8;
+				while (*val == ' ' || *val == '\t')
+					val++;
+				dynamic_prog = strdup(val);
+				LOG("_autocomplete_load_completions_dir: dynamic='%s'", dynamic_prog);
+				continue;
 			}
 		}
 
 		fclose(f);
 
+		/* Register command */
 		_autocomplete_register_completion(cmd, type);
-	}
 
-	closedir(d);
-}
-
-static autocomplete_entry *_input_autocomplete_lookup(const char *cmd)
-{
-	LOG("autocomplete_lookup: cmd='%s'", cmd);
-
-	for (int i = 0; i < input_autocomplete_count; i++)
-	{
-		LOG("autocomplete_lookup: checking '%s'",
-			input_autocomplete_table[i].cmd);
-
-		if (strcmp(input_autocomplete_table[i].cmd, cmd) == 0)
+		/* Fill entry fields */
+		autocomplete_entry *e = _input_autocomplete_lookup(cmd);
+		if (e)
 		{
-			LOG("autocomplete_lookup: match");
-			return &input_autocomplete_table[i];
+			e->options = (opt_count > 0) ? (const char **)options : NULL;
+			e->extensions = (ext_count > 0) ? (const char **)extensions : NULL;
+			e->dynamic_prog = dynamic_prog;
 		}
 	}
 
-	LOG("autocomplete_lookup: no match");
-	return NULL;
+	closedir(d);
 }
 
 static void _input_autocomplete_command(const char *prefix, size_t *len, char *buf)
@@ -157,6 +248,16 @@ static void _input_autocomplete_command(const char *prefix, size_t *len, char *b
 			clean[i] = '\0';
 
 	LOG("autocomplete_cmd: sanitized prefix='%s'", clean);
+
+	/* Lookup completion entry */
+	autocomplete_entry *ce = _input_autocomplete_lookup(clean);
+	autocomplete_type type = AUTOCOMPLETE_EXECUTABLES;
+
+	if (ce)
+	{
+		type = ce->type;
+		LOG("autocomplete_cmd: using type=%d from .comp", type);
+	}
 
 	const char *path = getenv("PATH");
 	if (!path || !*path)
@@ -237,6 +338,26 @@ static void _input_autocomplete_command(const char *prefix, size_t *len, char *b
 			if (access(full, X_OK) != 0)
 				continue;
 
+			/* Extension filtering */
+			if (ce && ce->extensions)
+			{
+				bool ok = false;
+				for (int k = 0; ce->extensions[k]; k++)
+				{
+					const char *ext = ce->extensions[k];
+					size_t extlen = strlen(ext);
+
+					if (nlen > extlen &&
+						strcmp(ent->d_name + (nlen - extlen), ext) == 0)
+					{
+						ok = true;
+						break;
+					}
+				}
+				if (!ok)
+					continue;
+			}
+
 			snprintf(matches[match_count], PATH_MAX, "%s", ent->d_name);
 			matches[match_count][PATH_MAX - 1] = '\0';
 			match_count++;
@@ -285,6 +406,7 @@ static void _input_autocomplete_path(char **argv, size_t *len, char *buf, autoco
 		argv[0], argv[1], type, *len, buf);
 
 	const char *prefix = (argv[1]) ? argv[1] : "";
+	autocomplete_entry *ce = _input_autocomplete_lookup(argv[0]);
 	LOG("autocomplete_path: prefix='%s'", prefix);
 
 	/* Strip control chars */
@@ -312,6 +434,79 @@ static void _input_autocomplete_path(char **argv, size_t *len, char *buf, autoco
 			prefix = expanded;
 			LOG("autocomplete_path: expanded='%s'", prefix);
 		}
+	}
+
+	/* ============================
+	   Dynamic completion
+	   ============================ */
+	if (ce && type == AUTOCOMPLETE_DYNAMIC && ce->dynamic_prog)
+	{
+		LOG("autocomplete_path: dynamic helper='%s'", ce->dynamic_prog);
+
+		FILE *pipe = popen(ce->dynamic_prog, "r");
+		if (!pipe)
+		{
+			LOG("autocomplete_path: dynamic popen failed");
+			return;
+		}
+
+		char matches[128][PATH_MAX];
+		int match_count = 0;
+
+		char line[PATH_MAX];
+		while (fgets(line, sizeof(line), pipe) && match_count < 128)
+		{
+			char *nl = strchr(line, '\n');
+			if (nl)
+				*nl = '\0';
+
+			if (strncmp(line, prefix, strlen(prefix)) == 0)
+			{
+				LOG("autocomplete_path: dynamic match '%s'", line);
+				snprintf(matches[match_count], PATH_MAX, "%s", line);
+				match_count++;
+			}
+			else
+			{
+				LOG("autocomplete_path: dynamic skip '%s'", line);
+			}
+		}
+
+		pclose(pipe);
+
+		LOG("autocomplete_path: dynamic total matches=%d", match_count);
+
+		if (match_count == 0)
+			return;
+
+		qsort(matches, match_count, PATH_MAX, _cmp_match);
+
+		if (match_count == 1)
+		{
+			const char *m = matches[0];
+			LOG("autocomplete_path: dynamic single match '%s'", m);
+
+			size_t plen = strlen(prefix);
+			size_t mlen = strlen(m);
+
+			if (*len >= plen)
+				*len -= plen;
+			buf[*len] = '\0';
+
+			if (*len + mlen < PATH_MAX)
+			{
+				memcpy(buf + *len, m, mlen);
+				*len += mlen;
+				buf[*len] = '\0';
+			}
+
+			LOG("autocomplete_path: dynamic completed buf='%s' len=%zu", buf, *len);
+			return;
+		}
+
+		LOG("autocomplete_path: dynamic multiple matches");
+		pager_columns(matches, match_count);
+		return;
 	}
 
 	char dirname[PATH_MAX] = {0};
@@ -419,6 +614,45 @@ static void _input_autocomplete_path(char **argv, size_t *len, char *buf, autoco
 		if (type == AUTOCOMPLETE_FILES && !S_ISREG(st.st_mode))
 			continue;
 
+		if (type == AUTOCOMPLETE_EXECUTABLES)
+		{
+			if (!S_ISREG(st.st_mode))
+			{
+				LOG("autocomplete_path: skip '%s' (not regular)", ent->d_name);
+				continue;
+			}
+			if (access(fullpath, X_OK) != 0)
+			{
+				LOG("autocomplete_path: skip '%s' (not executable)", ent->d_name);
+				continue;
+			}
+		}
+
+		if (ce && ce->extensions && S_ISREG(st.st_mode))
+		{
+			bool ok = false;
+
+			for (int k = 0; ce->extensions[k]; k++)
+			{
+				const char *ext = ce->extensions[k];
+				size_t extlen = strlen(ext);
+
+				if (nlen > extlen &&
+					strcmp(ent->d_name + (nlen - extlen), ext) == 0)
+				{
+					LOG("autocomplete_path: extension match '%s' ext='%s'", ent->d_name, ext);
+					ok = true;
+					break;
+				}
+			}
+
+			if (!ok)
+			{
+				LOG("autocomplete_path: skip '%s' (extension mismatch)", ent->d_name);
+				continue;
+			}
+		}
+
 		snprintf(matches[match_count], PATH_MAX, "%s", ent->d_name);
 		matches[match_count][PATH_MAX - 1] = '\0';
 
@@ -503,9 +737,11 @@ void autocomplete_load_completions(void)
 {
 	LOG("autocomplete_load_completions: start");
 
+	/* Load system-wide completions */
 	_autocomplete_load_completions_dir("/usr/share/termlink/completions");
 	_autocomplete_load_completions_dir("/etc/termlink/completions");
 
+	/* Load user completions */
 	const char *home = getenv("HOME");
 	LOG("autocomplete_load_completions: HOME='%s'", home ? home : "(null)");
 
@@ -517,8 +753,21 @@ void autocomplete_load_completions(void)
 		_autocomplete_load_completions_dir(path);
 	}
 
+	/* Built-in fallback for cd */
 	LOG("autocomplete_load_completions: adding built-in 'cd'");
-	_autocomplete_register_completion("cd", AUTOCOMPLETE_DIRS);
+	{
+		autocomplete_entry *e;
+		_autocomplete_register_completion("cd", AUTOCOMPLETE_DIRS);
+
+		/* Fill optional fields with NULL */
+		e = _input_autocomplete_lookup("cd");
+		if (e)
+		{
+			e->options = NULL;
+			e->extensions = NULL;
+			e->dynamic_prog = NULL;
+		}
+	}
 
 	LOG("autocomplete_load_completions: done");
 }
