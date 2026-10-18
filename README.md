@@ -111,9 +111,12 @@ Completion sources:
 Completion files end in `.comp` and may contain:
 
 ```
-type=dirs
-type=files
-type=files_and_dirs
+command: NAME
+type: files | dirs | files_and_dirs | executables | dynamic
+extensions: txt, md
+options:
+  - -n
+dynamic: helper_script.sh
 ```
 
 Completion entries are stored in:
