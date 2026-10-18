@@ -1,0 +1,64 @@
+# ============================================================
+# Termlink Completion Definition File (.comp)
+# ============================================================
+# This file defines how autocomplete behaves for a single
+# command. The loader reads it line-by-line and applies the
+# fields below. All fields except "command" and "type" are
+# optional. Comments may appear anywhere.
+# ============================================================
+
+# ------------------------------------------------------------
+# REQUIRED: command name
+# ------------------------------------------------------------
+# This must match the executable or builtin command name.
+# The filename (cat.comp) also determines the command name,
+# but specifying it here is allowed and ignored by the loader.
+command: cat
+
+# ------------------------------------------------------------
+# REQUIRED: completion type
+# ------------------------------------------------------------
+# Determines what kind of autocomplete is used for arguments:
+#
+#   files            → only regular files
+#   dirs             → only directories
+#   files_and_dirs   → both files and directories
+#   executables      → only executable files
+#   dynamic          → use a helper script/program to generate
+#                      completion candidates dynamically
+#
+# Termlink defaults to files_and_dirs if omitted.
+type: files
+
+# ------------------------------------------------------------
+# OPTIONAL: restrict file extensions
+# ------------------------------------------------------------
+# Only applies when type is "files" or "files_and_dirs".
+# If present, only files ending with these extensions will
+# be shown. Extensions must NOT include a leading dot.
+#
+# Example: "txt" matches "notes.txt"
+extensions: txt, md
+
+# ------------------------------------------------------------
+# OPTIONAL: command-line options
+# ------------------------------------------------------------
+# These are literal flags that autocomplete will suggest
+# when the user types "-" after the command name.
+#
+# Each option must be on its own line starting with "  - ".
+options:
+  - -n
+  - --number
+
+# ------------------------------------------------------------
+# OPTIONAL: dynamic completions
+# ------------------------------------------------------------
+# If type is "dynamic", Termlink will execute this helper
+# program and read its stdout line-by-line. Each line becomes
+# a completion candidate. The helper must output plain text.
+#
+# The helper is executed with no arguments.
+# It must be located somewhere in PATH or referenced by a
+# full path.
+dynamic: cat_complete_script.sh
