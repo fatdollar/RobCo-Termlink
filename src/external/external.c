@@ -79,6 +79,51 @@ void external_load_commands_from_dir(const char *dirpath)
     closedir(d);
 }
 
+bool external_exists(const char *cmd)
+{
+    LOG("external_exists: checking '%s'", cmd);
+
+    const char *path = getenv("PATH");
+    if (!path)
+    {
+        LOG("external_exists: PATH is null");
+        return false;
+    }
+
+    LOG("external_exists: PATH='%s'", path);
+
+    char buf[PATH_MAX];
+    const char *p = path;
+
+    while (*p)
+    {
+        // Extract one PATH segment
+        const char *start = p;
+        while (*p && *p != ':')
+            p++;
+
+        size_t len = p - start;
+
+        if (len > 0)
+        {
+            snprintf(buf, sizeof(buf), "%.*s/%s", (int)len, start, cmd);
+            LOG("external_exists: checking file '%s'", buf);
+
+            if (access(buf, X_OK) == 0)
+            {
+                LOG("external_exists: found executable '%s'", buf);
+                return true;
+            }
+        }
+
+        if (*p == ':')
+            p++;
+    }
+
+    LOG("external_exists: '%s' not found", cmd);
+    return false;
+}
+
 void external_run(char **argv)
 {
     LOG("run_external: cmd='%s'", argv[0]);

@@ -374,8 +374,21 @@ void terminal_process(input_state *st, const char *cmd)
 		return;
 	}
 
-	LOG("terminal_process: running external command");
-	external_run_paged(argv);
+	LOG("terminal_process: checking external existence");
+	if (external_exists(argv[0]))
+	{
+		LOG("terminal_process: running external command");
+		external_run_paged(argv);
+	}
+	else
+	{
+		LOG("terminal_process: unknown command");
+		terminal_slow_print("Unknown command: ");
+		terminal_slow_print(argv[0]);
+		terminal_slow_print("\n");
+	}
+
+	terminal_draw_prompt();
 
 	LOG("terminal_process: external done");
 
