@@ -41,7 +41,7 @@ autocomplete_type util_parse_completion_type(const char *value)
 	return AUTOCOMPLETE_FILES_AND_DIRS;
 }
 
-void util_register_completion(const char *cmd, autocomplete_type type)
+void util_register_completion(char *cmd, autocomplete_type type)
 {
 	LOG("util_register_completion: cmd='%s' type=%d", cmd, type);
 
@@ -51,9 +51,7 @@ void util_register_completion(const char *cmd, autocomplete_type type)
 		return;
 	}
 
-	snprintf(input_autocomplete_table[input_autocomplete_count].cmd,
-			 sizeof(input_autocomplete_table[input_autocomplete_count].cmd),
-			 "%s", cmd);
+	input_autocomplete_table[input_autocomplete_count].cmd = cmd;
 
 	input_autocomplete_table[input_autocomplete_count].type = type;
 	input_autocomplete_count++;
