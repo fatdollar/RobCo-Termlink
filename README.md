@@ -305,5 +305,7 @@ type=dirs
 - Custom themes and default theme (`/usr/share/termlink/`)
 - Full VT100 key decoding (Home, End, PgUp, PgDn)
 - Multi‑argument tab completion
+- Update paging for better navigation and selection
+- Add menu builtin
 
 ---
