@@ -43,7 +43,7 @@ int _compute_start_col(int line, const char *s)
 	return col;
 }
 
-int _compute_visible_len(int line, const char *s, int start_col)
+int _compute_visible_len(const char *s, int start_col)
 {
 	// Cursor is already at end of leading whitespace
 	const char *p = s;
@@ -179,6 +179,13 @@ void terminal_med_putc(char c)
 	usleep(PRINT_DELAY / 4);
 }
 
+void terminal_putc(char c)
+{
+	putchar(c);
+	fflush(stdout);
+	usleep(PRINT_DELAY / 4);
+}
+
 void terminal_slow_print_at(int line, const char *s)
 {
 	int prompt_row = terminal_rows;
@@ -192,14 +199,19 @@ void terminal_slow_print_at(int line, const char *s)
 		fflush(stdout);
 
 		for (const char *p = s; *p; ++p)
-			terminal_slow_putc(*p);
+		{
+			if (*p == ' ' || *p == '\t')
+				terminal_putc(*p); // FAST PRINT
+			else
+				terminal_slow_putc(*p); // SLOW PRINT
+		}
 
 		return;
 	}
 
 	// SCROLL REGION — USE start_col logic
 	int start_col = _compute_start_col(line, s);
-	int visible_len = _compute_visible_len(line, s, start_col);
+	int visible_len = _compute_visible_len(s, start_col);
 
 	LOG("slow_print_at: SCROLL line=%d raw='%s' start_col=%d visible_len=%d",
 		line, s, start_col, visible_len);

@@ -251,7 +251,7 @@ void external_run_paged(char **argv)
 
     close(pipefd[1]);
 
-    struct pager p;
+    pager p;
     pager_init(&p, terminal_scroll_rows(), terminal_scroll_cols());
 
     char buf[4096];

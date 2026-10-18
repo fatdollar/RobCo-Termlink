@@ -8,7 +8,7 @@ int builtin_help(int argc, char **argv)
 {
 	LOG("builtin_help: generating help output");
 
-	struct pager p;
+	pager p;
 	pager_start(&p);
 
 	pager_print_line(&p, "Available commands:");

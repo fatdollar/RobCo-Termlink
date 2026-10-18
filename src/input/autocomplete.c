@@ -4,6 +4,7 @@
 #include "terminal.h"
 #include "history.h"
 #include "util.h"
+#include "pager.h"
 
 autocomplete_entry input_autocomplete_table[MAX_COMPLETIONS];
 int input_autocomplete_count = 0;
@@ -12,6 +13,141 @@ static int cmp_match(const void *a, const void *b)
 {
 	LOG("cmp_match: '%s' vs '%s'", (char *)a, (char *)b);
 	return strcmp((const char *)a, (const char *)b);
+}
+
+static void input_autocomplete_command(const char *prefix, size_t *len, char *buf)
+{
+	LOG("autocomplete_cmd: prefix='%s' len=%zu buf='%s'", prefix, *len, buf);
+
+	/* Strip control chars from prefix */
+	char clean[PATH_MAX];
+	snprintf(clean, sizeof(clean), "%s", prefix);
+	for (size_t i = 0; clean[i]; i++)
+		if ((unsigned char)clean[i] < 32)
+			clean[i] = '\0';
+
+	LOG("autocomplete_cmd: sanitized prefix='%s'", clean);
+
+	const char *path = getenv("PATH");
+	if (!path || !*path)
+	{
+		LOG("autocomplete_cmd: PATH is empty");
+		return;
+	}
+
+	char matches[128][PATH_MAX];
+	int match_count = 0;
+
+	/* Add built-in commands */
+	for (int i = 0; i < input_autocomplete_count && match_count < 128; i++)
+	{
+		const char *cmd = input_autocomplete_table[i].cmd;
+		size_t plen = strlen(clean);
+
+		if (strncmp(cmd, clean, plen) == 0)
+		{
+			snprintf(matches[match_count], PATH_MAX, "%s", cmd);
+			matches[match_count][PATH_MAX - 1] = '\0';
+			match_count++;
+		}
+	}
+
+	/* Walk PATH components */
+	const char *p = path;
+	while (*p && match_count < 128)
+	{
+		char dir[PATH_MAX];
+		size_t dlen = 0;
+
+		/* Extract one PATH element */
+		while (*p && *p != ':' && dlen + 1 < sizeof(dir))
+			dir[dlen++] = *p++;
+		dir[dlen] = '\0';
+		if (*p == ':')
+			p++;
+
+		if (dlen == 0)
+			continue;
+
+		DIR *d = opendir(dir);
+		if (!d)
+			continue;
+
+		struct dirent *ent;
+		size_t plen = strlen(clean);
+
+		while ((ent = readdir(d)) != NULL && match_count < 128)
+		{
+			if (strncmp(ent->d_name, clean, plen) != 0)
+				continue;
+
+			/* Skip . and .. */
+			if (plen > 0 &&
+				(strcmp(ent->d_name, ".") == 0 || strcmp(ent->d_name, "..") == 0))
+				continue;
+
+			char full[PATH_MAX];
+			size_t nlen = strlen(ent->d_name);
+
+			if (dlen + 1 + nlen >= sizeof(full))
+				continue;
+
+			memcpy(full, dir, dlen);
+			full[dlen] = '/';
+			memcpy(full + dlen + 1, ent->d_name, nlen);
+			full[dlen + 1 + nlen] = '\0';
+
+			struct stat st;
+			if (stat(full, &st) != 0)
+				continue;
+
+			/* Require executable bit */
+			if (!S_ISREG(st.st_mode))
+				continue;
+			if (access(full, X_OK) != 0)
+				continue;
+
+			snprintf(matches[match_count], PATH_MAX, "%s", ent->d_name);
+			matches[match_count][PATH_MAX - 1] = '\0';
+			match_count++;
+		}
+
+		closedir(d);
+	}
+
+	LOG("autocomplete_cmd: match_count=%d", match_count);
+
+	if (match_count == 0)
+		return;
+
+	qsort(matches, match_count, PATH_MAX, cmp_match);
+
+	if (match_count == 1)
+	{
+		const char *m = matches[0];
+		LOG("autocomplete_cmd: single match='%s'", m);
+
+		size_t plen = strlen(clean);
+		size_t mlen = strlen(m);
+
+		if (*len >= plen)
+			*len -= plen;
+		buf[*len] = '\0';
+
+		if (*len + mlen < PATH_MAX)
+		{
+			memcpy(buf + *len, m, mlen);
+			*len += mlen;
+			buf[*len] = '\0';
+		}
+
+		LOG("autocomplete_cmd: completed buf='%s' len=%zu", buf, *len);
+		return;
+	}
+
+	/* Multiple matches → print list */
+	terminal_slow_print("Commands:");
+	pager_columns(matches, match_count);
 }
 
 void input_autocomplete_path(char **argv, size_t *len, char *buf, autocomplete_type type)
@@ -228,11 +364,7 @@ void input_autocomplete_path(char **argv, size_t *len, char *buf, autocomplete_t
 	   ============================================================ */
 	LOG("autocomplete_path: multiple matches");
 	terminal_slow_print("Matches:");
-	for (int i = 0; i < match_count; i++)
-	{
-		LOG("autocomplete_path: printing match='%s'", matches[i]);
-		terminal_slow_print(matches[i]);
-	}
+	pager_columns(matches, match_count);
 }
 
 void input_autocomplete_tab(input_state *st)
@@ -264,56 +396,6 @@ void input_autocomplete_tab(input_state *st)
 		return;
 	}
 
-	/* Determine completion type from command */
-	autocomplete_type type = AUTOCOMPLETE_FILES_AND_DIRS;
-	autocomplete_entry *ce = input_autocomplete_lookup(argv[0]);
-	LOG("autocomplete_tab: lookup cmd='%s' result=%p", argv[0], ce);
-
-	if (ce)
-		type = ce->type;
-
-	LOG("autocomplete_tab: type=%d", type);
-
-	/* ============================================================
-	   Determine which argument to complete
-	   Rules:
-		 - If only command: complete empty second arg
-		 - If flags present: complete LAST non-flag argument
-		 - Else: complete argv[1]
-	   ============================================================ */
-
-	int target_index = 1;
-
-	if (argc == 1)
-	{
-		LOG("autocomplete_tab: argc==1, completing empty second arg");
-		/* "ls<TAB>" → complete empty second arg */
-		argv[1] = "";
-		target_index = 1;
-	}
-	else
-	{
-		/* If argv[1] is a flag, complete the last argument */
-		if (argv[1][0] == '-' && argc > 2)
-		{
-			target_index = argc - 1;
-			LOG("autocomplete_tab: flag detected, completing last arg index=%d", target_index);
-		}
-		else
-		{
-			/* Normal case: complete argv[1] */
-			target_index = 1;
-			LOG("autocomplete_tab: completing argv[1]");
-		}
-	}
-
-	/* Build a minimal argv view for completion */
-	char *comp_argv[2];
-	comp_argv[0] = argv[0];
-	comp_argv[1] = argv[target_index];
-
-	LOG("autocomplete_tab: comp_argv='%s' '%s'", comp_argv[0], comp_argv[1]);
-
 	/* Save old buffer for change detection */
 	char oldbuf[PATH_MAX];
 	snprintf(oldbuf, sizeof(oldbuf), "%s", buf);
@@ -333,11 +415,65 @@ void input_autocomplete_tab(input_state *st)
 
 	/* ======================================================================= */
 
-	/* Perform completion */
-	LOG("autocomplete_tab: calling input_autocomplete_path()");
-	input_autocomplete_path(comp_argv, len, buf, type);
+	/* If only command token → complete command name (external/builtin) */
+	if (argc == 1)
+	{
+		/* If nothing typed, do nothing */
+		if (argv[0][0] == '\0')
+		{
+			LOG("autocomplete_tab: empty command prefix, no completion");
+			*len = original_len;
+			buf[*len] = '\0';
+			return;
+		}
 
-	LOG("autocomplete_tab: after path buf='%s' len=%zu", buf, *len);
+		LOG("autocomplete_tab: argc==1, command completion on argv[0]='%s'", argv[0]);
+		input_autocomplete_command(argv[0], len, buf);
+	}
+	else
+	{
+		/* Determine completion type from command */
+		autocomplete_type type = AUTOCOMPLETE_FILES_AND_DIRS;
+		autocomplete_entry *ce = input_autocomplete_lookup(argv[0]);
+		LOG("autocomplete_tab: lookup cmd='%s' result=%p", argv[0], ce);
+
+		if (ce)
+			type = ce->type;
+
+		LOG("autocomplete_tab: type=%d", type);
+
+		/* ============================================================
+		   Determine which argument to complete
+		   Rules:
+			 - If only command: complete empty second arg
+			 - If flags present: complete LAST non-flag argument
+			 - Else: complete argv[1]
+		   ============================================================ */
+
+		int target_index = 1;
+
+		if (argv[1][0] == '-' && argc > 2)
+		{
+			target_index = argc - 1;
+			LOG("autocomplete_tab: flag detected, completing last arg index=%d", target_index);
+		}
+		else
+		{
+			LOG("autocomplete_tab: completing argv[1]");
+			target_index = 1;
+		}
+
+		char *comp_argv[2];
+		comp_argv[0] = argv[0];
+		comp_argv[1] = argv[target_index];
+
+		LOG("autocomplete_tab: comp_argv='%s' '%s'", comp_argv[0], comp_argv[1]);
+
+		LOG("autocomplete_tab: calling input_autocomplete_path()");
+		input_autocomplete_path(comp_argv, len, buf, type);
+	}
+
+	LOG("autocomplete_tab: after completion buf='%s' len=%zu", buf, *len);
 
 	/* ============================================================
 	   Redraw ONLY if buffer changed

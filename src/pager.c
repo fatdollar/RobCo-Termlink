@@ -3,12 +3,12 @@
 #include "terminal.h"
 #include "input.h"
 
-static void pager_buf_push(struct pager_buffer *b, const char *s, size_t n)
+static void _pager_buf_push(pager_buffer *b, const char *s, size_t n)
 {
     if (b->count == b->cap)
     {
         b->cap = b->cap ? b->cap * 2 : 64;
-        b->lines = realloc(b->lines, b->cap * sizeof(struct pager_line));
+        b->lines = realloc(b->lines, b->cap * sizeof(pager_line));
     }
     b->lines[b->count].text = malloc(n + 1);
     memcpy(b->lines[b->count].text, s, n);
@@ -17,62 +17,66 @@ static void pager_buf_push(struct pager_buffer *b, const char *s, size_t n)
     b->count++;
 }
 
-void pager_start(struct pager *p)
+static void _pager_columns_init(pager_column *pc,
+                                char matches[][PATH_MAX],
+                                int count)
 {
-    pager_init(p, terminal_scroll_rows(), terminal_cols);
-}
+    pc->term_width = terminal_cols;
+    pc->col_width = 0;
 
-void pager_print_line(struct pager *p, const char *s)
-{
-    pager_feed(p, s, strlen(s));
-    pager_feed(p, "\n", 1);
-}
-
-void pager_finish(struct pager *p)
-{
-    p->done = true;
-}
-
-void pager_init(struct pager *p, int rows, int cols)
-{
-    memset(p, 0, sizeof(*p));
-    p->rows = rows;
-    p->cols = cols;
-    p->cur_cap = 256;
-    p->cur = malloc(p->cur_cap);
-}
-
-void pager_free(struct pager *p)
-{
-    for (size_t i = 0; i < p->buf.count; i++)
-        free(p->buf.lines[i].text);
-    free(p->buf.lines);
-    free(p->cur);
-}
-
-void pager_feed(struct pager *p, const char *data, size_t n)
-{
-    for (size_t i = 0; i < n; i++)
+    /* Find longest entry */
+    for (int i = 0; i < count; i++)
     {
-        char c = data[i];
-        if (c == '\n')
+        int len = strlen(matches[i]);
+        if (len > pc->col_width)
+            pc->col_width = len;
+    }
+
+    /* Add spacing */
+    pc->col_width += 2;
+
+    /* Compute number of columns */
+    pc->cols = pc->term_width / pc->col_width;
+    if (pc->cols < 1)
+        pc->cols = 1;
+}
+
+static void _pager_columns_build(pager_column *pc,
+                                 char matches[][PATH_MAX],
+                                 int count,
+                                 pager *p)
+{
+    int rows = (count + pc->cols - 1) / pc->cols;
+
+    for (int r = 0; r < rows; r++)
+    {
+        char line[PATH_MAX * 2] = {0};
+        char *out = line;
+
+        for (int c = 0; c < pc->cols; c++)
         {
-            pager_buf_push(&p->buf, p->cur, p->cur_len);
-            p->cur_len = 0;
+            int idx = r + c * rows;
+            if (idx >= count)
+                break;
+
+            const char *m = matches[idx];
+            int len = strlen(m);
+
+            memcpy(out, m, len);
+            out += len;
+
+            /* pad */
+            int pad = pc->col_width - len;
+            memset(out, ' ', pad);
+            out += pad;
         }
-        else
-        {
-            if (p->cur_len + 1 >= p->cur_cap)
-            {
-                p->cur_cap *= 2;
-                p->cur = realloc(p->cur, p->cur_cap);
-            }
-            p->cur[p->cur_len++] = c;
-        }
+
+        *out = '\0';
+        pager_print_line(p, line);
     }
 }
 
-void pager_get_input(struct pager *p)
+static void _pager_get_input(pager *p)
 {
     while (1)
     {
@@ -99,7 +103,78 @@ void pager_get_input(struct pager *p)
     }
 }
 
-void pager_render(struct pager *p)
+void pager_start(pager *p)
+{
+    pager_init(p, terminal_scroll_rows(), terminal_cols);
+}
+
+void pager_print_line(pager *p, const char *s)
+{
+    pager_feed(p, s, strlen(s));
+    pager_feed(p, "\n", 1);
+}
+
+void pager_finish(pager *p)
+{
+    p->done = true;
+}
+
+void pager_init(pager *p, int rows, int cols)
+{
+    memset(p, 0, sizeof(*p));
+    p->rows = rows;
+    p->cols = cols;
+    p->cur_cap = 256;
+    p->cur = malloc(p->cur_cap);
+}
+
+void pager_free(pager *p)
+{
+    for (size_t i = 0; i < p->buf.count; i++)
+        free(p->buf.lines[i].text);
+    free(p->buf.lines);
+    free(p->cur);
+}
+
+void pager_feed(pager *p, const char *data, size_t n)
+{
+    for (size_t i = 0; i < n; i++)
+    {
+        char c = data[i];
+        if (c == '\n')
+        {
+            _pager_buf_push(&p->buf, p->cur, p->cur_len);
+            p->cur_len = 0;
+        }
+        else
+        {
+            if (p->cur_len + 1 >= p->cur_cap)
+            {
+                p->cur_cap *= 2;
+                p->cur = realloc(p->cur, p->cur_cap);
+            }
+            p->cur[p->cur_len++] = c;
+        }
+    }
+}
+
+void pager_columns(char data[][PATH_MAX], int count)
+{
+    LOG("pager_columns: count=%d", count);
+
+    pager p;
+    pager_start(&p);
+
+    pager_column pc;
+    _pager_columns_init(&pc, data, count);
+
+    _pager_columns_build(&pc, data, count, &p);
+
+    pager_finish(&p);
+    pager_run(&p);
+}
+
+void pager_render(pager *p)
 {
     int first = p->top;
     int last = first + p->rows;
@@ -127,7 +202,7 @@ void pager_render(struct pager *p)
     terminal_draw_prompt();
 }
 
-void pager_handle_key(struct pager *p, int key)
+void pager_handle_key(pager *p, int key)
 {
     LOG("pager_handle_key: key=%d top(before)=%d rows=%d buf.count=%zu",
         key, p->top, p->rows, p->buf.count);
@@ -179,7 +254,7 @@ void pager_handle_key(struct pager *p, int key)
     }
 }
 
-void pager_run(struct pager *p)
+void pager_run(pager *p)
 {
     // Clear scroll region
     terminal_clear_scroll();
@@ -188,5 +263,5 @@ void pager_run(struct pager *p)
     LOG("pager rows=%d buf.count=%zu top=%d", p->rows, p->buf.count, p->top);
     pager_render(p);
 
-    pager_get_input(p);
+    _pager_get_input(p);
 }
