@@ -6,7 +6,7 @@
 #include "util.h"
 #include "theme.h"
 #include "history.h"
-#include "read_line.h"
+#include "input.h"
 
 int main(void)
 {

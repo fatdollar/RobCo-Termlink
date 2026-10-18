@@ -2,6 +2,7 @@
 #include "external.h"
 #include "terminal.h"
 #include "util.h"
+#include "pager.h"
 
 char external_cmds[MAX_EXTERNAL_CMDS][PATH_MAX];
 int external_cmd_count = 0;
@@ -158,4 +159,92 @@ void external_run(char **argv)
     }
 
     LOG("run_external: child exited status=%d", status);
+}
+
+void external_run_paged(char **argv)
+{
+    int pipefd[2];
+    pipe(pipefd);
+
+    pid_t pid = fork();
+    if (pid == 0)
+    {
+        close(pipefd[0]);
+        dup2(pipefd[1], STDOUT_FILENO);
+        dup2(pipefd[1], STDERR_FILENO);
+        close(pipefd[1]);
+        execvp(argv[0], argv);
+        _exit(127);
+    }
+
+    close(pipefd[1]);
+
+    struct pager p;
+    pager_init(&p, terminal_scroll_rows(), terminal_scroll_cols());
+
+    char buf[4096];
+    ssize_t n;
+
+    while ((n = read(pipefd[0], buf, sizeof(buf))) > 0)
+    {
+        pager_feed(&p, buf, (size_t)n);
+
+        if (p.quit)
+            break;
+
+        terminal_clear_scroll();
+        pager_render(&p);
+
+        while (1)
+        {
+            int key;
+
+            if (!terminal_poll_key(&key))
+                key = input_read_char(); // BLOCK
+
+            int old_top = p.top;
+            pager_handle_key(&p, key);
+
+            if (p.quit)
+            {
+                // Exit immediately: no more renders
+                terminal_clear_scroll();
+                terminal_draw_prompt();
+                break;
+            }
+
+            if (p.top != old_top)
+            {
+                terminal_clear_scroll();
+                pager_render(&p);
+            }
+        }
+
+        if (p.quit)
+            break;
+    }
+
+    // If user quit, skip final render entirely
+    if (!p.quit)
+    {
+        p.done = true;
+
+        terminal_clear_scroll();
+        pager_render(&p);
+
+        int key;
+        if (!terminal_poll_key(&key))
+            key = input_read_char();
+        pager_handle_key(&p, key);
+
+        if (p.quit)
+        {
+            terminal_clear_scroll();
+            terminal_draw_prompt();
+        }
+    }
+
+    pager_free(&p);
+    close(pipefd[0]);
+    waitpid(pid, NULL, 0);
 }

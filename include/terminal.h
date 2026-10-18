@@ -14,6 +14,7 @@ extern struct termios terminal_orig_termios;
 typedef struct
 {
     int row;
+    int start_col;
     int length;
 } scroll_line;
 
@@ -31,6 +32,10 @@ extern int termlink_job_control_enabled;
 
 void terminal_sigint(int sig);
 
+int terminal_scroll_rows(void);
+int terminal_scroll_cols(void);
+bool terminal_poll_key(int *key);
+
 void terminal_restore(void);
 void terminal_setup(void);
 void terminal_update_size(void);
@@ -38,6 +43,8 @@ void terminal_update_size(void);
 void terminal_slow_putc(char c);
 void terminal_slow_print_at(int line, const char *s);
 void terminal_slow_print(const char *s);
+void terminal_write_scroll_line(int row, const char *text);
+void terminal_write_status(const char *text);
 
 void terminal_clear_scroll(void);
 void terminal_draw_prompt(void);

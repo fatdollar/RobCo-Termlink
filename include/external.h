@@ -10,5 +10,6 @@ void external_register(const char *name);
 void external_load_from_path(void);
 void external_load_commands_from_dir(const char *dirpath);
 void external_run(char **argv);
+void external_run_paged(char **argv);
 
 #endif

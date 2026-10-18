@@ -20,9 +20,83 @@ int terminal_cursor_line = 5;
 
 int termlink_job_control_enabled = 0;
 
+int _compute_start_col(int line, const char *s)
+{
+	// Move cursor to column 1 ON THE TARGET LINE
+	printf("\033[%d;1H", line);
+	fflush(stdout);
+
+	// Print ONLY leading whitespace
+	const char *p = s;
+	while (*p == ' ' || *p == '\t')
+	{
+		LOG("_compute_start_col: *p=%c", *p);
+		terminal_slow_putc(*p);
+		p++;
+	}
+
+	// Query actual cursor column
+	int col = input_cursor_get_col();
+	if (col < 1)
+		col = 1;
+
+	return col;
+}
+
+int _compute_visible_len(int line, const char *s, int start_col)
+{
+	// Cursor is already at end of leading whitespace
+	const char *p = s;
+	while (*p == ' ' || *p == '\t')
+		p++;
+
+	// Print ONLY visible characters
+	for (; *p; ++p)
+		terminal_slow_putc(*p);
+
+	// Query final cursor column
+	int final_col = input_cursor_get_col();
+	if (final_col < start_col)
+		final_col = start_col;
+
+	return final_col - start_col;
+}
+
 void terminal_sigint(int sig)
 {
 	LOG("terminal_sigint: sigint skipped for termlink");
+}
+
+int terminal_scroll_rows(void)
+{
+	return terminal_scroll_bottom - terminal_scroll_top;
+}
+
+bool terminal_poll_key(int *key)
+{
+	struct timeval tv = {0, 0};
+	fd_set fds;
+
+	FD_ZERO(&fds);
+	FD_SET(STDIN_FILENO, &fds);
+
+	int r = select(STDIN_FILENO + 1, &fds, NULL, NULL, &tv);
+	if (r > 0 && FD_ISSET(STDIN_FILENO, &fds))
+	{
+		unsigned char c;
+		if (read(STDIN_FILENO, &c, 1) == 1)
+		{
+			*key = c;
+			return true;
+		}
+	}
+
+	return false;
+}
+
+int terminal_scroll_cols(void)
+{
+	return terminal_cols;
 }
 
 void terminal_restore(void)
@@ -98,31 +172,62 @@ void terminal_slow_putc(char c)
 	usleep(PRINT_DELAY);
 }
 
-void terminal_slow_clear_putc()
+void terminal_med_putc(char c)
 {
-	putchar(' ');
+	putchar(c);
 	fflush(stdout);
-	usleep(PRINT_DELAY / 2);
+	usleep(PRINT_DELAY / 4);
 }
 
 void terminal_slow_print_at(int line, const char *s)
 {
-	LOG("terminal_slow_print_at: line=%d text='%s'", line, s);
-	printf("\033[%d;1H", line);
-	fflush(stdout);
+	int prompt_row = terminal_rows;
 
-	for (const char *p = s; *p; ++p)
-		terminal_slow_putc(*p);
+	// HEADER OR PROMPT — DO NOT USE start_col logic
+	if (line < terminal_scroll_top || line >= prompt_row)
+	{
+		LOG("slow_print_at: HEADER/PROMPT line=%d raw='%s'", line, s);
 
-	// Record printed content length
+		printf("\033[%d;1H", line);
+		fflush(stdout);
+
+		for (const char *p = s; *p; ++p)
+			terminal_slow_putc(*p);
+
+		return;
+	}
+
+	// SCROLL REGION — USE start_col logic
+	int start_col = _compute_start_col(line, s);
+	int visible_len = _compute_visible_len(line, s, start_col);
+
+	LOG("slow_print_at: SCROLL line=%d raw='%s' start_col=%d visible_len=%d",
+		line, s, start_col, visible_len);
+
 	if (scroll_line_count < MAX_SCROLL_LINES)
-		scroll_lines[scroll_line_count++] = (scroll_line){line, (int)strlen(s)};
+	{
+		scroll_lines[scroll_line_count++] =
+			(scroll_line){line, start_col, visible_len};
+
+		LOG("slow_print_at: TRACKED row=%d start_col=%d len=%d",
+			line, start_col, visible_len);
+	}
 }
 
 void terminal_slow_print(const char *s)
 {
 	terminal_slow_print_at(terminal_cursor_line, s);
 	terminal_cursor_line++;
+}
+
+void terminal_write_scroll_line(int row, const char *text)
+{
+	terminal_slow_print_at(terminal_scroll_top + row, text);
+}
+
+void terminal_write_status(const char *text)
+{
+	terminal_slow_print_at(terminal_scroll_bottom, text);
 }
 
 void terminal_clear_scroll(void)
@@ -135,14 +240,15 @@ void terminal_clear_scroll(void)
 	for (int i = 0; i < scroll_line_count; i++)
 	{
 		int row = scroll_lines[i].row;
+		int start_col = scroll_lines[i].start_col;
 		int len = scroll_lines[i].length;
 
 		if (row >= terminal_scroll_top && row < prompt_row)
 		{
-			printf("\033[%d;1H", row);
+			printf("\033[%d;%dH", row, start_col);
 
 			for (int c = 0; c < len; c++)
-				terminal_slow_clear_putc(' ');
+				terminal_med_putc(' ');
 		}
 	}
 
@@ -177,9 +283,9 @@ void terminal_print_header(void)
 	printf("\033[2J\033[H");
 
 	LOG("terminal_print_header: printing header");
-	terminal_slow_print_at(1, "=============================================");
-	terminal_slow_print_at(2, "      RobCo Industries (TM) Termlink v1.0");
-	terminal_slow_print_at(3, "=============================================");
+	terminal_slow_print_at(1, "==============================================================================");
+	terminal_slow_print_at(2, "                      RobCo Industries (TM) Termlink v1.0");
+	terminal_slow_print_at(3, "==============================================================================");
 	terminal_slow_print_at(4, "");
 
 	LOG("terminal_print_header: clearing scroll region");
@@ -269,7 +375,7 @@ void terminal_process(input_state *st, const char *cmd)
 	}
 
 	LOG("terminal_process: running external command");
-	external_run(argv);
+	external_run_paged(argv);
 
 	LOG("terminal_process: external done");
 

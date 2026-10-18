@@ -2,7 +2,6 @@
 #include "input.h"
 #include "terminal.h"
 #include "tokens.h"
-#include "read_char.h"
 #include "buffer.h"
 #include "cursor.h"
 #include "autocomplete.h"
