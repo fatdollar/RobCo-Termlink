@@ -8,6 +8,7 @@ SRC = \
 	src/history.c \
 	src/debug.c \
 	src/pager.c \
+	$(wildcard src/tl/*.c) \
 	$(wildcard src/input/*.c) \
 	$(wildcard src/builtin/*.c) \
 	$(wildcard src/external/*.c) 

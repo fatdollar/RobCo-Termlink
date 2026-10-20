@@ -17,6 +17,7 @@
 #include <ctype.h>
 #include <errno.h>
 #include <unistd.h>
+#include <fcntl.h>
 
 #include "config.h"
 #include "debug.h"
