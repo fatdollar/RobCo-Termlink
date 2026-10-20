@@ -1,6 +1,7 @@
 #include "main.h"
 #include "input.h"
 #include "external.h"
+#include "glob.h"
 #include "tl.h"
 
 static int tl_exec_command(tl_command_t *cmd, tl_exec_ctx_t *ctx);
@@ -302,7 +303,7 @@ static int _tl_apply_redirs(tl_redir_t *r)
         int fd = r->fd;
         int newfd;
 
-        switch (r->kind)
+        switch (r->type)
         {
         case TL_REDIR_OUT:
             LOG("_tl_apply_redirs: TL_REDIR_OUT to '%s'", r->target->text);
@@ -329,7 +330,7 @@ static int _tl_apply_redirs(tl_redir_t *r)
             return dup2(1, 2) == -1 ? -1 : 0;
 
         default:
-            LOG("_tl_apply_redirs: unknown redir kind=%d", r->kind);
+            LOG("_tl_apply_redirs: unknown redir type=%d", r->type);
             return -1;
         }
 
@@ -475,6 +476,9 @@ int tl_exec_command(tl_command_t *cmd, tl_exec_ctx_t *ctx)
 
     /* Expand argv for builtins and external commands (with field splitting) */
     cmd->argv = _tl_expand_all_words(cmd->argv);
+
+    /* Glob expansion on argv (pathname expansion) */
+    cmd->argv = _tl_expand_globs_on_argv(cmd->argv);
 
     /* Expand redirection targets */
     for (tl_redir_t *r = cmd->redirs; r; r = r->next)

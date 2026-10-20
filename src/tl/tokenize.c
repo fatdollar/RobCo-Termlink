@@ -25,7 +25,7 @@ tl_token_t *tl_tokenize(const char *line)
         {
             LOG("tl_tokenize: OR '||'");
             tl_token_t *t = calloc(1, sizeof(tl_token_t));
-            t->kind = TL_TOK_OR;
+            t->type = TL_TOK_OR;
             t->text = strdup("||");
             if (!head)
                 head = t;
@@ -41,7 +41,7 @@ tl_token_t *tl_tokenize(const char *line)
         {
             LOG("tl_tokenize: AND '&&'");
             tl_token_t *t = calloc(1, sizeof(tl_token_t));
-            t->kind = TL_TOK_AND;
+            t->type = TL_TOK_AND;
             t->text = strdup("&&");
             if (!head)
                 head = t;
@@ -57,7 +57,7 @@ tl_token_t *tl_tokenize(const char *line)
         {
             LOG("tl_tokenize: APPEND '>>'");
             tl_token_t *t = calloc(1, sizeof(tl_token_t));
-            t->kind = TL_TOK_REDIR_APPEND;
+            t->type = TL_TOK_REDIR_APPEND;
             t->text = strdup(">>");
             if (!head)
                 head = t;
@@ -73,7 +73,7 @@ tl_token_t *tl_tokenize(const char *line)
         {
             LOG("tl_tokenize: PIPE '|'");
             tl_token_t *t = calloc(1, sizeof(tl_token_t));
-            t->kind = TL_TOK_PIPE;
+            t->type = TL_TOK_PIPE;
             t->text = strdup("|");
             if (!head)
                 head = t;
@@ -89,7 +89,7 @@ tl_token_t *tl_tokenize(const char *line)
         {
             LOG("tl_tokenize: REDIR_OUT '>'");
             tl_token_t *t = calloc(1, sizeof(tl_token_t));
-            t->kind = TL_TOK_REDIR_OUT;
+            t->type = TL_TOK_REDIR_OUT;
             t->text = strdup(">");
             if (!head)
                 head = t;
@@ -105,7 +105,7 @@ tl_token_t *tl_tokenize(const char *line)
         {
             LOG("tl_tokenize: REDIR_IN '<'");
             tl_token_t *t = calloc(1, sizeof(tl_token_t));
-            t->kind = TL_TOK_REDIR_IN;
+            t->type = TL_TOK_REDIR_IN;
             t->text = strdup("<");
             if (!head)
                 head = t;
@@ -121,7 +121,7 @@ tl_token_t *tl_tokenize(const char *line)
         {
             LOG("tl_tokenize: SEMI ';'");
             tl_token_t *t = calloc(1, sizeof(tl_token_t));
-            t->kind = TL_TOK_SEMI;
+            t->type = TL_TOK_SEMI;
             t->text = strdup(";");
             if (!head)
                 head = t;
@@ -137,7 +137,7 @@ tl_token_t *tl_tokenize(const char *line)
         {
             LOG("tl_tokenize: LPAREN '('");
             tl_token_t *t = calloc(1, sizeof(tl_token_t));
-            t->kind = TL_TOK_LPAREN;
+            t->type = TL_TOK_LPAREN;
             t->text = strdup("(");
             if (!head)
                 head = t;
@@ -153,7 +153,7 @@ tl_token_t *tl_tokenize(const char *line)
         {
             LOG("tl_tokenize: RPAREN ')'");
             tl_token_t *t = calloc(1, sizeof(tl_token_t));
-            t->kind = TL_TOK_RPAREN;
+            t->type = TL_TOK_RPAREN;
             t->text = strdup(")");
             if (!head)
                 head = t;
@@ -216,7 +216,7 @@ tl_token_t *tl_tokenize(const char *line)
         LOG("tl_tokenize: WORD '%s'", buf);
 
         tl_token_t *t = calloc(1, sizeof(tl_token_t));
-        t->kind = TL_TOK_WORD;
+        t->type = TL_TOK_WORD;
         t->text = strdup(buf);
 
         if (!head)

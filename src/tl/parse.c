@@ -35,9 +35,9 @@ static tl_token_t *_tl_next(tl_parse_state_t *ps)
     return t;
 }
 
-static int _tl_accept(tl_parse_state_t *ps, tl_tok_kind_t kind)
+static int _tl_accept(tl_parse_state_t *ps, tl_tok_type_t type)
 {
-    if (ps->tok && ps->tok->kind == kind)
+    if (ps->tok && ps->tok->type == type)
     {
         ps->tok = ps->tok->next;
         return 1;
@@ -52,7 +52,7 @@ static tl_word_t *_tl_parse_words(tl_parse_state_t *ps)
     tl_word_t *head = NULL;
     tl_word_t *tail = NULL;
 
-    while (_tl_peek(ps) && _tl_peek(ps)->kind == TL_TOK_WORD)
+    while (_tl_peek(ps) && _tl_peek(ps)->type == TL_TOK_WORD)
     {
         tl_token_t *t = _tl_next(ps);
 
@@ -80,27 +80,27 @@ static tl_redir_t *_tl_parse_redirs(tl_parse_state_t *ps)
 
     while (_tl_peek(ps))
     {
-        tl_tok_kind_t k = _tl_peek(ps)->kind;
+        tl_tok_type_t k = _tl_peek(ps)->type;
 
         int fd = 1;
-        int kind = -1;
+        int type = -1;
 
         if (k == TL_TOK_REDIR_OUT)
         {
             LOG("_tl_parse_redirs: '>'");
-            kind = TL_REDIR_OUT;
+            type = TL_REDIR_OUT;
             _tl_next(ps);
         }
         else if (k == TL_TOK_REDIR_APPEND)
         {
             LOG("_tl_parse_redirs: '>>'");
-            kind = TL_REDIR_OUT_APPEND;
+            type = TL_REDIR_OUT_APPEND;
             _tl_next(ps);
         }
         else if (k == TL_TOK_REDIR_IN)
         {
             LOG("_tl_parse_redirs: '<'");
-            kind = TL_REDIR_IN;
+            type = TL_REDIR_IN;
             fd = 0;
             _tl_next(ps);
         }
@@ -109,7 +109,7 @@ static tl_redir_t *_tl_parse_redirs(tl_parse_state_t *ps)
             break;
         }
 
-        if (!_tl_peek(ps) || _tl_peek(ps)->kind != TL_TOK_WORD)
+        if (!_tl_peek(ps) || _tl_peek(ps)->type != TL_TOK_WORD)
         {
             LOG("_tl_parse_redirs: missing filename");
             return head;
@@ -119,7 +119,7 @@ static tl_redir_t *_tl_parse_redirs(tl_parse_state_t *ps)
 
         tl_redir_t *r = calloc(1, sizeof(tl_redir_t));
         r->fd = fd;
-        r->kind = kind;
+        r->type = type;
 
         tl_word_t *w = calloc(1, sizeof(tl_word_t));
         w->text = strdup(t->text);
@@ -249,7 +249,7 @@ static tl_node_t *_tl_parse_pipeline(tl_parse_state_t *ps)
     tl_node_t *first = NULL;
 
     /* First element: command or subshell */
-    if (_tl_peek(ps) && _tl_peek(ps)->kind == TL_TOK_LPAREN)
+    if (_tl_peek(ps) && _tl_peek(ps)->type == TL_TOK_LPAREN)
     {
         first = _tl_parse_subshell(ps);
         if (!first)
@@ -273,7 +273,7 @@ static tl_node_t *_tl_parse_pipeline(tl_parse_state_t *ps)
     }
 
     /* If no pipe, return the single node */
-    if (!_tl_peek(ps) || _tl_peek(ps)->kind != TL_TOK_PIPE)
+    if (!_tl_peek(ps) || _tl_peek(ps)->type != TL_TOK_PIPE)
     {
         LOG("_tl_parse_pipeline: single command");
         return first;
@@ -410,7 +410,7 @@ tl_node_t *tl_parse(const char *line)
 
     if (ps.tok != NULL)
     {
-        LOG("tl_parse: trailing tokens after parse (kind=%d)", ps.tok->kind);
+        LOG("tl_parse: trailing tokens after parse (type=%d)", ps.tok->type);
         /* You can choose to treat this as error: */
         /* return NULL; */
     }
