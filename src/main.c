@@ -6,13 +6,25 @@
 #include "external.h"
 #include "theme.h"
 #include "history.h"
-#include "input.h"
+#include "tl.h"
+
+extern char **environ;
+
+tl_exec_ctx_t tl_ctx = {
+	.posix_mode = false,
+	.termlink_mode = true,
+	.interactive = true,
+	.last_status = 0,
+	.output_fn = terminal_slow_print,
+	.error_fn = terminal_slow_print};
 
 int main(void)
 {
 	char input_buf[PATH_MAX];
 	input_state st;
 	memset(&st, 0, sizeof(st));
+
+	tl_ctx.envp = environ;
 
 #ifdef TERMLINK_DEBUG
 	debug_init();

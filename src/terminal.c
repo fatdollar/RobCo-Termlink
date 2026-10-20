@@ -5,6 +5,7 @@
 #include "theme.h"
 #include "input.h"
 #include "cursor.h"
+#include "tl.h"
 
 struct termios terminal_orig_termios;
 
@@ -23,7 +24,6 @@ int termlink_job_control_enabled = 0;
 /* ============================================================
  * INTERNAL HELPERS (static)
  * ============================================================ */
-
 
 static void _terminal_slow_putc(char c)
 {
@@ -86,11 +86,6 @@ static int _terminal_visible_len(const char *s, int start_col)
 		final_col = start_col;
 
 	return final_col - start_col;
-}
-
-static void _terminal_sigint(int sig)
-{
-	LOG("terminal_sigint: sigint skipped for termlink");
 }
 
 static void _terminal_restore(void)
@@ -393,21 +388,8 @@ void terminal_process(input_state *st, const char *cmd)
 {
 	LOG("terminal_process: cmd='%s'", cmd);
 
-	char buf[PATH_MAX];
-	char *argv[MAX_ARGS];
-	int argc;
-
-	snprintf(buf, sizeof(buf), "%s", cmd);
-	LOG("terminal_process: buf='%s'", buf);
-
-	argc = input_parse_args(buf, argv, MAX_ARGS);
-	LOG("terminal_process: argc=%d", argc);
-
-	if (argc == 0)
-	{
-		LOG("terminal_process: argc==0, abort");
+	if (!cmd || !*cmd)
 		return;
-	}
 
 	// always clear before executing a command
 	LOG("terminal_process: clearing scroll and buffer");
@@ -428,44 +410,11 @@ void terminal_process(input_state *st, const char *cmd)
 	terminal_cursor_line = terminal_scroll_top;
 	LOG("terminal_process: cursor_line reset to %d", terminal_cursor_line);
 
-	LOG("terminal_process: trying builtin");
-	if (builtin_try(argc, argv))
-	{
-		LOG("terminal_process: builtin executed");
-		input_cursor_redraw(st);
-		return;
-	}
-
-	LOG("terminal_process: checking external existence");
-	if (external_exists(argv[0]))
-	{
-		LOG("terminal_process: external exists");
-
-		if (external_is_tty_interactive(argv[0]))
-		{
-			LOG("terminal_process: external is TTY interactive");
-			terminal_slow_print("Interactive TTY programs are not yet supported: ");
-			terminal_slow_print(argv[0]);
-			terminal_slow_print("\n");
-		}
-		else
-		{
-			LOG("terminal_process: running external command");
-			external_run_paged(argv);
-		}
-	}
-	else
-	{
-		LOG("terminal_process: unknown command");
-		terminal_slow_print("Unknown command: ");
-		terminal_slow_print(argv[0]);
-		terminal_slow_print("\n");
-	}
+	/* Phase 1: hand off to Termlink executor */
+	tl_exec_line(cmd, &tl_ctx);
 
 	terminal_prompt_draw();
-
-	LOG("terminal_process: external done");
+	LOG("terminal_process: exec done");
 
 	input_cursor_redraw(st);
-	return;
 }

@@ -23,34 +23,82 @@ void input_redraw(input_state *st, bool place_cursor)
 	fflush(stdout);
 }
 
-int input_parse_args(char *line, char **argv, int max_args)
+int input_parse_args(char *line, char **argv, int max)
 {
-	LOG("parse_args: line='%s' max_args=%d", line, max_args);
+	LOG("input_parse_args: start");
 
 	int argc = 0;
 	char *p = line;
 
-	while (*p && argc < max_args - 1)
+	while (*p && argc < max)
 	{
-		while (*p == ' ' || *p == '\t')
+		/* Skip whitespace */
+		while (*p && isspace((unsigned char)*p))
 			p++;
+
 		if (!*p)
 			break;
 
-		argv[argc++] = p;
-		LOG("parse_args: arg[%d]='%s'", argc - 1, p);
+		char token[PATH_MAX];
+		int ti = 0;
 
-		while (*p && *p != ' ' && *p != '\t')
-			p++;
-		if (*p)
+		/* Normal unquoted token */
+		if (*p != '"' && *p != '\'')
 		{
-			*p = '\0';
-			p++;
+			while (*p && !isspace((unsigned char)*p))
+			{
+				if (*p == '\\' && p[1])
+				{
+					/* Escape next char */
+					token[ti++] = p[1];
+					p += 2;
+					continue;
+				}
+
+				if (*p == '"' || *p == '\'')
+					break;
+
+				token[ti++] = *p++;
+			}
 		}
+		else if (*p == '"')
+		{
+			/* Double-quoted token */
+			p++; /* skip " */
+			while (*p && *p != '"')
+			{
+				if (*p == '\\' && p[1])
+				{
+					token[ti++] = p[1];
+					p += 2;
+					continue;
+				}
+				token[ti++] = *p++;
+			}
+			if (*p == '"')
+				p++; /* skip closing " */
+		}
+		else if (*p == '\'')
+		{
+			/* Single-quoted token */
+			p++; /* skip ' */
+			while (*p && *p != '\'')
+			{
+				/* Single quotes: literal, no escapes */
+				token[ti++] = *p++;
+			}
+			if (*p == '\'')
+				p++; /* skip closing ' */
+		}
+
+		token[ti] = '\0';
+
+		LOG("input_parse_args: token='%s'", token);
+
+		argv[argc] = strdup(token);
+		argc++;
 	}
 
-	argv[argc] = NULL;
-
-	LOG("parse_args: argc=%d", argc);
+	LOG("input_parse_args: done, argc=%d", argc);
 	return argc;
 }

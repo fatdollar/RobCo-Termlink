@@ -9,7 +9,6 @@ extern int external_cmd_count;
 void external_load_from_path(void);
 bool external_exists(const char *cmd);
 bool external_is_tty_interactive(const char *cmd);
-void external_run(char **argv);
-void external_run_paged(char **argv);
+int external_run_paged(char **argv);
 
 #endif

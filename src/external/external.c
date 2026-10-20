@@ -186,98 +186,39 @@ bool external_is_tty_interactive(const char *cmd)
     return false;
 }
 
-void external_run(char **argv)
+int external_run_paged(char **argv)
 {
-    LOG("run_external: cmd='%s'", argv[0]);
-
-#ifndef TL_EXTERNAL_CMDS
-    terminal_slow_print("External commands are disabled.\n");
-    return;
-#endif
+    LOG("external_run_paged: start, argv[0]='%s'", argv[0]);
 
     int pipefd[2];
     if (pipe(pipefd) < 0)
     {
-        terminal_slow_print("Error: pipe failed\n");
-        return;
+        LOG("external_run_paged: pipe() failed");
+        return 1;
     }
 
     pid_t pid = fork();
-    if (pid < 0)
-    {
-        terminal_slow_print("Error: fork failed\n");
-        return;
-    }
-
     if (pid == 0)
     {
-        if (termlink_job_control_enabled)
-            setpgid(0, 0);
-
-        struct sigaction sa;
-        memset(&sa, 0, sizeof(sa));
-        sa.sa_handler = SIG_DFL;
-        sigaction(SIGINT, &sa, NULL);
+        LOG("external_run_paged: child exec '%s'", argv[0]);
 
         close(pipefd[0]);
-
         dup2(pipefd[1], STDOUT_FILENO);
         dup2(pipefd[1], STDERR_FILENO);
         close(pipefd[1]);
 
         execvp(argv[0], argv);
-        perror("execvp");
+        LOG("external_run_paged: execvp failed");
         _exit(127);
     }
 
-    close(pipefd[1]);
-
-    if (termlink_job_control_enabled)
-    {
-        setpgid(pid, pid);
-        tcsetpgrp(STDIN_FILENO, pid);
-    }
-
-    char buffer[256];
-    ssize_t n;
-
-    while ((n = read(pipefd[0], buffer, sizeof(buffer) - 1)) > 0)
-    {
-        buffer[n] = '\0';
-        terminal_slow_print(buffer);
-    }
-
-    close(pipefd[0]);
-
-    int status;
-    waitpid(pid, &status, 0);
-
-    if (termlink_job_control_enabled)
-        tcsetpgrp(STDIN_FILENO, getpgrp());
-
-    LOG("run_external: child exited status=%d", status);
-}
-
-void external_run_paged(char **argv)
-{
-    int pipefd[2];
-    pipe(pipefd);
-
-    pid_t pid = fork();
-    if (pid == 0)
-    {
-        close(pipefd[0]);
-        dup2(pipefd[1], STDOUT_FILENO);
-        dup2(pipefd[1], STDERR_FILENO);
-        close(pipefd[1]);
-        execvp(argv[0], argv);
-        _exit(127);
-    }
+    LOG("external_run_paged: parent, child pid=%d", pid);
 
     close(pipefd[1]);
 
     pager p;
     pager_init(&p, terminal_scroll_rows(), terminal_scroll_cols());
+    LOG("external_run_paged: pager initialized");
 
     char buf[4096];
     ssize_t n;
@@ -295,6 +236,8 @@ void external_run_paged(char **argv)
             break;
     }
 
+    LOG("external_run_paged: read loop done");
+
     if (!p.quit)
     {
         p.done = true;
@@ -305,6 +248,7 @@ void external_run_paged(char **argv)
         int key;
         if (!terminal_poll_key(&key))
             key = input_read_char();
+
         pager_handle_key(&p, key);
 
         if (p.quit)
@@ -316,5 +260,12 @@ void external_run_paged(char **argv)
 
     pager_free(&p);
     close(pipefd[0]);
-    waitpid(pid, NULL, 0);
+
+    int status = 0;
+    waitpid(pid, &status, 0);
+
+    int rc = WEXITSTATUS(status);
+    LOG("external_run_paged: child exit code=%d", rc);
+
+    return rc;
 }

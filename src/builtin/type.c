@@ -9,7 +9,7 @@ extern int builtin_count;
 extern char external_cmds[][PATH_MAX];
 extern int external_cmd_count;
 
-static int is_builtin(const char *name)
+static int _tl_is_builtin(const char *name)
 {
     for (int i = 0; i < builtin_count; i++)
     {
@@ -44,7 +44,7 @@ int builtin_type(int argc, char **argv)
     LOG("type: checking '%s'", name);
 
     /* 1. Check builtin */
-    if (is_builtin(name))
+    if (_tl_is_builtin(name))
     {
         terminal_slow_print(name);
         terminal_slow_print(" is a shell builtin\n");
