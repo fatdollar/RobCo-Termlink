@@ -490,7 +490,7 @@ int tl_exec_command(tl_command_t *cmd, tl_exec_ctx_t *ctx)
 	cmd->argv = _tl_expand_all_words(cmd->argv);
 
 	/* Glob expansion on argv (pathname expansion) */
-	cmd->argv = _tl_expand_globs_on_argv(cmd->argv);
+	cmd->argv = tl_expand_globs_on_argv(cmd->argv);
 
 	/* Expand redirection targets */
 	for (tl_redir_t *r = cmd->redirs; r; r = r->next)

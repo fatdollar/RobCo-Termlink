@@ -402,9 +402,11 @@ void terminal_expand_tilde(const char **target)
 
 void terminal_process(input_state *st, const char *cmd)
 {
-	LOG("terminal_process: cmd='%s'", cmd);
+	char *cmd_copy = strdup(cmd);
 
-	if (!cmd || !*cmd)
+	LOG("terminal_process: cmd='%s'", cmd_copy);
+
+	if (!cmd_copy || !*cmd_copy)
 		return;
 
 	// always clear before executing a command
@@ -412,7 +414,7 @@ void terminal_process(input_state *st, const char *cmd)
 	terminal_scroll_clear();
 
 	LOG("terminal_process: adding to history");
-	history_add(&st->hist, cmd);
+	history_add(&st->hist, cmd_copy);
 
 	LOG("terminal_process: saving history");
 	history_save(&st->hist);
@@ -427,7 +429,7 @@ void terminal_process(input_state *st, const char *cmd)
 	LOG("terminal_process: cursor_line reset to %d", terminal_cursor_line);
 
 	/* Phase 1: hand off to Termlink executor */
-	tl_exec_line(cmd, &tl_ctx);
+	tl_exec_line(cmd_copy, &tl_ctx);
 
 	terminal_prompt_draw();
 	LOG("terminal_process: exec done");

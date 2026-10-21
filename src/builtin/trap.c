@@ -8,8 +8,6 @@
  * GLOBAL STATE
  * ============================================================ */
 
-static input_state trap_state;
-
 static char *trap_cmds[MAX_TRAPS];
 
 static int signals[MAX_TRAPS];
