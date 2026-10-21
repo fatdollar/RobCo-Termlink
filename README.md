@@ -1,5 +1,7 @@
 # **Termlink — Project Specification & README**
 
+![alt text](image.png)
+
 ## **Overview**
 Termlink is a retro‑styled terminal shell inspired by the Fallout universe’s RobCo Industries Termlink systems.  
 It provides a custom UI, scroll region, slow‑print rendering, command execution pipeline, tab‑completion, and built‑in commands — all implemented in pure C with ANSI escape sequences.
