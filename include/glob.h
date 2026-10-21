@@ -3,6 +3,6 @@
 
 #include "tl_struct.h"
 
-tl_word_t *tl_expand_globs_on_argv(tl_word_t *argv);
+tl_word_t *tl_glob_expand_on_argv(tl_word_t *argv);
 
 #endif
