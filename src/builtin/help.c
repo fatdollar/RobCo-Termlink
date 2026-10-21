@@ -13,7 +13,7 @@ int builtin_help(int argc, char **argv)
 	LOG("builtin_help: generating help output");
 
 	pager p;
-	pager_start(&p);
+	screen_pager_start(&p);
 
 	pager_print_line(&p, "Available commands:");
 	pager_print_line(&p, "");
@@ -37,9 +37,9 @@ int builtin_help(int argc, char **argv)
 		LOG("builtin_help: listed external '%s'", external_cmds[i]);
 	}
 
-	pager_finish(&p);
-	pager_run(&p);
-	pager_free(&p);
+	screen_pager_finish(&p);
+	screen_pager_run(&p);
+	screen_pager_free(&p);
 
 	return 1;
 }

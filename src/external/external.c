@@ -17,75 +17,75 @@ int external_cmd_count = 0;
 
 static void _external_register(const char *name)
 {
-    LOG("register_external: '%s'", name);
+	LOG("register_external: '%s'", name);
 
-    if (external_cmd_count >= MAX_EXTERNAL_CMDS)
-    {
-        LOG("register_external: MAX_EXTERNAL_CMDS reached");
-        return;
-    }
+	if (external_cmd_count >= MAX_EXTERNAL_CMDS)
+	{
+		LOG("register_external: MAX_EXTERNAL_CMDS reached");
+		return;
+	}
 
-    snprintf(external_cmds[external_cmd_count],
-             sizeof(external_cmds[external_cmd_count]),
-             "%s", name);
+	snprintf(external_cmds[external_cmd_count],
+			 sizeof(external_cmds[external_cmd_count]),
+			 "%s", name);
 
-    external_cmd_count++;
+	external_cmd_count++;
 
-    LOG("register_external: count=%d", external_cmd_count);
+	LOG("register_external: count=%d", external_cmd_count);
 }
 
 static int _external_is_executable(const char *path)
 {
-    LOG("_external_is_executable: path='%s'", path);
+	LOG("_external_is_executable: path='%s'", path);
 
-    struct stat st;
-    if (stat(path, &st) != 0)
-    {
-        LOG("_external_is_executable: stat failed");
-        return 0;
-    }
+	struct stat st;
+	if (stat(path, &st) != 0)
+	{
+		LOG("_external_is_executable: stat failed");
+		return 0;
+	}
 
-    if (!S_ISREG(st.st_mode))
-    {
-        LOG("_external_is_executable: not a regular file");
-        return 0;
-    }
+	if (!S_ISREG(st.st_mode))
+	{
+		LOG("_external_is_executable: not a regular file");
+		return 0;
+	}
 
-    int exec = (st.st_mode & S_IXUSR) ||
-               (st.st_mode & S_IXGRP) ||
-               (st.st_mode & S_IXOTH);
+	int exec = (st.st_mode & S_IXUSR) ||
+			   (st.st_mode & S_IXGRP) ||
+			   (st.st_mode & S_IXOTH);
 
-    LOG("_external_is_executable: exec=%d", exec);
-    return exec;
+	LOG("_external_is_executable: exec=%d", exec);
+	return exec;
 }
 
 static void _external_load_commands_from_dir(const char *dirpath)
 {
-    LOG("load_commands_from_dir: '%s'", dirpath);
+	LOG("load_commands_from_dir: '%s'", dirpath);
 
-    DIR *d = opendir(dirpath);
-    if (!d)
-    {
-        LOG("load_commands_from_dir: cannot open");
-        return;
-    }
+	DIR *d = opendir(dirpath);
+	if (!d)
+	{
+		LOG("load_commands_from_dir: cannot open");
+		return;
+	}
 
-    struct dirent *ent;
-    while ((ent = readdir(d)) != NULL)
-    {
-        LOG("load_commands_from_dir: found '%s'", ent->d_name);
+	struct dirent *ent;
+	while ((ent = readdir(d)) != NULL)
+	{
+		LOG("load_commands_from_dir: found '%s'", ent->d_name);
 
-        char fullpath[PATH_MAX];
-        snprintf(fullpath, sizeof(fullpath), "%s/%s", dirpath, ent->d_name);
+		char fullpath[PATH_MAX];
+		snprintf(fullpath, sizeof(fullpath), "%s/%s", dirpath, ent->d_name);
 
-        if (_external_is_executable(fullpath))
-        {
-            LOG("load_commands_from_dir: executable '%s'", ent->d_name);
-            _external_register(ent->d_name);
-        }
-    }
+		if (_external_is_executable(fullpath))
+		{
+			LOG("load_commands_from_dir: executable '%s'", ent->d_name);
+			_external_register(ent->d_name);
+		}
+	}
 
-    closedir(d);
+	closedir(d);
 }
 
 /* ============================================================
@@ -95,95 +95,95 @@ static void _external_load_commands_from_dir(const char *dirpath)
 void external_load_from_path(void)
 {
 #ifdef TL_EXTERNAL_CMDS
-    const char *path = getenv("PATH");
-    LOG("load_external_from_path: PATH='%s'", path ? path : "(null)");
+	const char *path = getenv("PATH");
+	LOG("load_external_from_path: PATH='%s'", path ? path : "(null)");
 
-    if (!path)
-        return;
+	if (!path)
+		return;
 
-    char temp[4096];
-    snprintf(temp, sizeof(temp), "%s", path);
+	char temp[4096];
+	snprintf(temp, sizeof(temp), "%s", path);
 
-    char *saveptr;
-    char *dir = strtok_r(temp, ":", &saveptr);
+	char *saveptr;
+	char *dir = strtok_r(temp, ":", &saveptr);
 
-    while (dir)
-    {
-        LOG("load_external_from_path: scanning '%s'", dir);
-        _external_load_commands_from_dir(dir);
-        dir = strtok_r(NULL, ":", &saveptr);
-    }
+	while (dir)
+	{
+		LOG("load_external_from_path: scanning '%s'", dir);
+		_external_load_commands_from_dir(dir);
+		dir = strtok_r(NULL, ":", &saveptr);
+	}
 #endif
 }
 
 bool external_exists(const char *cmd)
 {
-    LOG("external_exists: checking '%s'", cmd);
+	LOG("external_exists: checking '%s'", cmd);
 
-    const char *path = getenv("PATH");
-    if (!path)
-    {
-        LOG("external_exists: PATH is null");
-        return false;
-    }
+	const char *path = getenv("PATH");
+	if (!path)
+	{
+		LOG("external_exists: PATH is null");
+		return false;
+	}
 
-    LOG("external_exists: PATH='%s'", path);
+	LOG("external_exists: PATH='%s'", path);
 
-    char buf[PATH_MAX];
-    const char *p = path;
+	char buf[PATH_MAX];
+	const char *p = path;
 
-    while (*p)
-    {
-        const char *start = p;
-        while (*p && *p != ':')
-            p++;
+	while (*p)
+	{
+		const char *start = p;
+		while (*p && *p != ':')
+			p++;
 
-        size_t len = p - start;
+		size_t len = p - start;
 
-        if (len > 0)
-        {
-            snprintf(buf, sizeof(buf), "%.*s/%s", (int)len, start, cmd);
-            LOG("external_exists: checking file '%s'", buf);
+		if (len > 0)
+		{
+			snprintf(buf, sizeof(buf), "%.*s/%s", (int)len, start, cmd);
+			LOG("external_exists: checking file '%s'", buf);
 
-            if (access(buf, X_OK) == 0)
-            {
-                LOG("external_exists: found executable '%s'", buf);
-                return true;
-            }
-        }
+			if (access(buf, X_OK) == 0)
+			{
+				LOG("external_exists: found executable '%s'", buf);
+				return true;
+			}
+		}
 
-        if (*p == ':')
-            p++;
-    }
+		if (*p == ':')
+			p++;
+	}
 
-    LOG("external_exists: '%s' not found", cmd);
-    return false;
+	LOG("external_exists: '%s' not found", cmd);
+	return false;
 }
 
 bool external_is_tty_interactive(const char *cmd)
 {
-    LOG("external_is_tty_interactive: checking '%s'", cmd);
+	LOG("external_is_tty_interactive: checking '%s'", cmd);
 
-    const char *interactive[] = {
-        "bash", "sh", "zsh", "fish",
-        "nano", "vim", "vi",
-        "top", "htop",
-        "less", "more",
-        "ssh",
-        "python", "python3",
-        NULL};
+	const char *interactive[] = {
+		"bash", "sh", "zsh", "fish",
+		"nano", "vim", "vi",
+		"top", "htop",
+		"less", "more",
+		"ssh",
+		"python", "python3",
+		NULL};
 
-    for (int i = 0; interactive[i]; i++)
-    {
-        if (strcmp(cmd, interactive[i]) == 0)
-        {
-            LOG("external_is_tty_interactive: '%s' is known interactive", cmd);
-            return true;
-        }
-    }
+	for (int i = 0; interactive[i]; i++)
+	{
+		if (strcmp(cmd, interactive[i]) == 0)
+		{
+			LOG("external_is_tty_interactive: '%s' is known interactive", cmd);
+			return true;
+		}
+	}
 
-    LOG("external_is_tty_interactive: '%s' not in interactive list", cmd);
-    return false;
+	LOG("external_is_tty_interactive: '%s' not in interactive list", cmd);
+	return false;
 }
 
 /* ============================================================
@@ -192,84 +192,84 @@ bool external_is_tty_interactive(const char *cmd)
 
 int external_run_paged(char **argv)
 {
-    LOG("external_run_paged: start, argv[0]='%s'", argv[0]);
+	LOG("external_run_paged: start, argv[0]='%s'", argv[0]);
 
-    int pipefd[2];
-    if (pipe(pipefd) < 0)
-    {
-        LOG("external_run_paged: pipe() failed");
-        return 1;
-    }
+	int pipefd[2];
+	if (pipe(pipefd) < 0)
+	{
+		LOG("external_run_paged: pipe() failed");
+		return 1;
+	}
 
-    pid_t pid = fork();
-    if (pid == 0)
-    {
-        LOG("external_run_paged: child exec '%s'", argv[0]);
+	pid_t pid = fork();
+	if (pid == 0)
+	{
+		LOG("external_run_paged: child exec '%s'", argv[0]);
 
-        close(pipefd[0]);
-        dup2(pipefd[1], STDOUT_FILENO);
-        dup2(pipefd[1], STDERR_FILENO);
-        close(pipefd[1]);
+		close(pipefd[0]);
+		dup2(pipefd[1], STDOUT_FILENO);
+		dup2(pipefd[1], STDERR_FILENO);
+		close(pipefd[1]);
 
-        execvp(argv[0], argv);
-        LOG("external_run_paged: execvp failed");
-        _exit(127);
-    }
+		execvp(argv[0], argv);
+		LOG("external_run_paged: execvp failed");
+		_exit(127);
+	}
 
-    LOG("external_run_paged: parent, child pid=%d", pid);
+	LOG("external_run_paged: parent, child pid=%d", pid);
 
-    close(pipefd[1]);
+	close(pipefd[1]);
 
-    pager p;
-    pager_init(&p, terminal_scroll_rows(), terminal_scroll_cols());
-    LOG("external_run_paged: pager initialized");
+	pager p;
+	screen_pager_init(&p, terminal_scroll_rows(), terminal_scroll_cols());
+	LOG("external_run_paged: pager initialized");
 
-    char buf[4096];
-    ssize_t n;
+	char buf[4096];
+	ssize_t n;
 
-    while ((n = read(pipefd[0], buf, sizeof(buf))) > 0)
-    {
-        pager_feed(&p, buf, (size_t)n);
+	while ((n = read(pipefd[0], buf, sizeof(buf))) > 0)
+	{
+		screen_pager_feed(&p, buf, (size_t)n);
 
-        if (p.quit)
-            break;
+		if (p.screen.quit)
+			break;
 
-        pager_run(&p);
+		screen_pager_run(&p);
 
-        if (p.quit)
-            break;
-    }
+		if (p.screen.quit)
+			break;
+	}
 
-    LOG("external_run_paged: read loop done");
+	LOG("external_run_paged: read loop done");
 
-    if (!p.quit)
-    {
-        p.done = true;
+	if (!p.screen.quit)
+	{
+		p.done = true;
 
-        terminal_scroll_clear();
-        pager_render(&p);
+		terminal_scroll_clear();
+		screen_pager_render(&p);
 
-        int key;
-        if (!terminal_poll_key(&key))
-            key = input_read_char();
+		int key;
+		if (!terminal_poll_key(&key))
+			key = input_read_char();
 
-        pager_handle_key(&p, key);
+		screen_pager_handle_key(&p, key);
 
-        if (p.quit)
-        {
-            terminal_scroll_clear();
-            terminal_prompt_draw();
-        }
-    }
+		if (p.screen.quit)
+		{
+			terminal_scroll_clear();
+			terminal_prompt_draw();
+		}
+	}
 
-    pager_free(&p);
-    close(pipefd[0]);
+	screen_pager_free(&p);
+	close(pipefd[0]);
 
-    int status = 0;
-    waitpid(pid, &status, 0);
+	int status = 0;
+	waitpid(pid, &status, 0);
 
-    int rc = WEXITSTATUS(status);
-    LOG("external_run_paged: child exit code=%d", rc);
+	int rc = WEXITSTATUS(status);
+	LOG("external_run_paged: child exit code=%d", rc);
 
-    return rc;
+	return rc;
 }

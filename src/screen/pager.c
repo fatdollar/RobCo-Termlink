@@ -7,34 +7,34 @@
  * FORWARD DECLARATIONS
  * ============================================================ */
 
-static void _pager_screen_render(screen *s);
-static void _pager_screen_handle(screen *s, int key);
-static void _pager_screen_free(screen *s);
-static void _pager_buf_push(pager_buffer *b, const char *s, size_t n);
-static void _pager_columns_init(pager_column *pc, char matches[][PATH_MAX], int count);
-static void _pager_columns_build(pager_column *pc, char matches[][PATH_MAX], int count, pager *p);
-static void _pager_get_input(pager *p);
+static void _screen_pager_screen_render(screen *s);
+static void _screen_pager_screen_handle(screen *s, int key);
+static void _screen_pager_screen_free(screen *s);
+static void _screen_pager_buf_push(pager_buffer *b, const char *s, size_t n);
+static void _screen_pager_columns_init(pager_column *pc, char matches[][PATH_MAX], int count);
+static void _screen_pager_columns_build(pager_column *pc, char matches[][PATH_MAX], int count, pager *p);
+static void _screen_pager_get_input(pager *p);
 
 /* ============================================================
  *  INTERNAL HELPERS
  * ============================================================ */
 
-static void _pager_screen_render(screen *s)
+static void _screen_pager_screen_render(screen *s)
 {
-	pager_render((pager *)s);
+	screen_pager_render((pager *)s);
 }
 
-static void _pager_screen_handle(screen *s, int key)
+static void _screen_pager_screen_handle(screen *s, int key)
 {
-	pager_handle_key((pager *)s, key);
+	screen_pager_handle_key((pager *)s, key);
 }
 
-static void _pager_screen_free(screen *s)
+static void _screen_pager_screen_free(screen *s)
 {
-	pager_free((pager *)s);
+	screen_pager_free((pager *)s);
 }
 
-static void _pager_buf_push(pager_buffer *b, const char *s, size_t n)
+static void _screen_pager_buf_push(pager_buffer *b, const char *s, size_t n)
 {
 	if (b->count == b->cap)
 	{
@@ -48,7 +48,7 @@ static void _pager_buf_push(pager_buffer *b, const char *s, size_t n)
 	b->count++;
 }
 
-static void _pager_columns_init(pager_column *pc, char matches[][PATH_MAX], int count)
+static void _screen_pager_columns_init(pager_column *pc, char matches[][PATH_MAX], int count)
 {
 	pc->term_width = terminal_cols;
 	pc->col_width = 0;
@@ -70,7 +70,7 @@ static void _pager_columns_init(pager_column *pc, char matches[][PATH_MAX], int 
 		pc->cols = 1;
 }
 
-static void _pager_columns_build(pager_column *pc, char matches[][PATH_MAX], int count, pager *p)
+static void _screen_pager_columns_build(pager_column *pc, char matches[][PATH_MAX], int count, pager *p)
 {
 	int rows = (count + pc->cols - 1) / pc->cols;
 
@@ -102,7 +102,7 @@ static void _pager_columns_build(pager_column *pc, char matches[][PATH_MAX], int
 	}
 }
 
-static void _pager_get_input(pager *p)
+static void _screen_pager_get_input(pager *p)
 {
 	while (1)
 	{
@@ -112,7 +112,7 @@ static void _pager_get_input(pager *p)
 			key = input_read_char(); // BLOCK
 
 		int old_top = p->top;
-		pager_handle_key(p, key);
+		screen_pager_handle_key(p, key);
 
 		if (p->screen.quit)
 		{
@@ -124,7 +124,7 @@ static void _pager_get_input(pager *p)
 		if (p->top != old_top)
 		{
 			terminal_scroll_clear();
-			pager_render(p);
+			screen_pager_render(p);
 		}
 	}
 }
@@ -133,35 +133,35 @@ static void _pager_get_input(pager *p)
  *  SETUP
  * ============================================================ */
 
-void pager_init(pager *p, int rows, int cols)
+void screen_pager_init(pager *p, int rows, int cols)
 {
 	memset(p, 0, sizeof(*p));
 	p->rows = rows;
 	p->cols = cols;
 	p->cur_cap = 256;
 	p->cur = malloc(p->cur_cap);
-	p->screen.render = _pager_screen_render;
-	p->screen.handle_key = _pager_screen_handle;
-	p->screen.destroy = _pager_screen_free;
+	p->screen.render = _screen_pager_screen_render;
+	p->screen.handle_key = _screen_pager_screen_handle;
+	p->screen.destroy = _screen_pager_screen_free;
 }
 
 /* ============================================================
  *  PROCESSING
  * ============================================================ */
 
-void pager_start(pager *p)
+void screen_pager_start(pager *p)
 {
-	pager_init(p, terminal_scroll_rows(), terminal_cols);
+	screen_pager_init(p, terminal_scroll_rows(), terminal_cols);
 }
 
-void pager_feed(pager *p, const char *data, size_t n)
+void screen_pager_feed(pager *p, const char *data, size_t n)
 {
 	for (size_t i = 0; i < n; i++)
 	{
 		char c = data[i];
 		if (c == '\n')
 		{
-			_pager_buf_push(&p->buf, p->cur, p->cur_len);
+			_screen_pager_buf_push(&p->buf, p->cur, p->cur_len);
 			p->cur_len = 0;
 		}
 		else
@@ -178,28 +178,28 @@ void pager_feed(pager *p, const char *data, size_t n)
 
 void pager_print_line(pager *p, const char *s)
 {
-	pager_feed(p, s, strlen(s));
-	pager_feed(p, "\n", 1);
+	screen_pager_feed(p, s, strlen(s));
+	screen_pager_feed(p, "\n", 1);
 }
 
-void pager_finish(pager *p)
+void screen_pager_finish(pager *p)
 {
 	p->done = true;
 }
 
-void pager_run(pager *p)
+void screen_pager_run(pager *p)
 {
 	// Clear scroll region
 	terminal_scroll_clear();
 
 	// Render first page
 	LOG("pager rows=%d buf.count=%zu top=%d", p->rows, p->buf.count, p->top);
-	pager_render(p);
+	screen_pager_render(p);
 
-	_pager_get_input(p);
+	_screen_pager_get_input(p);
 }
 
-void pager_render(pager *p)
+void screen_pager_render(pager *p)
 {
 	int first = p->top;
 	int last = first + p->rows;
@@ -231,9 +231,9 @@ void pager_render(pager *p)
  *  INPUT
  * ============================================================ */
 
-void pager_handle_key(pager *p, int key)
+void screen_pager_handle_key(pager *p, int key)
 {
-	LOG("pager_handle_key: key=%d top(before)=%d rows=%d buf.count=%zu",
+	LOG("screen_pager_handle_key: key=%d top(before)=%d rows=%d buf.count=%zu",
 		key, p->top, p->rows, p->buf.count);
 
 	switch (key)
@@ -241,49 +241,49 @@ void pager_handle_key(pager *p, int key)
 	case 'q':
 	case 'Q':
 		p->screen.quit = true;
-		LOG("pager_handle_key: quit=true");
+		LOG("screen_pager_handle_key: quit=true");
 		break;
 
 	case ' ':
 	case DOWN:
-		LOG("pager_handle_key: DOWN/space pressed");
+		LOG("screen_pager_handle_key: DOWN/space pressed");
 		p->top += p->rows;
-		LOG("pager_handle_key: top(after)=%d", p->top);
+		LOG("screen_pager_handle_key: top(after)=%d", p->top);
 
 		if (p->top >= (int)p->buf.count && p->done)
 		{
 			p->screen.quit = true;
-			LOG("pager_handle_key: reached end, quit=true");
+			LOG("screen_pager_handle_key: reached end, quit=true");
 		}
 		break;
 
 	case '\n':
-		LOG("pager_handle_key: newline pressed");
+		LOG("screen_pager_handle_key: newline pressed");
 		p->top++;
-		LOG("pager_handle_key: top(after)=%d", p->top);
+		LOG("screen_pager_handle_key: top(after)=%d", p->top);
 
 		if (p->top >= (int)p->buf.count && p->done)
 		{
 			p->screen.quit = true;
-			LOG("pager_handle_key: reached end, quit=true");
+			LOG("screen_pager_handle_key: reached end, quit=true");
 		}
 		break;
 
 	case UP:
-		LOG("pager_handle_key: UP pressed");
+		LOG("screen_pager_handle_key: UP pressed");
 		p->top -= p->rows;
 		if (p->top < 0)
 			p->top = 0;
-		LOG("pager_handle_key: top(after)=%d", p->top);
+		LOG("screen_pager_handle_key: top(after)=%d", p->top);
 		break;
 
 	default:
-		LOG("pager_handle_key: unhandled key=%d", key);
+		LOG("screen_pager_handle_key: unhandled key=%d", key);
 		break;
 	}
 }
 
-void pager_free(pager *p)
+void screen_pager_free(pager *p)
 {
 	for (size_t i = 0; i < p->buf.count; i++)
 		free(p->buf.lines[i].text);
@@ -295,18 +295,18 @@ void pager_free(pager *p)
  *  RUNNER
  * ============================================================ */
 
-void pager_columns(char data[][PATH_MAX], int count)
+void screen_pager_columns(char data[][PATH_MAX], int count)
 {
-	LOG("pager_columns: count=%d", count);
+	LOG("screen_pager_columns: count=%d", count);
 
 	pager p;
-	pager_start(&p);
+	screen_pager_start(&p);
 
 	pager_column pc;
-	_pager_columns_init(&pc, data, count);
+	_screen_pager_columns_init(&pc, data, count);
 
-	_pager_columns_build(&pc, data, count, &p);
+	_screen_pager_columns_build(&pc, data, count, &p);
 
-	pager_finish(&p);
-	pager_run(&p);
+	screen_pager_finish(&p);
+	screen_pager_run(&p);
 }

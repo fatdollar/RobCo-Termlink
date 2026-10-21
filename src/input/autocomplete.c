@@ -409,7 +409,7 @@ static void _input_autocomplete_command(const char *prefix, size_t *len, char *b
 	}
 
 	/* Multiple matches → print list */
-	pager_columns(matches, match_count);
+	screen_pager_columns(matches, match_count);
 }
 
 static void _input_autocomplete_path(char **argv, size_t *len, char *buf, autocomplete_type type)
@@ -517,7 +517,7 @@ static void _input_autocomplete_path(char **argv, size_t *len, char *buf, autoco
 		}
 
 		LOG("autocomplete_path: dynamic multiple matches");
-		pager_columns(matches, match_count);
+		screen_pager_columns(matches, match_count);
 		return;
 	}
 
@@ -738,7 +738,7 @@ static void _input_autocomplete_path(char **argv, size_t *len, char *buf, autoco
 	   Multiple matches → print list
 	   ============================================================ */
 	LOG("autocomplete_path: multiple matches");
-	pager_columns(matches, match_count);
+	screen_pager_columns(matches, match_count);
 }
 
 /* ============================================================
