@@ -3,16 +3,15 @@ CFLAGS = -Wall -Wextra -Iinclude
 
 SRC = \
 	src/main.c \
+	src/debug.c \
+	src/history.c \
 	src/terminal.c \
 	src/theme.c \
-	src/history.c \
-	src/debug.c \
-	src/pager.c \
-	$(wildcard src/tl/*.c) \
+	$(wildcard src/builtin/*.c) \
+	$(wildcard src/external/*.c) \
 	$(wildcard src/input/*.c) \
 	$(wildcard src/screen/*.c) \
-	$(wildcard src/builtin/*.c) \
-	$(wildcard src/external/*.c) 
+	$(wildcard src/tl/*.c) \
 
 OBJ = $(patsubst src/%.c, build/%.o, $(SRC))
 
