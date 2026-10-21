@@ -10,6 +10,7 @@ SRC = \
 	src/pager.c \
 	$(wildcard src/tl/*.c) \
 	$(wildcard src/input/*.c) \
+	$(wildcard src/screen/*.c) \
 	$(wildcard src/builtin/*.c) \
 	$(wildcard src/external/*.c) 
 

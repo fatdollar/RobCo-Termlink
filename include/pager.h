@@ -1,6 +1,8 @@
 #ifndef TERMLINK_PAGER_H
 #define TERMLINK_PAGER_H
 
+#include "screen.h"
+
 typedef struct
 {
     char *text;
@@ -23,6 +25,8 @@ typedef struct
 
 typedef struct
 {
+    screen screen;
+
     pager_buffer buf;
     char *cur;
     size_t cur_len;
@@ -33,7 +37,6 @@ typedef struct
     int cols;
 
     bool done;
-    bool quit;
 } pager;
 
 void pager_init(pager *p, int rows, int cols);

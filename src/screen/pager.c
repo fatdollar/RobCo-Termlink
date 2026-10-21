@@ -7,6 +7,9 @@
  * FORWARD DECLARATIONS
  * ============================================================ */
 
+static void _pager_screen_render(screen *s);
+static void _pager_screen_handle(screen *s, int key);
+static void _pager_screen_free(screen *s);
 static void _pager_buf_push(pager_buffer *b, const char *s, size_t n);
 static void _pager_columns_init(pager_column *pc, char matches[][PATH_MAX], int count);
 static void _pager_columns_build(pager_column *pc, char matches[][PATH_MAX], int count, pager *p);
@@ -15,6 +18,22 @@ static void _pager_get_input(pager *p);
 /* ============================================================
  *  INTERNAL HELPERS
  * ============================================================ */
+
+static void _pager_screen_render(screen *s)
+{
+	pager_render((pager *)s);
+}
+
+static void _pager_screen_handle(screen *s, int key)
+{
+	pager_handle_key((pager *)s, key);
+}
+
+static void _pager_screen_free(screen *s)
+{
+	pager_free((pager *)s);
+}
+
 static void _pager_buf_push(pager_buffer *b, const char *s, size_t n)
 {
 	if (b->count == b->cap)
@@ -95,7 +114,7 @@ static void _pager_get_input(pager *p)
 		int old_top = p->top;
 		pager_handle_key(p, key);
 
-		if (p->quit)
+		if (p->screen.quit)
 		{
 			terminal_scroll_clear();
 			terminal_prompt_draw();
@@ -121,6 +140,9 @@ void pager_init(pager *p, int rows, int cols)
 	p->cols = cols;
 	p->cur_cap = 256;
 	p->cur = malloc(p->cur_cap);
+	p->screen.render = _pager_screen_render;
+	p->screen.handle_key = _pager_screen_handle;
+	p->screen.destroy = _pager_screen_free;
 }
 
 /* ============================================================
@@ -218,7 +240,7 @@ void pager_handle_key(pager *p, int key)
 	{
 	case 'q':
 	case 'Q':
-		p->quit = true;
+		p->screen.quit = true;
 		LOG("pager_handle_key: quit=true");
 		break;
 
@@ -230,7 +252,7 @@ void pager_handle_key(pager *p, int key)
 
 		if (p->top >= (int)p->buf.count && p->done)
 		{
-			p->quit = true;
+			p->screen.quit = true;
 			LOG("pager_handle_key: reached end, quit=true");
 		}
 		break;
@@ -242,7 +264,7 @@ void pager_handle_key(pager *p, int key)
 
 		if (p->top >= (int)p->buf.count && p->done)
 		{
-			p->quit = true;
+			p->screen.quit = true;
 			LOG("pager_handle_key: reached end, quit=true");
 		}
 		break;
