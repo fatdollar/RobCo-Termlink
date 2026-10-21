@@ -4,13 +4,19 @@
 
 #define MAX_ALIASES 256
 
-/* alias table from alias.c */
+/* ============================================================
+ * GLOBAL STATE
+ * ============================================================ */
+
 extern char *alias_names[MAX_ALIASES];
 extern char *alias_values[MAX_ALIASES];
 extern int alias_count;
 
-/* Remove alias at index */
-static void alias_remove(int idx)
+/* ============================================================
+ *  INTERNAL HELPERS
+ * ============================================================ */
+
+static void _builtin_alias_remove(int idx)
 {
     LOG("unalias: removing index %d", idx);
 
@@ -26,6 +32,10 @@ static void alias_remove(int idx)
 
     alias_count--;
 }
+
+/* ============================================================
+ *  COMMAND
+ * ============================================================ */
 
 int builtin_unalias(int argc, char **argv)
 {
@@ -64,7 +74,7 @@ int builtin_unalias(int argc, char **argv)
         {
             if (strcmp(alias_names[j], name) == 0)
             {
-                alias_remove(j);
+                _builtin_alias_remove(j);
                 found = 1;
                 break;
             }

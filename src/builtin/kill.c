@@ -2,6 +2,10 @@
 #include "builtin.h"
 #include "terminal.h"
 
+/* ============================================================
+ *  COMMAND
+ * ============================================================ */
+
 int builtin_kill(int argc, char **argv)
 {
     LOG("kill: argc=%d", argc);

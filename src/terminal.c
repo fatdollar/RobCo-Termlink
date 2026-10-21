@@ -7,6 +7,10 @@
 #include "cursor.h"
 #include "tl.h"
 
+/* ============================================================
+ * GLOBAL STATE
+ * ============================================================ */
+
 struct termios terminal_orig_termios;
 
 scroll_line scroll_lines[MAX_SCROLL_LINES];
@@ -22,7 +26,19 @@ int terminal_cursor_line = 5;
 int termlink_job_control_enabled = 0;
 
 /* ============================================================
- * INTERNAL HELPERS (static)
+ * FORWARD DECLARATIONS
+ * ============================================================ */
+
+static void _terminal_slow_putc(char c);
+static void _terminal_med_putc(char c);
+static void _terminal_putc(char c);
+static int _terminal_start_col(int line, const char *s);
+static int _terminal_visible_len(const char *s, int start_col);
+static void _terminal_restore(void);
+static void _terminal_update_size(void);
+
+/* ============================================================
+ * INTERNAL HELPERS
  * ============================================================ */
 
 static void _terminal_slow_putc(char c)
@@ -118,7 +134,7 @@ static void _terminal_update_size(void)
 }
 
 /* ============================================================
- * PUBLIC API — DIMENSIONS / INPUT
+ * DIMENSIONS / INPUT
  * ============================================================ */
 
 int terminal_scroll_rows(void)
@@ -154,7 +170,7 @@ bool terminal_poll_key(int *key)
 }
 
 /* ============================================================
- * PUBLIC API — SETUP
+ * SETUP
  * ============================================================ */
 
 void terminal_setup(void)
@@ -201,7 +217,7 @@ void terminal_setup(void)
 }
 
 /* ============================================================
- * PUBLIC API — PRINTING
+ * PRINTING
  * ============================================================ */
 
 void terminal_slow_print_at(int line, const char *s)
@@ -256,7 +272,7 @@ void terminal_scroll_print(int row, const char *text)
 }
 
 /* ============================================================
- * PUBLIC API — CLEAR / HEADER / PROMPT
+ * CLEAR / HEADER / PROMPT
  * ============================================================ */
 
 void terminal_scroll_clear(void)
@@ -342,7 +358,7 @@ void terminal_header_print(void)
 }
 
 /* ============================================================
- * PUBLIC API — PATH / TILDE
+ * PATH / TILDE
  * ============================================================ */
 
 void terminal_expand_tilde(const char **target)
@@ -381,7 +397,7 @@ void terminal_expand_tilde(const char **target)
 }
 
 /* ============================================================
- * PUBLIC API — COMMAND PROCESSING
+ * COMMAND PROCESSING
  * ============================================================ */
 
 void terminal_process(input_state *st, const char *cmd)

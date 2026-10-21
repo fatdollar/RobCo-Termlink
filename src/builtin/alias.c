@@ -4,11 +4,26 @@
 
 #define MAX_ALIASES 256
 
+/* ============================================================
+ * GLOBAL STATE
+ * ============================================================ */
+
 char *alias_names[MAX_ALIASES];
 char *alias_values[MAX_ALIASES];
 int alias_count = 0;
 
-static int alias_find(const char *name)
+/* ============================================================
+ *  FORWARD DECLARATIONS
+ * ============================================================ */
+
+static int _builtin_alias_find(const char *name);
+static void _builtin_alias_print(int idx);
+
+/* ============================================================
+ *  INTERNAL HELPERS
+ * ============================================================ */
+
+static int _builtin_alias_find(const char *name)
 {
     for (int i = 0; i < alias_count; i++)
     {
@@ -18,7 +33,7 @@ static int alias_find(const char *name)
     return -1;
 }
 
-static void alias_print_one(int idx)
+static void _builtin_alias_print(int idx)
 {
     terminal_slow_print(alias_names[idx]);
     terminal_slow_print("='");
@@ -26,7 +41,11 @@ static void alias_print_one(int idx)
     terminal_slow_print("'\n");
 }
 
-int builtin_alias(int argc, char **argv)
+/* ============================================================
+ *  COMMAND
+ * ============================================================ */
+
+ int builtin_alias(int argc, char **argv)
 {
     LOG("alias: argc=%d", argc);
 
@@ -34,7 +53,7 @@ int builtin_alias(int argc, char **argv)
     if (argc == 1)
     {
         for (int i = 0; i < alias_count; i++)
-            alias_print_one(i);
+            _builtin_alias_print(i);
         return 1;
     }
 
@@ -53,7 +72,7 @@ int builtin_alias(int argc, char **argv)
 
             LOG("alias: setting %s='%s'", name, value);
 
-            int idx = alias_find(name);
+            int idx = _builtin_alias_find(name);
             if (idx >= 0)
             {
                 free(alias_values[idx]);
@@ -75,9 +94,9 @@ int builtin_alias(int argc, char **argv)
         else
         {
             /* Case 3: alias name → print that alias */
-            int idx = alias_find(arg);
+            int idx = _builtin_alias_find(arg);
             if (idx >= 0)
-                alias_print_one(idx);
+                _builtin_alias_print(idx);
             else
             {
                 terminal_slow_print("alias: ");

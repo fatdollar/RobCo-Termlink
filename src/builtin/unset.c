@@ -1,6 +1,10 @@
 #include "terminal.h"
 #include "builtin.h"
 
+/* ============================================================
+ *  COMMAND
+ * ============================================================ */
+
 int builtin_unset(int argc, char **argv)
 {
     if (argc < 2)

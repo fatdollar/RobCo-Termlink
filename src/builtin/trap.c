@@ -2,58 +2,54 @@
 #include "builtin.h"
 #include "terminal.h"
 
-/* forward declaration from your command processor */
-extern void terminal_process(input_state *st, const char *cmd);
-
-/* dummy input state for executing trap commands */
-static input_state trap_state;
-
-/* maximum signals we support */
 #define MAX_TRAPS 64
+
+/* ============================================================
+ * GLOBAL STATE
+ * ============================================================ */
+
+static input_state trap_state;
 
 static char *trap_cmds[MAX_TRAPS];
 
-/* queue for pending traps */
-static int pending_signals[MAX_TRAPS];
-static int pending_count = 0;
+static int signals[MAX_TRAPS];
+static int signal_count = 0;
 
-/* enqueue a signal to be processed in main loop */
-static void enqueue_signal(int sig)
+/* ============================================================
+ *  FORWARD DECLARATIONS
+ * ============================================================ */
+
+static void _builting_trap_enqueue_signal(int sig);
+static void _builting_trap_handler(int sig);
+static void _builting_trap_install_handler(int sig);
+
+/* ============================================================
+ *  INTERNAL HELPERS
+ * ============================================================ */
+
+static void _builting_trap_enqueue_signal(int sig)
 {
-    if (pending_count < MAX_TRAPS)
-        pending_signals[pending_count++] = sig;
+    if (signal_count < MAX_TRAPS)
+        signals[signal_count++] = sig;
 }
 
-/* signal handler */
-static void trap_handler(int sig)
+static void _builting_trap_handler(int sig)
 {
     LOG("trap: caught signal %d", sig);
-    enqueue_signal(sig);
+    _builting_trap_enqueue_signal(sig);
 }
 
-/* install handler for a signal */
-static void install_handler(int sig)
+static void _builting_trap_install_handler(int sig)
 {
     struct sigaction sa;
     memset(&sa, 0, sizeof(sa));
-    sa.sa_handler = trap_handler;
+    sa.sa_handler = _builting_trap_handler;
     sigaction(sig, &sa, NULL);
 }
 
-/* process pending traps (called from main loop) */
-void trap_process_pending(void)
-{
-    for (int i = 0; i < pending_count; i++)
-    {
-        int sig = pending_signals[i];
-        if (trap_cmds[sig])
-        {
-            LOG("trap: executing handler for %d: %s", sig, trap_cmds[sig]);
-            terminal_process(&trap_state, trap_cmds[sig]);
-        }
-    }
-    pending_count = 0;
-}
+/* ============================================================
+ *  COMMAND
+ * ============================================================ */
 
 int builtin_trap(int argc, char **argv)
 {
@@ -118,7 +114,7 @@ int builtin_trap(int argc, char **argv)
         free(trap_cmds[sig]);
         trap_cmds[sig] = strdup(cmd);
 
-        install_handler(sig);
+        _builting_trap_install_handler(sig);
 
         return 1;
     }

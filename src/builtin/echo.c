@@ -1,6 +1,10 @@
 #include "builtin.h"
 #include "terminal.h"
 
+/* ============================================================
+ *  COMMAND
+ * ============================================================ */
+
 int builtin_echo(int argc, char **argv)
 {
     int i = 1;

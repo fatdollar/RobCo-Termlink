@@ -1,6 +1,10 @@
 #include "main.h"
 #include "theme.h"
 
+/* ============================================================
+ * SETUP
+ * ============================================================ */
+
 void theme_apply_default(void)
 {
 	// Reset everything

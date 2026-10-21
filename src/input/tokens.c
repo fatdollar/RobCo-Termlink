@@ -2,6 +2,20 @@
 #include "input_state.h"
 #include "tokens.h"
 
+/* ============================================================
+ * FORWARD DECLARATIONS
+ * ============================================================ */
+
+static int _input_tokens_is_operator_char(char c);
+static int _input_tokens_is_operator(const char *buf, int i);
+static int _input_tokens_quote_left(const char *buf, int i);
+static int _input_tokens_quote_right(const char *buf, int len, int i);
+static int _input_tokens_paren_left(const char *buf, int i);
+static int _input_tokens_paren_right(const char *buf, int len, int i);
+
+/* ============================================================
+ * INTERNAL HELPERS
+ * ============================================================ */
 
 static int _input_tokens_is_operator_char(char c)
 {
@@ -133,6 +147,10 @@ static int _input_tokens_paren_right(const char *buf, int len, int i)
 	return len;
 }
 
+/* ============================================================
+ * NAVIGATION
+ * ============================================================ */
+
 int input_tokens_prev(const char *buf, int cursor)
 {
 	LOG("tokens_prev: buf='%s' cursor=%d", buf, cursor);
@@ -245,6 +263,10 @@ int input_tokens_next(const char *buf, int cursor)
 	LOG("tokens_next: normal token end=%d", i);
 	return i;
 }
+
+/* ============================================================
+ * MANIPULATIONS
+ * ============================================================ */
 
 void input_tokens_delete_prev(input_state *st)
 {

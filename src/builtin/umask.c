@@ -2,8 +2,11 @@
 #include "builtin.h"
 #include "terminal.h"
 
-/* Convert umask to symbolic form: u=rwx,g=rx,o=rx */
-static void umask_symbolic(mode_t mask)
+/* ============================================================
+ *  INTERNAL HELPERS
+ * ============================================================ */
+
+static void _builtin_umask_symbolic(mode_t mask)
 {
     char out[64];
 
@@ -36,6 +39,10 @@ static void umask_symbolic(mode_t mask)
     terminal_slow_print(out);
 }
 
+/* ============================================================
+ *  COMMAND
+ * ============================================================ */
+
 int builtin_umask(int argc, char **argv)
 {
     LOG("umask: argc=%d", argc);
@@ -55,7 +62,7 @@ int builtin_umask(int argc, char **argv)
     /* Case 2: symbolic output */
     if (argc == 2 && strcmp(argv[1], "-S") == 0)
     {
-        umask_symbolic(oldmask);
+        _builtin_umask_symbolic(oldmask);
         return 1;
     }
 

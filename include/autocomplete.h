@@ -27,7 +27,7 @@ typedef struct
 extern autocomplete_entry input_autocomplete_table[];
 extern int input_autocomplete_count;
 
-void autocomplete_load_completions(void);
+void input_autocomplete_load_completions(void);
 void input_autocomplete_tab(input_state *st);
 
 #endif

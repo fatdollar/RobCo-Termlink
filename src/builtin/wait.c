@@ -2,6 +2,10 @@
 #include "builtin.h"
 #include "terminal.h"
 
+/* ============================================================
+ *  COMMAND
+ * ============================================================ */
+
 int builtin_wait(int argc, char **argv)
 {
     (void)argc;

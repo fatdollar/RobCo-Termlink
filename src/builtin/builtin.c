@@ -5,6 +5,10 @@
 #include "input.h"
 #include "input_state.h"
 
+/* ============================================================
+ *  COMMAND
+ * ============================================================ */
+
 void builtin_init(void)
 {
 	builtin_register("cd", builtin_cd);

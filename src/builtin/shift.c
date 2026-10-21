@@ -2,9 +2,16 @@
 #include "builtin.h"
 #include "terminal.h"
 
-/* positional parameters from set.c */
+/* ============================================================
+ * GLOBAL STATE
+ * ============================================================ */
+
 extern char *positional_params[256];
 extern int positional_count;
+
+/* ============================================================
+ *  COMMAND
+ * ============================================================ */
 
 int builtin_shift(int argc, char **argv)
 {

@@ -12,7 +12,7 @@ char external_cmds[MAX_EXTERNAL_CMDS][PATH_MAX];
 int external_cmd_count = 0;
 
 /* ============================================================
- * INTERNAL HELPERS (static)
+ * INTERNAL HELPERS
  * ============================================================ */
 
 static void _external_register(const char *name)
@@ -89,7 +89,7 @@ static void _external_load_commands_from_dir(const char *dirpath)
 }
 
 /* ============================================================
- * PUBLIC API
+ * SETUP
  * ============================================================ */
 
 void external_load_from_path(void)
@@ -185,6 +185,10 @@ bool external_is_tty_interactive(const char *cmd)
     LOG("external_is_tty_interactive: '%s' not in interactive list", cmd);
     return false;
 }
+
+/* ============================================================
+ * RUNNER
+ * ============================================================ */
 
 int external_run_paged(char **argv)
 {

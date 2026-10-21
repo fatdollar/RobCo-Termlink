@@ -1,6 +1,10 @@
 #include "main.h"
 #include "history.h"
 
+/* ============================================================
+ * INTERNAL HELPERS
+ * ============================================================ */
+
 static void _history_init_path(history_entry *hist)
 {
 	LOG_HISTORY("init_path: HOME='%s'", getenv("HOME"));
@@ -18,6 +22,10 @@ static void _history_init_path(history_entry *hist)
 
 	LOG_HISTORY("init_path: path='%s'", hist->history_path);
 }
+
+/* ============================================================
+ * SETUP
+ * ============================================================ */
 
 void history_load(history_entry *hist)
 {
@@ -59,6 +67,10 @@ void history_load(history_entry *hist)
 	LOG_HISTORY("load: count=%d index=%d",
 				hist->history_count, hist->history_index);
 }
+
+/* ============================================================
+ * UPDATING
+ * ============================================================ */
 
 void history_save(history_entry *hist)
 {
@@ -130,6 +142,10 @@ void history_add(history_entry *hist, const char *cmd)
 				hist->history_index,
 				hist->history_edit_saved);
 }
+
+/* ============================================================
+ * NAVIGATING
+ * ============================================================ */
 
 void history_prev(history_entry *hist, char *buf, size_t maxlen)
 {

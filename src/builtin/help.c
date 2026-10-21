@@ -4,6 +4,10 @@
 #include "external.h"
 #include "builtin.h"
 
+/* ============================================================
+ *  COMMAND
+ * ============================================================ */
+
 int builtin_help(int argc, char **argv)
 {
 	LOG("builtin_help: generating help output");

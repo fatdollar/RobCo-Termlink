@@ -2,9 +2,16 @@
 #include "builtin.h"
 #include "terminal.h"
 
-/* POSIX positional parameters storage */
+/* ============================================================
+ * GLOBAL STATE
+ * ============================================================ */
+
 char *positional_params[256];
 int positional_count = 0;
+
+/* ============================================================
+ *  COMMAND
+ * ============================================================ */
 
 int builtin_set(int argc, char **argv)
 {

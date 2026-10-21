@@ -13,18 +13,30 @@ autocomplete_entry input_autocomplete_table[MAX_COMPLETIONS];
 int input_autocomplete_count = 0;
 
 /* ============================================================
- * INTERNAL HELPERS (static)
+ * FORWARD DECLARATIONS
  * ============================================================ */
 
-static int _cmp_match(const void *a, const void *b)
+static int _input_autocomplete_cmp_match(const void *a, const void *b);
+static autocomplete_type _input_autocomplete_parse_completion_type(const char *value);
+static void _input_autocomplete_register_completion(char *cmd, autocomplete_type type);
+static autocomplete_entry *_input_autocomplete_lookup(const char *cmd);
+static void _input_autocomplete_load_completions_dir(const char *dirpath);
+static void _input_autocomplete_command(const char *prefix, size_t *len, char *buf);
+static void _input_autocomplete_path(char **argv, size_t *len, char *buf, autocomplete_type type);
+
+/* ============================================================
+ * INTERNAL HELPERS
+ * ============================================================ */
+
+static int _input_autocomplete_cmp_match(const void *a, const void *b)
 {
 	LOG("cmp_match: '%s' vs '%s'", (char *)a, (char *)b);
 	return strcmp((const char *)a, (const char *)b);
 }
 
-static autocomplete_type _autocomplete_parse_completion_type(const char *value)
+static autocomplete_type _input_autocomplete_parse_completion_type(const char *value)
 {
-	LOG("_autocomplete_parse_completion_type: value='%s'", value);
+	LOG("_input_autocomplete_parse_completion_type: value='%s'", value);
 
 	if (strcmp(value, "dirs") == 0)
 		return AUTOCOMPLETE_DIRS;
@@ -37,17 +49,17 @@ static autocomplete_type _autocomplete_parse_completion_type(const char *value)
 	if (strcmp(value, "dynamic") == 0)
 		return AUTOCOMPLETE_DYNAMIC;
 
-	LOG("_autocomplete_parse_completion_type: default");
+	LOG("_input_autocomplete_parse_completion_type: default");
 	return AUTOCOMPLETE_FILES_AND_DIRS;
 }
 
-static void _autocomplete_register_completion(char *cmd, autocomplete_type type)
+static void _input_autocomplete_register_completion(char *cmd, autocomplete_type type)
 {
-	LOG("_autocomplete_register_completion: cmd='%s' type=%d", cmd, type);
+	LOG("_input_autocomplete_register_completion: cmd='%s' type=%d", cmd, type);
 
 	if (input_autocomplete_count >= MAX_COMPLETIONS)
 	{
-		LOG("_autocomplete_register_completion: MAX_COMPLETIONS reached");
+		LOG("_input_autocomplete_register_completion: MAX_COMPLETIONS reached");
 		return;
 	}
 
@@ -55,7 +67,7 @@ static void _autocomplete_register_completion(char *cmd, autocomplete_type type)
 	input_autocomplete_table[input_autocomplete_count].type = type;
 	input_autocomplete_count++;
 
-	LOG("_autocomplete_register_completion: count=%d", input_autocomplete_count);
+	LOG("_input_autocomplete_register_completion: count=%d", input_autocomplete_count);
 }
 
 static autocomplete_entry *_input_autocomplete_lookup(const char *cmd)
@@ -78,21 +90,21 @@ static autocomplete_entry *_input_autocomplete_lookup(const char *cmd)
 	return NULL;
 }
 
-void _autocomplete_load_completions_dir(const char *dirpath)
+static void _input_autocomplete_load_completions_dir(const char *dirpath)
 {
-	LOG("_autocomplete_load_completions_dir: dir='%s'", dirpath);
+	LOG("_input_autocomplete_load_completions_dir: dir='%s'", dirpath);
 
 	DIR *d = opendir(dirpath);
 	if (!d)
 	{
-		LOG("_autocomplete_load_completions_dir: cannot open");
+		LOG("_input_autocomplete_load_completions_dir: cannot open");
 		return;
 	}
 
 	struct dirent *ent;
 	while ((ent = readdir(d)) != NULL)
 	{
-		LOG("_autocomplete_load_completions_dir: found '%s'", ent->d_name);
+		LOG("_input_autocomplete_load_completions_dir: found '%s'", ent->d_name);
 
 		const char *name = ent->d_name;
 		size_t len = strlen(name);
@@ -102,7 +114,7 @@ void _autocomplete_load_completions_dir(const char *dirpath)
 		if (strcmp(name + len - 5, ".comp") != 0)
 			continue;
 
-		LOG("_autocomplete_load_completions_dir: .comp file '%s'", name);
+		LOG("_input_autocomplete_load_completions_dir: .comp file '%s'", name);
 
 		char cmd[64];
 		size_t cmdlen = len - 5;
@@ -111,7 +123,7 @@ void _autocomplete_load_completions_dir(const char *dirpath)
 		memcpy(cmd, name, cmdlen);
 		cmd[cmdlen] = '\0';
 
-		LOG("_autocomplete_load_completions_dir: cmd='%s'", cmd);
+		LOG("_input_autocomplete_load_completions_dir: cmd='%s'", cmd);
 
 		char path[PATH_MAX];
 		snprintf(path, sizeof(path), "%s/%s", dirpath, name);
@@ -119,7 +131,7 @@ void _autocomplete_load_completions_dir(const char *dirpath)
 		FILE *f = fopen(path, "r");
 		if (!f)
 		{
-			LOG("_autocomplete_load_completions_dir: cannot open file '%s'", path);
+			LOG("_input_autocomplete_load_completions_dir: cannot open file '%s'", path);
 			continue;
 		}
 
@@ -138,7 +150,7 @@ void _autocomplete_load_completions_dir(const char *dirpath)
 
 		while (fgets(line, sizeof(line), f))
 		{
-			LOG("_autocomplete_load_completions_dir: line='%s'", line);
+			LOG("_input_autocomplete_load_completions_dir: line='%s'", line);
 
 			char *nl = strchr(line, '\n');
 			if (nl)
@@ -162,8 +174,8 @@ void _autocomplete_load_completions_dir(const char *dirpath)
 				while (*val == ' ' || *val == '\t')
 					val++;
 
-				type = _autocomplete_parse_completion_type(val);
-				LOG("_autocomplete_load_completions_dir: parsed type=%d", type);
+				type = _input_autocomplete_parse_completion_type(val);
+				LOG("_input_autocomplete_load_completions_dir: parsed type=%d", type);
 				continue;
 			}
 
@@ -184,7 +196,7 @@ void _autocomplete_load_completions_dir(const char *dirpath)
 				}
 				extensions[ext_count] = NULL;
 
-				LOG("_autocomplete_load_completions_dir: parsed %d extensions", ext_count);
+				LOG("_input_autocomplete_load_completions_dir: parsed %d extensions", ext_count);
 				continue;
 			}
 
@@ -201,7 +213,7 @@ void _autocomplete_load_completions_dir(const char *dirpath)
 				if (opt_count < 63)
 				{
 					options[opt_count++] = strdup(line + 4);
-					LOG("_autocomplete_load_completions_dir: option='%s'", line + 4);
+					LOG("_input_autocomplete_load_completions_dir: option='%s'", line + 4);
 				}
 				continue;
 			}
@@ -213,7 +225,7 @@ void _autocomplete_load_completions_dir(const char *dirpath)
 				while (*val == ' ' || *val == '\t')
 					val++;
 				dynamic_prog = strdup(val);
-				LOG("_autocomplete_load_completions_dir: dynamic='%s'", dynamic_prog);
+				LOG("_input_autocomplete_load_completions_dir: dynamic='%s'", dynamic_prog);
 				continue;
 			}
 		}
@@ -221,7 +233,7 @@ void _autocomplete_load_completions_dir(const char *dirpath)
 		fclose(f);
 
 		/* Register command */
-		_autocomplete_register_completion(cmd, type);
+		_input_autocomplete_register_completion(cmd, type);
 
 		/* Fill entry fields */
 		autocomplete_entry *e = _input_autocomplete_lookup(cmd);
@@ -371,7 +383,7 @@ static void _input_autocomplete_command(const char *prefix, size_t *len, char *b
 	if (match_count == 0)
 		return;
 
-	qsort(matches, match_count, PATH_MAX, _cmp_match);
+	qsort(matches, match_count, PATH_MAX, _input_autocomplete_cmp_match);
 
 	if (match_count == 1)
 	{
@@ -479,7 +491,7 @@ static void _input_autocomplete_path(char **argv, size_t *len, char *buf, autoco
 		if (match_count == 0)
 			return;
 
-		qsort(matches, match_count, PATH_MAX, _cmp_match);
+		qsort(matches, match_count, PATH_MAX, _input_autocomplete_cmp_match);
 
 		if (match_count == 1)
 		{
@@ -671,7 +683,7 @@ static void _input_autocomplete_path(char **argv, size_t *len, char *buf, autoco
 	}
 
 	LOG("autocomplete_path: sorting matches");
-	qsort(matches, match_count, PATH_MAX, _cmp_match);
+	qsort(matches, match_count, PATH_MAX, _input_autocomplete_cmp_match);
 
 	/* ============================================================
 	   Single match → complete it
@@ -730,34 +742,34 @@ static void _input_autocomplete_path(char **argv, size_t *len, char *buf, autoco
 }
 
 /* ============================================================
- * PUBLIC API
+ * SETUP
  * ============================================================ */
 
-void autocomplete_load_completions(void)
+void input_autocomplete_load_completions(void)
 {
-	LOG("autocomplete_load_completions: start");
+	LOG("input_autocomplete_load_completions: start");
 
 	/* Load system-wide completions */
-	_autocomplete_load_completions_dir("/usr/share/termlink/completions");
-	_autocomplete_load_completions_dir("/etc/termlink/completions");
+	_input_autocomplete_load_completions_dir("/usr/share/termlink/completions");
+	_input_autocomplete_load_completions_dir("/etc/termlink/completions");
 
 	/* Load user completions */
 	const char *home = getenv("HOME");
-	LOG("autocomplete_load_completions: HOME='%s'", home ? home : "(null)");
+	LOG("input_autocomplete_load_completions: HOME='%s'", home ? home : "(null)");
 
 	if (home && *home)
 	{
 		char path[PATH_MAX];
 		snprintf(path, sizeof(path), "%s/.termlink/completions", home);
-		LOG("autocomplete_load_completions: user dir='%s'", path);
-		_autocomplete_load_completions_dir(path);
+		LOG("input_autocomplete_load_completions: user dir='%s'", path);
+		_input_autocomplete_load_completions_dir(path);
 	}
 
 	/* Built-in fallback for cd */
-	LOG("autocomplete_load_completions: adding built-in 'cd'");
+	LOG("input_autocomplete_load_completions: adding built-in 'cd'");
 	{
 		autocomplete_entry *e;
-		_autocomplete_register_completion("cd", AUTOCOMPLETE_DIRS);
+		_input_autocomplete_register_completion("cd", AUTOCOMPLETE_DIRS);
 
 		/* Fill optional fields with NULL */
 		e = _input_autocomplete_lookup("cd");
@@ -769,8 +781,12 @@ void autocomplete_load_completions(void)
 		}
 	}
 
-	LOG("autocomplete_load_completions: done");
+	LOG("input_autocomplete_load_completions: done");
 }
+
+/* ============================================================
+ * RUNNER
+ * ============================================================ */
 
 void input_autocomplete_tab(input_state *st)
 {

@@ -2,13 +2,19 @@
 #include "builtin.h"
 #include "terminal.h"
 
-/* POSIX state variables */
+/* ============================================================
+ * GLOBAL STATE
+ * ============================================================ */
+
 static int optind_internal = 1;
 static char *optarg_internal = NULL;
 static int optopt_internal = 0;
 
-/* expose to environment */
-static void sync_env(void)
+/* ============================================================
+ *  INTERNAL HELPERS
+ * ============================================================ */
+
+static void _builtin_getopts_sync_env(void)
 {
     char buf[32];
 
@@ -23,6 +29,10 @@ static void sync_env(void)
     snprintf(buf, sizeof(buf), "%d", optopt_internal);
     setenv("OPTOPT", buf, 1);
 }
+
+/* ============================================================
+ *  COMMAND
+ * ============================================================ */
 
 int builtin_getopts(int argc, char **argv)
 {
@@ -78,7 +88,7 @@ int builtin_getopts(int argc, char **argv)
             setenv(name, "?", 1);
 
         optind_internal++;
-        sync_env();
+        _builtin_getopts_sync_env();
         return 1;
     }
 
@@ -105,7 +115,7 @@ int builtin_getopts(int argc, char **argv)
             else
                 setenv(name, "?", 1);
 
-            sync_env();
+            _builtin_getopts_sync_env();
             optind_internal++;
             return 1;
         }
@@ -121,7 +131,7 @@ int builtin_getopts(int argc, char **argv)
     setenv(name, buf, 1);
 
     optind_internal++;
-    sync_env();
+    _builtin_getopts_sync_env();
 
     return 1;
 }

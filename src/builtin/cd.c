@@ -2,6 +2,10 @@
 #include "builtin.h"
 #include "terminal.h"
 
+/* ============================================================
+ *  COMMAND
+ * ============================================================ */
+
 int builtin_cd(int argc, char **argv)
 {
     LOG("cd: argc=%d argv1='%s'", argc, (argc > 1 ? argv[1] : "(none)"));

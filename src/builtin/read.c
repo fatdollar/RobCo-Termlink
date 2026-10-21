@@ -3,6 +3,10 @@
 #include "terminal.h"
 #include "input.h"
 
+/* ============================================================
+ *  COMMAND
+ * ============================================================ */
+
 int builtin_read(int argc, char **argv)
 {
     LOG("read: argc=%d", argc);

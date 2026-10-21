@@ -8,6 +8,10 @@
 #include "history.h"
 #include "tl.h"
 
+/* ============================================================
+ * GLOBAL STATE
+ * ============================================================ */
+
 extern char **environ;
 
 tl_exec_ctx_t tl_ctx = {
@@ -17,6 +21,10 @@ tl_exec_ctx_t tl_ctx = {
 	.last_status = 0,
 	.output_fn = terminal_slow_print,
 	.error_fn = terminal_slow_print};
+
+/* ============================================================
+ * MAIN
+ * ============================================================ */
 
 int main(void)
 {
@@ -52,7 +60,7 @@ int main(void)
 	terminal_setup();
 
 	history_load(&st.hist);
-	autocomplete_load_completions();
+	input_autocomplete_load_completions();
 	builtin_init();
 	external_load_from_path();
 
