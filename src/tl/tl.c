@@ -403,45 +403,31 @@ static int _builtin_type_is_builtin(const tl_command_t *cmd)
 
 static int _tl_exec_builtin(tl_command_t *cmd, tl_exec_ctx_t *ctx)
 {
-	const char *name = cmd->argv->text;
-	LOG("_tl_exec_builtin: name='%s'", name);
+	(void)ctx;
 
-	if (strcmp(name, "cd") == 0)
-	{
-		const char *path = cmd->argv->next ? cmd->argv->next->text : getenv("HOME");
-		LOG("_tl_exec_builtin: cd to '%s'", path ? path : "(null)");
-		if (chdir(path) != 0)
-		{
-			ctx->error_fn("cd: failed");
-			return 1;
-		}
-		return 0;
-	}
+	int argc = 0;
 
-	if (strcmp(name, "echo") == 0)
-	{
-		LOG("_tl_exec_builtin: echo");
-		tl_word_t *w = cmd->argv->next;
-		while (w)
-		{
-			ctx->output_fn(w->text);
-			if (w->next)
-				ctx->output_fn(" ");
-			w = w->next;
-		}
-		ctx->output_fn("\n");
-		return 0;
-	}
+	for (tl_word_t *w = cmd->argv; w; w = w->next)
+		argc++;
 
-	if (strcmp(name, "exit") == 0)
-	{
-		int code = cmd->argv->next ? atoi(cmd->argv->next->text) : 0;
-		LOG("_tl_exec_builtin: exit %d", code);
-		exit(code);
-	}
+	char **argv = calloc(argc + 1, sizeof(char *));
 
-	LOG("_tl_exec_builtin: unknown builtin");
-	return 1;
+	int i = 0;
+	for (tl_word_t *w = cmd->argv; w; w = w->next)
+		argv[i++] = w->text;
+
+	argv[i] = NULL;
+
+	LOG("_tl_exec_builtin: argc=%d", argc);
+
+	for (i = 0; i < argc; i++)
+		LOG("_tl_exec_builtin: argv[%d]='%s'", i, argv[i]);
+
+	int rc = builtin_try(argc, argv);
+
+	free(argv);
+
+	return rc;
 }
 
 /* ============================================================
@@ -490,7 +476,7 @@ int tl_exec_command(tl_command_t *cmd, tl_exec_ctx_t *ctx)
 	cmd->argv = _tl_expand_all_words(cmd->argv);
 
 	/* Glob expansion on argv (pathname expansion) */
-	cmd->argv = tl_expand_globs_on_argv(cmd->argv);
+	cmd->argv = tl_glob_expand_on_argv(cmd->argv);
 
 	/* Expand redirection targets */
 	for (tl_redir_t *r = cmd->redirs; r; r = r->next)
