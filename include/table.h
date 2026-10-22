@@ -1,5 +1,5 @@
-#ifndef TERMLINK_TABLE_H
-#define TERMLINK_TABLE_H
+#ifndef TABLE_H
+#define TABLE_H
 
 #include "screen.h"
 
