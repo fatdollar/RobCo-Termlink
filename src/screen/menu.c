@@ -16,7 +16,7 @@ void screen_menu_init(menu *m, menu_item *items, int count)
 	m->selected = 0;
 	m->page = 0;
 
-	/* Assign directly with pointer casting to satisfy screen struct without wrappers */
+	m->screen.type = SCREEN_MENU;
 	m->screen.render = (void (*)(screen *))screen_menu_render;
 	m->screen.handle_key = (void (*)(screen *, int))screen_menu_handle_key;
 	m->screen.destroy = (void (*)(screen *))screen_menu_free;
