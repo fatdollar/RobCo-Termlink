@@ -1,5 +1,5 @@
-#ifndef TERMLINK_MENU_H
-#define TERMLINK_MENU_H
+#ifndef MENU_H
+#define MENU_H
 
 #include "screen.h"
 

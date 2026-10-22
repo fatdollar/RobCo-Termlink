@@ -1,5 +1,5 @@
-#ifndef TERMLINK_PAGER_H
-#define TERMLINK_PAGER_H
+#ifndef PAGER_H
+#define PAGER_H
 
 #include "screen.h"
 

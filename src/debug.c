@@ -1,6 +1,6 @@
 #include "debug.h"
 
-#ifdef TERMLINK_DEBUG
+#ifdef DEBUG
 FILE *debug_log = NULL;
 
 void debug_init(void)

@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 
-#ifdef TERMLINK_DEBUG
+#ifdef DEBUG
 
 extern FILE *debug_log;
 

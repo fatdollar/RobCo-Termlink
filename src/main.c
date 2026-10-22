@@ -34,7 +34,7 @@ int main(void)
 
 	tl_ctx.envp = environ;
 
-#ifdef TERMLINK_DEBUG
+#ifdef DEBUG
 	debug_init();
 #endif
 

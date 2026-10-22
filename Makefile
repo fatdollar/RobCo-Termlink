@@ -36,5 +36,5 @@ clean:
 	rm -rf build
 
 # --- Debug build target ---
-debug: CFLAGS += -DTERMLINK_DEBUG
+debug: CFLAGS += -DDEBUG
 debug: $(BIN)
