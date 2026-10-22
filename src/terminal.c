@@ -271,6 +271,13 @@ void terminal_scroll_print(int row, const char *text)
 	terminal_slow_print_at(terminal_scroll_top + row, text);
 }
 
+void terminal_scroll_print_highlighted(int row, const char *text)
+{
+	char buf[512];
+	snprintf(buf, sizeof(buf), "\033[7m%s\033[0m", text);
+	terminal_scroll_print(row, buf);
+}
+
 /* ============================================================
  * CLEAR / HEADER / PROMPT
  * ============================================================ */

@@ -40,19 +40,19 @@ void screen_menu_render(menu *m)
 		char line[256];
 		int slot = (i - start) + 1;
 
-		if (i == m->selected)
-			snprintf(line, sizeof(line), "> [%d] %s", slot, m->items[i].label);
-		else
-			snprintf(line, sizeof(line), "  [%d] %s", slot, m->items[i].label);
+		snprintf(line, sizeof(line), "[%d] %s", slot, m->items[i].label);
 
-		terminal_scroll_print(row++, line);
+		if (i == m->selected)
+			terminal_scroll_print_highlighted(row++, line);
+		else
+			terminal_scroll_print(row++, line);
 	}
 
 	int total_pages = (m->count + MENU_PAGE_SIZE - 1) / MENU_PAGE_SIZE;
 	if (total_pages > 1)
 	{
 		char page_info[64];
-		snprintf(page_info, sizeof(page_info), "-- Page %d/%d ([←][→] switch page) --", m->page + 1, total_pages);
+		snprintf(page_info, sizeof(page_info), "-- Page %d/%d ([←][→] page) --", m->page + 1, total_pages);
 		terminal_scroll_print(row++, page_info);
 	}
 

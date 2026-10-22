@@ -39,6 +39,7 @@ void terminal_setup(void);
 void terminal_slow_print_at(int line, const char *s);
 void terminal_slow_print(const char *s);
 void terminal_scroll_print(int row, const char *text);
+void terminal_scroll_print_highlighted(int row, const char *text);
 
 void terminal_scroll_clear(void);
 void terminal_prompt_draw(void);
