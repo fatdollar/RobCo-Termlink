@@ -1,6 +1,7 @@
 #include "main.h"
 #include "builtin.h"
 #include "terminal.h"
+#include "jobs.h"
 
 /* ============================================================
  *  COMMAND
@@ -8,11 +9,27 @@
 
 int builtin_fg(int argc, char **argv)
 {
-    (void)argc;
-    (void)argv;
+	LOG("builtin_fg: start");
 
-    LOG("fg: stub called");
-    terminal_slow_print("fg: job control not implemented\n");
+	job_t *j = g_first_job;
+	if (argc > 1)
+	{
+		pid_t pgid = (pid_t)atoi(argv[1]);
+		j = tl_jobs_find(pgid);
+	}
 
-    return 1;
+	if (!j)
+	{
+		terminal_slow_print("fg: no such job\n");
+		return 1;
+	}
+
+	char buf[256];
+	snprintf(buf, sizeof(buf), "%s\n", j->name ? j->name : "");
+	terminal_slow_print(buf);
+
+	tl_jobs_to_foreground(j, 1);
+
+	LOG("builtin_fg: done");
+	return 0;
 }

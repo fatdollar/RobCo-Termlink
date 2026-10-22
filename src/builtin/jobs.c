@@ -1,6 +1,7 @@
 #include "main.h"
 #include "builtin.h"
 #include "terminal.h"
+#include "jobs.h"
 
 /* ============================================================
  *  COMMAND
@@ -8,11 +9,25 @@
 
 int builtin_jobs(int argc, char **argv)
 {
-    (void)argc;
-    (void)argv;
+	(void)argc;
+	(void)argv;
 
-    LOG("jobs: stub called");
-    terminal_slow_print("jobs: job control not implemented\n");
+	LOG("builtin_jobs: start");
 
-    return 1;
+	int job_num = 1;
+	for (job_t *j = g_first_job; j; j = j->next, job_num++)
+	{
+		const char *state_str = "Running";
+		if (j->state == JOB_STOPPED)
+			state_str = "Stopped";
+		else if (j->state == JOB_DONE)
+			state_str = "Done";
+
+		char buf[512];
+		snprintf(buf, sizeof(buf), "[%d]  %s %s\n", job_num, state_str, j->name ? j->name : "");
+		terminal_slow_print(buf);
+	}
+
+	LOG("builtin_jobs: done");
+	return 0;
 }

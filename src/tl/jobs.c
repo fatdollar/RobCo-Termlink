@@ -1,44 +1,272 @@
 #include "main.h"
 #include "jobs.h"
 
-static job *g_first_job = NULL;
+/* ============================================================
+ *  STATE
+ * ============================================================ */
 
-void init_job_control(void)
+job_t *g_first_job = NULL;
+
+/* ============================================================
+ * FORWARD DECLARATIONS
+ * ============================================================ */
+
+void _tl_jobs_wait(job_t *j);
+void _tl_jobs_mark_process_status(pid_t pid, int status);
+static int tl_jobs_is_stopped(job_t *j);
+static int tl_jobs_is_completed(job_t *j);
+
+/* ============================================================
+ * INTERNAL HELPERS
+ * ============================================================ */
+
+void _tl_jobs_wait(job_t *j)
 {
-    /* Ensure shell is running interactively */
-    pid_t shell_pgid = getpid();
-    if (setpgid(shell_pgid, shell_pgid) < 0)
-    {
-        /* Fallback if setpgid fails in non-tty environments */
-        return;
-    }
-    tcsetpgrp(STDIN_FILENO, shell_pgid);
+	LOG("_tl_jobs_wait: start waiting for job pgid=%d", (int)j->pgid);
+	int status;
+	pid_t pid;
+
+	do
+	{
+		pid = waitpid(WAIT_ANY, &status, WUNTRACED);
+		if (pid > 0)
+		{
+			_tl_jobs_mark_process_status(pid, status);
+		}
+	} while (pid > 0 && !tl_jobs_is_stopped(j) && !tl_jobs_is_completed(j));
+	LOG("_tl_jobs_wait: finished waiting for job pgid=%d", (int)j->pgid);
 }
 
-void put_job_in_foreground(job *j, int cont)
+void _tl_jobs_mark_process_status(pid_t pid, int status)
 {
-    /* Put job in the foreground */
-    tcsetpgrp(STDIN_FILENO, j->pgid);
-
-    /* Send continue signal if stopped */
-    if (cont)
-    {
-        kill(-j->pgid, SIGCONT);
-        j->state = JOB_RUNNING;
-    }
-
-    /* Wait for it to finish or stop */
-    // TODO: implement wait_for_job(j) loop here
-
-    /* Reclaim terminal control back to shell */
-    tcsetpgrp(STDIN_FILENO, getpgrp());
+	LOG("_tl_jobs_mark_process_status: pid=%d, status=%d", (int)pid, status);
+	for (job_t *j = g_first_job; j; j = j->next)
+	{
+		for (process_t *p = j->first_process; p; p = p->next)
+		{
+			if (p->pid == pid)
+			{
+				p->status = status;
+				if (WIFSTOPPED(status))
+				{
+					p->stopped = true;
+					LOG("_tl_jobs_mark_process_status: process pid=%d stopped by signal %d", (int)pid, WSTOPSIG(status));
+				}
+				else
+				{
+					p->completed = true;
+					if (WIFEXITED(status))
+					{
+						LOG("_tl_jobs_mark_process_status: process pid=%d exited with status %d", (int)pid, WEXITSTATUS(status));
+					}
+					else if (WIFSIGNALED(status))
+					{
+						LOG("_tl_jobs_mark_process_status: process pid=%d terminated by signal %d", (int)pid, WTERMSIG(status));
+					}
+				}
+				return;
+			}
+		}
+	}
+	LOG("_tl_jobs_mark_process_status: warning - no process matched pid=%d", (int)pid);
 }
 
-void put_job_in_background(job *j, int cont)
+static int tl_jobs_is_stopped(job_t *j)
 {
-    if (cont)
-    {
-        kill(-j->pgid, SIGCONT);
-        j->state = JOB_RUNNING;
-    }
+	for (process_t *p = j->first_process; p; p = p->next)
+	{
+		if (!p->completed && !p->stopped)
+			return 0;
+	}
+	return 1;
+}
+
+static int tl_jobs_is_completed(job_t *j)
+{
+	for (process_t *p = j->first_process; p; p = p->next)
+	{
+		if (!p->completed)
+			return 0;
+	}
+	return 1;
+}
+
+/* ============================================================
+ * SETUP
+ * ============================================================ */
+
+void tl_jobs_init(void)
+{
+	LOG("tl_jobs_init: start");
+	pid_t shell_pgid = getpid();
+	if (setpgid(shell_pgid, shell_pgid) < 0)
+	{
+		LOG("tl_jobs_init: setpgid failed (errno=%d)", errno);
+		return;
+	}
+	tcsetpgrp(STDIN_FILENO, shell_pgid);
+	LOG("tl_jobs_init: done, shell_pgid=%d", (int)shell_pgid);
+}
+
+/* ============================================================
+ * JOB MANAGEMENT
+ * ============================================================ */
+
+job_t *tl_jobs_find(pid_t pgid)
+{
+	LOG("tl_jobs_find: searching for pgid=%d", (int)pgid);
+	for (job_t *j = g_first_job; j; j = j->next)
+	{
+		if (j->pgid == pgid)
+		{
+			LOG("tl_jobs_find: found job name='%s'", j->name ? j->name : "(null)");
+			return j;
+		}
+	}
+	LOG("tl_jobs_find: job not found for pgid=%d", (int)pgid);
+	return NULL;
+}
+
+void tl_jobs_to_foreground(job_t *j, int cont)
+{
+	LOG("tl_jobs_to_foreground: start job pgid=%d, cont=%d", (int)j->pgid, cont);
+	tcsetpgrp(STDIN_FILENO, j->pgid);
+
+	if (cont)
+	{
+		LOG("tl_jobs_to_foreground: sending SIGCONT to pgid=%d", (int)j->pgid);
+		kill(-j->pgid, SIGCONT);
+		j->state = JOB_RUNNING;
+	}
+
+	_tl_jobs_wait(j);
+
+	tcsetpgrp(STDIN_FILENO, getpgrp());
+	LOG("tl_jobs_to_foreground: done job pgid=%d", (int)j->pgid);
+}
+
+void tl_jobs_to_background(job_t *j, int cont)
+{
+	LOG("tl_jobs_to_background: start job pgid=%d, cont=%d", (int)j->pgid, cont);
+	if (cont)
+	{
+		LOG("tl_jobs_to_background: sending SIGCONT to pgid=%d", (int)j->pgid);
+		kill(-j->pgid, SIGCONT);
+		j->state = JOB_RUNNING;
+	}
+	LOG("tl_jobs_to_background: done job pgid=%d", (int)j->pgid);
+}
+
+void tl_jobs_launch_process(process_t *p, pid_t infd, pid_t outfd, pid_t errfd, int foreground)
+{
+	LOG("tl_jobs_launch_process: start process command='%s', infd=%d, outfd=%d, errfd=%d, foreground=%d",
+		p->command ? p->command : "(null)", (int)infd, (int)outfd, (int)errfd, foreground);
+
+	pid_t pid = getpid();
+
+	/* Put the process into its process group */
+	if (setpgid(pid, pid) < 0)
+	{
+		LOG("tl_jobs_launch_process: setpgid failed (errno=%d)", errno);
+	}
+
+	/* If this is a foreground process, give it terminal control */
+	if (foreground)
+	{
+		tcsetpgrp(STDIN_FILENO, pid);
+	}
+
+	/* Restore default signal handlers for the child process */
+	signal(SIGINT, SIG_DFL);
+	signal(SIGQUIT, SIG_DFL);
+	signal(SIGTSTP, SIG_DFL);
+	signal(SIGTTIN, SIG_DFL);
+	signal(SIGTTOU, SIG_DFL);
+	signal(SIGCHLD, SIG_DFL);
+
+	/* Handle standard input redirection */
+	if (infd != STDIN_FILENO)
+	{
+		LOG("tl_jobs_launch_process: redirecting stdin from fd %d", (int)infd);
+		dup2(infd, STDIN_FILENO);
+		close(infd);
+	}
+
+	/* Handle standard output redirection */
+	if (outfd != STDOUT_FILENO)
+	{
+		LOG("tl_jobs_launch_process: redirecting stdout to fd %d", (int)outfd);
+		dup2(outfd, STDOUT_FILENO);
+		close(outfd);
+	}
+
+	/* Handle standard error redirection */
+	if (errfd != STDERR_FILENO)
+	{
+		LOG("tl_jobs_launch_process: redirecting stderr to fd %d", (int)errfd);
+		dup2(errfd, STDERR_FILENO);
+		close(errfd);
+	}
+
+	LOG("tl_jobs_launch_process: done for process pid=%d", (int)pid);
+}
+
+void tl_jobs_launch_job(job_t *j, int foreground)
+{
+	LOG("tl_jobs_launch_job: start job name='%s', foreground=%d", j->name ? j->name : "(null)", foreground);
+
+	// Add job to global job list
+	j->next = g_first_job;
+	g_first_job = j;
+
+	// For single or multiple processes in the job, iterate and fork/launch
+	process_t *p = j->first_process;
+	pid_t pid = fork();
+
+	if (pid < 0)
+	{
+		LOG("tl_jobs_launch_job: fork failed");
+		return;
+	}
+
+	if (pid == 0)
+	{
+		/* Child process */
+		pid_t child_pid = getpid();
+
+		// If pgid is not set yet, use the first child's pid as the pgid
+		if (j->pgid == 0)
+		{
+			j->pgid = child_pid;
+		}
+		setpgid(child_pid, j->pgid);
+
+		// Call your existing fully-instrumented launcher
+		tl_jobs_launch_process(p, STDIN_FILENO, STDOUT_FILENO, STDERR_FILENO, foreground);
+
+		// Exec handling happens right after in the execution routine,
+		// or we can structure the child exit here.
+	}
+	else
+	{
+		/* Parent process */
+		p->pid = pid;
+		if (j->pgid == 0)
+		{
+			j->pgid = pid;
+		}
+		setpgid(pid, j->pgid);
+
+		if (foreground)
+		{
+			tl_jobs_to_foreground(j, 0);
+		}
+		else
+		{
+			tl_jobs_to_background(j, 0);
+			LOG("tl_jobs_launch_job: background job launched, pgid=%d", (int)j->pgid);
+		}
+	}
+
+	LOG("tl_jobs_launch_job: done");
 }

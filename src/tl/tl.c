@@ -2,6 +2,8 @@
 #include "input.h"
 #include "external.h"
 #include "glob.h"
+#include "jobs.h"
+#include "builtin.h"
 #include "tl.h"
 
 /* ============================================================
@@ -389,7 +391,7 @@ static void _tl_apply_assignments(tl_word_t *assignments)
 	}
 }
 
-static int _builtin_type_is_builtin(const tl_command_t *cmd)
+static int _tl_type_is_builtin(const tl_command_t *cmd)
 {
 	if (!cmd || !cmd->argv || !cmd->argv->text)
 		return 0;
@@ -428,6 +430,23 @@ static int _tl_exec_builtin(tl_command_t *cmd, tl_exec_ctx_t *ctx)
 	free(argv);
 
 	return rc;
+}
+
+static char *_tl_build_command_string(tl_command_t *cmd)
+{
+	int total_len = 0;
+	for (tl_word_t *w = cmd->argv; w; w = w->next)
+	{
+		total_len += strlen(w->text) + 1;
+	}
+	char *cmd_str = calloc(total_len > 0 ? total_len : 1, sizeof(char));
+	for (tl_word_t *w = cmd->argv; w; w = w->next)
+	{
+		strcat(cmd_str, w->text);
+		if (w->next)
+			strcat(cmd_str, " ");
+	}
+	return cmd_str;
 }
 
 /* ============================================================
@@ -501,7 +520,7 @@ int tl_exec_command(tl_command_t *cmd, tl_exec_ctx_t *ctx)
 	_tl_apply_assignments(cmd->assignments);
 
 	/* Check builtin */
-	if (_builtin_type_is_builtin(cmd))
+	if (_tl_type_is_builtin(cmd))
 	{
 		LOG("tl_exec_command: builtin");
 		int st = _tl_exec_builtin(cmd, ctx);
@@ -509,30 +528,39 @@ int tl_exec_command(tl_command_t *cmd, tl_exec_ctx_t *ctx)
 		return st;
 	}
 
-	/* External: fork + child exec */
+	/* Build process structure */
+	process_t *p = calloc(1, sizeof(process_t));
+	p->command = _tl_build_command_string(cmd);
+	p->completed = false;
+	p->stopped = false;
+
+	/* Build job structure */
+	job_t *j = calloc(1, sizeof(job_t));
+	j->name = strdup(p->command);
+	j->first_process = p;
+	j->state = JOB_RUNNING;
+	j->pgid = 0;
+
+	/* External: fork + child exec via job launcher */
 	pid_t pid = fork();
 	if (pid < 0)
 	{
 		LOG("tl_exec_command: fork failed");
+		free(p->command);
+		free(p);
+		free(j->name);
+		free(j);
 		return 1;
 	}
 
-	pid_t pgid = pid; // For a single command, its pid is its pgid
-
 	if (pid == 0)
 	{
-		/* Child: Put process in its own process group */
+		/* Child execution */
 		pid_t child_pid = getpid();
-		setpgid(child_pid, child_pid);
+		j->pgid = child_pid;
+		setpgid(child_pid, j->pgid);
 
-		/* Restore default signal handlers for child */
-		signal(SIGINT, SIG_DFL);
-		signal(SIGQUIT, SIG_DFL);
-		signal(SIGTSTP, SIG_DFL);
-		signal(SIGTTIN, SIG_DFL);
-		signal(SIGTTOU, SIG_DFL);
-
-		/* Child: apply redirs and exec, no further expansion */
+		tl_jobs_launch_process(p, STDIN_FILENO, STDOUT_FILENO, STDERR_FILENO, 1);
 		_tl_apply_redirs(cmd->redirs);
 
 		int argc = 0;
@@ -550,36 +578,36 @@ int tl_exec_command(tl_command_t *cmd, tl_exec_ctx_t *ctx)
 		_exit(127);
 	}
 
-	/* Parent: Set child process group to avoid race condition */
-	setpgid(pid, pgid);
+	/* Parent */
+	p->pid = pid;
+	j->pgid = pid;
+	setpgid(pid, j->pgid);
 
-	/* Give terminal control to the foreground job */
-	tcsetpgrp(STDIN_FILENO, pgid);
-
-	int status = 0;
-	/* Wait for process, tracking stops (WUNTRACED) */
-	waitpid(pid, &status, WUNTRACED);
-
-	/* Reclaim terminal control back to shell */
-	tcsetpgrp(STDIN_FILENO, getpgrp());
+	/* Launch and track job via job control system */
+	tl_jobs_launch_job(j, 1);
 
 	int st = 1;
-	if (WIFEXITED(status))
+	if (WIFEXITED(p->status))
 	{
-		st = WEXITSTATUS(status);
+		st = WEXITSTATUS(p->status);
 		LOG("tl_exec_command: exited normally, status=%d", st);
 	}
-	else if (WIFSIGNALED(status))
+	else if (WIFSIGNALED(p->status))
 	{
-		st = 128 + WTERMSIG(status);
-		LOG("tl_exec_command: terminated by signal %d", WTERMSIG(status));
+		st = 128 + WTERMSIG(p->status);
+		LOG("tl_exec_command: terminated by signal %d", WTERMSIG(p->status));
 	}
-	else if (WIFSTOPPED(status))
+	else if (WIFSTOPPED(p->status))
 	{
-		st = 128 + WSTOPSIG(status);
-		LOG("tl_exec_command: stopped by signal %d", WSTOPSIG(status));
-		// TODO: Add stopped job to job table here
+		st = 128 + WSTOPSIG(p->status);
+		LOG("tl_exec_command: stopped by signal %d", WSTOPSIG(p->status));
+		return st;
 	}
+
+	free(p->command);
+	free(p);
+	free(j->name);
+	free(j);
 
 	LOG("tl_exec_command: done, status=%d", st);
 	return st;
@@ -603,61 +631,103 @@ int tl_exec_pipeline(tl_pipeline_t *pl, tl_exec_ctx_t *ctx)
 	for (int i = 0; i < n - 1; i++)
 		pipe(pipes[i]);
 
-	pid_t pids[n];
+	job_t *j = calloc(1, sizeof(job_t));
+	j->state = JOB_RUNNING;
+	j->pgid = 0;
+	process_t *last_proc = NULL;
 
+	/* Expand and prepare all commands in the pipeline first */
 	for (int i = 0; i < n; i++)
 	{
 		tl_command_t *cmd = pl->commands[i];
 
-		/* Expand assignments (no field splitting) */
 		for (tl_word_t *w = cmd->assignments; w; w = w->next)
 		{
 			char *expanded = _tl_expand_word(w->text);
-			LOG("tl_exec_pipeline: assignment '%s' -> '%s'",
-				w->text, expanded);
+			LOG("tl_exec_pipeline: assignment '%s' -> '%s'", w->text, expanded);
 			free(w->text);
 			w->text = expanded;
 		}
 
-		/* Expand argv + redirs for each pipeline command */
 		cmd->argv = _tl_expand_all_words(cmd->argv);
+		cmd->argv = tl_glob_expand_on_argv(cmd->argv);
+
 		for (tl_redir_t *r = cmd->redirs; r; r = r->next)
 		{
 			char *expanded = _tl_expand_word(r->target->text);
-			LOG("tl_exec_pipeline: redir '%s' -> '%s'",
-				r->target->text, expanded);
+			LOG("tl_exec_pipeline: redir '%s' -> '%s'", r->target->text, expanded);
 			free(r->target->text);
 			r->target->text = expanded;
 		}
 
+		process_t *p = calloc(1, sizeof(process_t));
+		p->command = _tl_build_command_string(cmd);
+		p->completed = false;
+		p->stopped = false;
+
+		if (!j->name)
+		{
+			j->name = strdup(p->command);
+		}
+
+		if (!j->first_process)
+		{
+			j->first_process = p;
+		}
+		else
+		{
+			last_proc->next = p;
+		}
+		last_proc = p;
+	}
+
+	process_t *p = j->first_process;
+	for (int i = 0; i < n; i++)
+	{
+		tl_command_t *cmd = pl->commands[i];
+
 		pid_t pid = fork();
+		if (pid < 0)
+		{
+			LOG("tl_exec_pipeline: fork failed");
+			// Cleanup allocated nodes on error
+			return 1;
+		}
+
 		if (pid == 0)
 		{
-			/* Child: apply assignments to environment */
+			pid_t child_pid = getpid();
+			if (j->pgid == 0)
+			{
+				j->pgid = child_pid;
+			}
+			setpgid(child_pid, j->pgid);
+
 			_tl_apply_assignments(cmd->assignments);
 
-			/* stdin from previous pipe */
+			int infd = STDIN_FILENO;
+			int outfd = STDOUT_FILENO;
+
 			if (i > 0)
 			{
-				dup2(pipes[i - 1][0], STDIN_FILENO);
+				infd = pipes[i - 1][0];
 			}
 
-			/* stdout to next pipe */
 			if (i < n - 1)
 			{
-				dup2(pipes[i][1], STDOUT_FILENO);
+				outfd = pipes[i][1];
 			}
 
-			/* close all pipe fds */
-			for (int j = 0; j < n - 1; j++)
+			tl_jobs_launch_process(p, infd, outfd, STDERR_FILENO, 1);
+
+			for (int k = 0; k < n - 1; k++)
 			{
-				close(pipes[j][0]);
-				close(pipes[j][1]);
+				close(pipes[k][0]);
+				close(pipes[k][1]);
 			}
 
 			_tl_apply_redirs(cmd->redirs);
 
-			/* build argv[] */
 			int argc = 0;
 			for (tl_word_t *w = cmd->argv; w; w = w->next)
 				argc++;
@@ -673,23 +743,39 @@ int tl_exec_pipeline(tl_pipeline_t *pl, tl_exec_ctx_t *ctx)
 			_exit(127);
 		}
 
-		pids[i] = pid;
+		p->pid = pid;
+		if (j->pgid == 0)
+		{
+			j->pgid = pid;
+		}
+		setpgid(pid, j->pgid);
+
+		p = p->next;
 	}
 
-	/* parent closes pipes */
+	/* Parent closes all pipe file descriptors */
 	for (int i = 0; i < n - 1; i++)
 	{
 		close(pipes[i][0]);
 		close(pipes[i][1]);
 	}
 
+	/* Register and wait on pipeline job */
+	tl_jobs_launch_job(j, 1);
+
 	int last_status = 0;
-	for (int i = 0; i < n; i++)
+	process_t *curr = j->first_process;
+	while (curr)
 	{
-		int status = 0;
-		waitpid(pids[i], &status, 0);
-		if (i == n - 1)
-			last_status = WIFEXITED(status) ? WEXITSTATUS(status) : 1;
+		if (WIFEXITED(curr->status))
+		{
+			last_status = WEXITSTATUS(curr->status);
+		}
+		else if (WIFSIGNALED(curr->status))
+		{
+			last_status = 128 + WTERMSIG(curr->status);
+		}
+		curr = curr->next;
 	}
 
 	LOG("tl_exec_pipeline: done, status=%d", last_status);
