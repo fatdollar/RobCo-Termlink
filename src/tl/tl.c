@@ -517,8 +517,21 @@ int tl_exec_command(tl_command_t *cmd, tl_exec_ctx_t *ctx)
 		return 1;
 	}
 
+	pid_t pgid = pid; // For a single command, its pid is its pgid
+
 	if (pid == 0)
 	{
+		/* Child: Put process in its own process group */
+		pid_t child_pid = getpid();
+		setpgid(child_pid, child_pid);
+
+		/* Restore default signal handlers for child */
+		signal(SIGINT, SIG_DFL);
+		signal(SIGQUIT, SIG_DFL);
+		signal(SIGTSTP, SIG_DFL);
+		signal(SIGTTIN, SIG_DFL);
+		signal(SIGTTOU, SIG_DFL);
+
 		/* Child: apply redirs and exec, no further expansion */
 		_tl_apply_redirs(cmd->redirs);
 
@@ -537,10 +550,37 @@ int tl_exec_command(tl_command_t *cmd, tl_exec_ctx_t *ctx)
 		_exit(127);
 	}
 
-	int status = 0;
-	waitpid(pid, &status, 0);
+	/* Parent: Set child process group to avoid race condition */
+	setpgid(pid, pgid);
 
-	int st = WIFEXITED(status) ? WEXITSTATUS(status) : 1;
+	/* Give terminal control to the foreground job */
+	tcsetpgrp(STDIN_FILENO, pgid);
+
+	int status = 0;
+	/* Wait for process, tracking stops (WUNTRACED) */
+	waitpid(pid, &status, WUNTRACED);
+
+	/* Reclaim terminal control back to shell */
+	tcsetpgrp(STDIN_FILENO, getpgrp());
+
+	int st = 1;
+	if (WIFEXITED(status))
+	{
+		st = WEXITSTATUS(status);
+		LOG("tl_exec_command: exited normally, status=%d", st);
+	}
+	else if (WIFSIGNALED(status))
+	{
+		st = 128 + WTERMSIG(status);
+		LOG("tl_exec_command: terminated by signal %d", WTERMSIG(status));
+	}
+	else if (WIFSTOPPED(status))
+	{
+		st = 128 + WSTOPSIG(status);
+		LOG("tl_exec_command: stopped by signal %d", WSTOPSIG(status));
+		// TODO: Add stopped job to job table here
+	}
+
 	LOG("tl_exec_command: done, status=%d", st);
 	return st;
 }
