@@ -13,7 +13,7 @@ int builtin_help(int argc, char **argv)
 	LOG("builtin_help: generating help output");
 
 	pager p;
-	screen_pager_start(&p);
+	screen_pager_init(&p, terminal_scroll_rows(), terminal_cols);
 
 	pager_print_line(&p, "Available commands:");
 	pager_print_line(&p, "");

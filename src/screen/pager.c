@@ -133,11 +133,6 @@ void screen_pager_init(pager *p, int rows, int cols)
  *  PROCESSING
  * ============================================================ */
 
-void screen_pager_start(pager *p)
-{
-	screen_pager_init(p, terminal_scroll_rows(), terminal_cols);
-}
-
 void screen_pager_feed(pager *p, const char *data, size_t n)
 {
 	for (size_t i = 0; i < n; i++)
@@ -284,8 +279,8 @@ void screen_pager_columns(char data[][PATH_MAX], int count)
 	LOG("screen_pager_columns: count=%d", count);
 
 	pager p;
-	screen_pager_start(&p);
-
+	screen_pager_init(&p, terminal_scroll_rows(), terminal_cols);
+	
 	pager_column pc;
 	_screen_pager_columns_init(&pc, data, count);
 

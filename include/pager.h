@@ -40,7 +40,6 @@ typedef struct
 } pager;
 
 void screen_pager_init(pager *p, int rows, int cols);
-void screen_pager_start(pager *p);
 void pager_print_line(pager *p, const char *s);
 void screen_pager_finish(pager *p);
 void screen_pager_feed(pager *p, const char *data, size_t n);
