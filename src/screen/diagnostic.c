@@ -7,7 +7,7 @@
  *  SETUP
  * ============================================================ */
 
-void screen_diagnostic_init(diagnostic_screen *d, const char *title, diagnostic_metric *metrics, int count)
+void screen_diagnostic_init(diagnostic *d, const char *title, diagnostic_metric *metrics, int count)
 {
     memset(d, 0, sizeof(*d));
 
@@ -27,7 +27,7 @@ void screen_diagnostic_init(diagnostic_screen *d, const char *title, diagnostic_
  *  PROCESSING
  * ============================================================ */
 
-void screen_diagnostic_render(diagnostic_screen *d)
+void screen_diagnostic_render(diagnostic *d)
 {
     int row = 0;
 
@@ -73,7 +73,7 @@ void screen_diagnostic_render(diagnostic_screen *d)
  *  INPUT
  * ============================================================ */
 
-void screen_diagnostic_handle_key(diagnostic_screen *d, int key)
+void screen_diagnostic_handle_key(diagnostic *d, int key)
 {
     switch (key)
     {
@@ -87,7 +87,7 @@ void screen_diagnostic_handle_key(diagnostic_screen *d, int key)
     }
 }
 
-void screen_diagnostic_free(diagnostic_screen *d)
+void screen_diagnostic_free(diagnostic *d)
 {
     (void)d;
 }

@@ -21,11 +21,11 @@ typedef struct
 
     int result;
 
-} diagnostic_screen;
+} diagnostic;
 
-void screen_diagnostic_init(diagnostic_screen *d, const char *title, diagnostic_metric *metrics, int count);
-void screen_diagnostic_render(diagnostic_screen *d);
-void screen_diagnostic_handle_key(diagnostic_screen *d, int key);
-void screen_diagnostic_free(diagnostic_screen *d);
+void screen_diagnostic_init(diagnostic *d, const char *title, diagnostic_metric *metrics, int count);
+void screen_diagnostic_render(diagnostic *d);
+void screen_diagnostic_handle_key(diagnostic *d, int key);
+void screen_diagnostic_free(diagnostic *d);
 
 #endif

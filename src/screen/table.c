@@ -7,7 +7,7 @@
  *  SETUP
  * ============================================================ */
 
-void screen_table_init(table_screen *t, const char *title, table_column *cols, int col_count, table_row *rows, int row_count)
+void screen_table_init(table *t, const char *title, table_column *cols, int col_count, table_row *rows, int row_count)
 {
     memset(t, 0, sizeof(*t));
 
@@ -32,7 +32,7 @@ void screen_table_init(table_screen *t, const char *title, table_column *cols, i
  *  PROCESSING
  * ============================================================ */
 
-void screen_table_render(table_screen *t)
+void screen_table_render(table *t)
 {
     int row = 0;
 
@@ -102,7 +102,7 @@ void screen_table_render(table_screen *t)
  *  INPUT
  * ============================================================ */
 
-void screen_table_handle_key(table_screen *t, int key)
+void screen_table_handle_key(table *t, int key)
 {
     int total_pages = (t->row_count + TABLE_PAGE_SIZE - 1) / TABLE_PAGE_SIZE;
 
@@ -161,7 +161,7 @@ void screen_table_handle_key(table_screen *t, int key)
     }
 }
 
-void screen_table_free(table_screen *t)
+void screen_table_free(table *t)
 {
     (void)t;
 }

@@ -34,11 +34,11 @@ typedef struct
     int result;
     bool accepted;
 
-} table_screen;
+} table;
 
-void screen_table_init(table_screen *t, const char *title, table_column *cols, int col_count, table_row *rows, int row_count);
-void screen_table_render(table_screen *t);
-void screen_table_handle_key(table_screen *t, int key);
-void screen_table_free(table_screen *t);
+void screen_table_init(table *t, const char *title, table_column *cols, int col_count, table_row *rows, int row_count);
+void screen_table_render(table *t);
+void screen_table_handle_key(table *t, int key);
+void screen_table_free(table *t);
 
 #endif

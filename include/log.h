@@ -18,11 +18,11 @@ typedef struct
 
     int result;
 
-} log_screen;
+} log;
 
-void screen_log_init(log_screen *l, const char *title, char **lines, int count);
-void screen_log_render(log_screen *l);
-void screen_log_handle_key(log_screen *l, int key);
-void screen_log_free(log_screen *l);
+void screen_log_init(log *l, const char *title, char **lines, int count);
+void screen_log_render(log *l);
+void screen_log_handle_key(log *l, int key);
+void screen_log_free(log *l);
 
 #endif

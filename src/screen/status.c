@@ -7,7 +7,7 @@
  *  SETUP
  * ============================================================ */
 
-void screen_status_init(status_screen *st, const char *title, status_metric *metrics, int count)
+void screen_status_init(status *st, const char *title, status_metric *metrics, int count)
 {
     memset(st, 0, sizeof(*st));
 
@@ -27,7 +27,7 @@ void screen_status_init(status_screen *st, const char *title, status_metric *met
  *  PROCESSING
  * ============================================================ */
 
-void screen_status_render(status_screen *st)
+void screen_status_render(status *st)
 {
     int row = 0;
 
@@ -74,7 +74,7 @@ void screen_status_render(status_screen *st)
  *  INPUT
  * ============================================================ */
 
-void screen_status_handle_key(status_screen *st, int key)
+void screen_status_handle_key(status *st, int key)
 {
     switch (key)
     {
@@ -88,7 +88,7 @@ void screen_status_handle_key(status_screen *st, int key)
     }
 }
 
-void screen_status_free(status_screen *st)
+void screen_status_free(status *st)
 {
     (void)st;
 }

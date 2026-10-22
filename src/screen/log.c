@@ -7,7 +7,7 @@
  *  SETUP
  * ============================================================ */
 
-void screen_log_init(log_screen *l, const char *title, char **lines, int count)
+void screen_log_init(log *l, const char *title, char **lines, int count)
 {
     memset(l, 0, sizeof(*l));
 
@@ -29,7 +29,7 @@ void screen_log_init(log_screen *l, const char *title, char **lines, int count)
  *  PROCESSING
  * ============================================================ */
 
-void screen_log_render(log_screen *l)
+void screen_log_render(log *l)
 {
     int row = 0;
 
@@ -85,7 +85,7 @@ void screen_log_render(log_screen *l)
  *  INPUT
  * ============================================================ */
 
-void screen_log_handle_key(log_screen *l, int key)
+void screen_log_handle_key(log *l, int key)
 {
     int total_pages = (l->count + LOG_PAGE_SIZE - 1) / LOG_PAGE_SIZE;
 
@@ -144,7 +144,7 @@ void screen_log_handle_key(log_screen *l, int key)
     }
 }
 
-void screen_log_free(log_screen *l)
+void screen_log_free(log *l)
 {
     (void)l;
 }
