@@ -7,9 +7,6 @@
  * FORWARD DECLARATIONS
  * ============================================================ */
 
-static void _screen_pager_screen_render(screen *s);
-static void _screen_pager_screen_handle(screen *s, int key);
-static void _screen_pager_screen_free(screen *s);
 static void _screen_pager_buf_push(pager_buffer *b, const char *s, size_t n);
 static void _screen_pager_columns_init(pager_column *pc, char matches[][PATH_MAX], int count);
 static void _screen_pager_columns_build(pager_column *pc, char matches[][PATH_MAX], int count, pager *p);
@@ -18,21 +15,6 @@ static void _screen_pager_get_input(pager *p);
 /* ============================================================
  *  INTERNAL HELPERS
  * ============================================================ */
-
-static void _screen_pager_screen_render(screen *s)
-{
-	screen_pager_render((pager *)s);
-}
-
-static void _screen_pager_screen_handle(screen *s, int key)
-{
-	screen_pager_handle_key((pager *)s, key);
-}
-
-static void _screen_pager_screen_free(screen *s)
-{
-	screen_pager_free((pager *)s);
-}
 
 static void _screen_pager_buf_push(pager_buffer *b, const char *s, size_t n)
 {
@@ -140,9 +122,11 @@ void screen_pager_init(pager *p, int rows, int cols)
 	p->cols = cols;
 	p->cur_cap = 256;
 	p->cur = malloc(p->cur_cap);
-	p->screen.render = _screen_pager_screen_render;
-	p->screen.handle_key = _screen_pager_screen_handle;
-	p->screen.destroy = _screen_pager_screen_free;
+
+	p->screen.type = SCREEN_PAGER;
+	p->screen.render = screen_pager_render;
+	p->screen.handle_key = screen_pager_handle_key;
+	p->screen.destroy = screen_pager_free;
 }
 
 /* ============================================================
