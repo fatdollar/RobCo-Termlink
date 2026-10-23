@@ -13,6 +13,14 @@ int builtin_jobs(int argc, char **argv)
 	(void)argv;
 
 	LOG("builtin_jobs: start");
+	tl_jobs_cleanup(); // Clean up finished jobs first
+
+	if (!g_first_job)
+	{
+		terminal_slow_print("No jobs.");
+		LOG("builtin_jobs: no jobs found");
+		return 0;
+	}
 
 	int job_num = 1;
 	for (job_t *j = g_first_job; j; j = j->next, job_num++)

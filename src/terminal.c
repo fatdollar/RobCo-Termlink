@@ -188,22 +188,26 @@ void terminal_setup(void)
 	t.c_cc[VTIME] = 0;
 	tcsetattr(STDIN_FILENO, TCSANOW, &t);
 
-	if (termlink_job_control_enabled)
+	if (isatty(STDIN_FILENO))
 	{
 		pid_t shell_pgid = getpid();
-		setpgid(shell_pgid, shell_pgid);
+		if (setpgid(shell_pgid, shell_pgid) < 0)
+		{
+			LOG("terminal_setup: setpgid failed");
+		}
 		tcsetpgrp(STDIN_FILENO, shell_pgid);
 
-		struct sigaction sa;
-		memset(&sa, 0, sizeof(sa));
-		sa.sa_handler = SIG_IGN;
-		sigaction(SIGINT, &sa, NULL);
+		signal(SIGINT, SIG_IGN);
+		signal(SIGQUIT, SIG_IGN);
+		signal(SIGTSTP, SIG_IGN);
+		signal(SIGTTIN, SIG_IGN);
+		signal(SIGTTOU, SIG_IGN);
 
-		LOG("terminal_setup: job control active");
+		LOG("terminal_setup: job control active (interactive tty)");
 	}
 	else
 	{
-		LOG("terminal_setup: fallback mode (no job control)");
+		LOG("terminal_setup: non-interactive mode (stdin redirected)");
 	}
 
 	_terminal_update_size();

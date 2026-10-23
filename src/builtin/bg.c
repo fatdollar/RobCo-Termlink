@@ -14,8 +14,22 @@ int builtin_bg(int argc, char **argv)
 	job_t *j = g_first_job;
 	if (argc > 1)
 	{
-		pid_t pgid = (pid_t)atoi(argv[1]);
-		j = tl_jobs_find(pgid);
+		const char *arg = argv[1];
+		if (arg[0] == '%')
+			arg++; // skip optional leading '%'
+
+		int target_idx = atoi(arg);
+		int current_idx = 1;
+
+		j = NULL;
+		for (job_t *curr = g_first_job; curr; curr = curr->next, current_idx++)
+		{
+			if (current_idx == target_idx || curr->pgid == (pid_t)target_idx)
+			{
+				j = curr;
+				break;
+			}
+		}
 	}
 
 	if (!j)

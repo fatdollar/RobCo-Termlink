@@ -38,23 +38,26 @@ int main(void)
 	debug_init();
 #endif
 
-	// Try to become session leader
-	if (setsid() >= 0)
+	// Enable job control if running interactively on a terminal
+	if (isatty(STDIN_FILENO))
 	{
-		// Try to acquire controlling terminal
-		if (ioctl(STDIN_FILENO, TIOCSCTTY, 0) >= 0)
+		termlink_job_control_enabled = 1;
+
+		// Attempt to become session leader / acquire controlling terminal if possible
+		if (setsid() >= 0)
 		{
-			termlink_job_control_enabled = 1;
+			ioctl(STDIN_FILENO, TIOCSCTTY, 0);
 			LOG("Job control enabled (session leader)");
 		}
 		else
 		{
-			LOG("TIOCSCTTY failed — fallback mode");
+			LOG("Job control enabled (standard interactive mode)");
 		}
 	}
 	else
 	{
-		LOG("setsid failed — fallback mode");
+		termlink_job_control_enabled = 0;
+		LOG("Non-interactive mode — fallback mode");
 	}
 
 	terminal_setup();

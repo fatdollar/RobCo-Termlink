@@ -124,9 +124,9 @@ void screen_pager_init(pager *p, int rows, int cols)
 	p->cur = malloc(p->cur_cap);
 
 	p->screen.type = SCREEN_PAGER;
-	p->screen.render = screen_pager_render;
-	p->screen.handle_key = screen_pager_handle_key;
-	p->screen.destroy = screen_pager_free;
+	p->screen.render = (void (*)(screen *))screen_pager_render;
+	p->screen.handle_key = (void (*)(screen *, int))screen_pager_handle_key;
+	p->screen.destroy = (void (*)(screen *))screen_pager_free;
 }
 
 /* ============================================================
@@ -280,7 +280,7 @@ void screen_pager_columns(char data[][PATH_MAX], int count)
 
 	pager p;
 	screen_pager_init(&p, terminal_scroll_rows(), terminal_cols);
-	
+
 	pager_column pc;
 	_screen_pager_columns_init(&pc, data, count);
 

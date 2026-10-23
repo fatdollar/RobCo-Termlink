@@ -26,5 +26,5 @@ int builtin_try(int argc, char **argv)
         if (strcmp(argv[0], builtins[i].name) == 0)
             return builtins[i].func(argc, argv);
     }
-    return 0;
+    return -1; // Not a builtin
 }

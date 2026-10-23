@@ -4,6 +4,7 @@
 #include "glob.h"
 #include "jobs.h"
 #include "builtin.h"
+#include "terminal.h"
 #include "tl.h"
 
 /* ============================================================
@@ -391,18 +392,6 @@ static void _tl_apply_assignments(tl_word_t *assignments)
 	}
 }
 
-static int _tl_type_is_builtin(const tl_command_t *cmd)
-{
-	if (!cmd || !cmd->argv || !cmd->argv->text)
-		return 0;
-
-	const char *name = cmd->argv->text;
-
-	return strcmp(name, "cd") == 0 ||
-		   strcmp(name, "echo") == 0 ||
-		   strcmp(name, "exit") == 0;
-}
-
 static int _tl_exec_builtin(tl_command_t *cmd, tl_exec_ctx_t *ctx)
 {
 	(void)ctx;
@@ -520,12 +509,12 @@ int tl_exec_command(tl_command_t *cmd, tl_exec_ctx_t *ctx)
 	_tl_apply_assignments(cmd->assignments);
 
 	/* Check builtin */
-	if (_tl_type_is_builtin(cmd))
+	LOG("tl_exec_command: check builtin");
+	int builtin_rc = _tl_exec_builtin(cmd, ctx);
+	if (builtin_rc != -1)
 	{
-		LOG("tl_exec_command: builtin");
-		int st = _tl_exec_builtin(cmd, ctx);
-		LOG("tl_exec_command: builtin status=%d", st);
-		return st;
+		LOG("tl_exec_command: executed as builtin, status=%d", builtin_rc);
+		return builtin_rc;
 	}
 
 	/* Build process structure */
@@ -541,8 +530,9 @@ int tl_exec_command(tl_command_t *cmd, tl_exec_ctx_t *ctx)
 	j->state = JOB_RUNNING;
 	j->pgid = 0;
 
-	/* External: fork + child exec via job launcher */
+	/* External: fork */
 	pid_t pid = fork();
+
 	if (pid < 0)
 	{
 		LOG("tl_exec_command: fork failed");
@@ -559,6 +549,14 @@ int tl_exec_command(tl_command_t *cmd, tl_exec_ctx_t *ctx)
 		pid_t child_pid = getpid();
 		j->pgid = child_pid;
 		setpgid(child_pid, j->pgid);
+
+		/* CRITICAL: Reset signals to default immediately so Ctrl+C and Ctrl+Z work */
+		signal(SIGINT, SIG_DFL);
+		signal(SIGQUIT, SIG_DFL);
+		signal(SIGTSTP, SIG_DFL);
+		signal(SIGTTIN, SIG_DFL);
+		signal(SIGTTOU, SIG_DFL);
+		signal(SIGCHLD, SIG_DFL);
 
 		tl_jobs_launch_process(p, STDIN_FILENO, STDOUT_FILENO, STDERR_FILENO, 1);
 		_tl_apply_redirs(cmd->redirs);
@@ -583,31 +581,52 @@ int tl_exec_command(tl_command_t *cmd, tl_exec_ctx_t *ctx)
 	j->pgid = pid;
 	setpgid(pid, j->pgid);
 
-	/* Launch and track job via job control system */
-	tl_jobs_launch_job(j, 1);
+	/* Add job to global job list now that PGID is set */
+	j->next = g_first_job;
+	g_first_job = j;
 
+	/* Launch and track job via job control system (brings to foreground, waits, reclaims terminal) */
+	tl_jobs_to_foreground(j, 0);
+
+	/* Determine exit status and print feedback */
 	int st = 1;
-	if (WIFEXITED(p->status))
+	if (p->stopped || j->state == JOB_STOPPED)
+	{
+		st = 128 + (WIFSTOPPED(p->status) ? WSTOPSIG(p->status) : SIGTSTP);
+		LOG("tl_exec_command: job stopped, status=%d", st);
+
+		char buf[256];
+		snprintf(buf, sizeof(buf), "\n[1]+  Stopped                     %s\n", j->name ? j->name : "");
+		terminal_slow_print(buf);
+
+		return st;
+	}
+	else if (WIFSIGNALED(p->status))
+	{
+		int sig = WTERMSIG(p->status);
+		st = 128 + sig;
+		LOG("tl_exec_command: terminated by signal %d", sig);
+
+		/* Print newline/feedback on signal termination (like SIGINT) */
+		char buf[256];
+		if (sig == SIGINT)
+		{
+			snprintf(buf, sizeof(buf), "\n"); // Clean newline after ^C
+			terminal_slow_print(buf);
+		}
+		else
+		{
+			snprintf(buf, sizeof(buf), "\nTerminated by signal %d\n", sig);
+			terminal_slow_print(buf);
+		}
+
+		return st;
+	}
+	else if (WIFEXITED(p->status))
 	{
 		st = WEXITSTATUS(p->status);
 		LOG("tl_exec_command: exited normally, status=%d", st);
 	}
-	else if (WIFSIGNALED(p->status))
-	{
-		st = 128 + WTERMSIG(p->status);
-		LOG("tl_exec_command: terminated by signal %d", WTERMSIG(p->status));
-	}
-	else if (WIFSTOPPED(p->status))
-	{
-		st = 128 + WSTOPSIG(p->status);
-		LOG("tl_exec_command: stopped by signal %d", WSTOPSIG(p->status));
-		return st;
-	}
-
-	free(p->command);
-	free(p);
-	free(j->name);
-	free(j);
 
 	LOG("tl_exec_command: done, status=%d", st);
 	return st;
