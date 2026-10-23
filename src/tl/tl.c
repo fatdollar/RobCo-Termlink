@@ -6,6 +6,7 @@
 #include "builtin.h"
 #include "terminal.h"
 #include "autocomplete.h"
+#include "pty.h"
 #include "tl.h"
 
 /* ============================================================
@@ -536,6 +537,26 @@ int _tl_exec_pipeline(tl_pipeline_t *pl, tl_exec_ctx_t *ctx)
 		if (!pl->background && cmd->argv && cmd->argv->text)
 		{
 			const char *cmd_name = cmd->argv->text;
+
+			if (external_is_tty_interactive(cmd_name))
+			{
+				LOG("_tl_exec_pipeline: routing interactive TTY '%s' to pty_run_interactive", cmd_name);
+
+				int argc = 0;
+				for (tl_word_t *w = cmd->argv; w; w = w->next)
+					argc++;
+
+				char **exec_argv = calloc(argc + 1, sizeof(char *));
+				int k = 0;
+				for (tl_word_t *w = cmd->argv; w; w = w->next)
+					exec_argv[k++] = w->text;
+				exec_argv[k] = NULL;
+
+				int rc = pty_run_interactive(exec_argv);
+				free(exec_argv);
+				return rc;
+			}
+
 			if (!external_is_tty_interactive(cmd_name))
 			{
 				autocomplete_entry *entry = input_autocomplete_lookup(cmd_name);

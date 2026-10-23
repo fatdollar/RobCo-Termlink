@@ -1,5 +1,6 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -Iinclude
+LDFLAGS = -lutil
 
 SRC = \
 	src/main.c \
@@ -27,7 +28,7 @@ build/%.o: src/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(BIN): $(OBJ)
-	$(CC) $(CFLAGS) -o $(BIN) $(OBJ)
+	$(CC) $(CFLAGS) -o $(BIN) $(OBJ) $(LDFLAGS)
 
 run: $(BIN)
 	./$(BIN)
