@@ -19,7 +19,6 @@ int input_autocomplete_count = 0;
 static int _input_autocomplete_cmp_match(const void *a, const void *b);
 static autocomplete_type _input_autocomplete_parse_completion_type(const char *value);
 static void _input_autocomplete_register_completion(char *cmd, autocomplete_type type);
-static autocomplete_entry *_input_autocomplete_lookup(const char *cmd);
 static void _input_autocomplete_load_completions_dir(const char *dirpath);
 static void _input_autocomplete_command(const char *prefix, size_t *len, char *buf);
 static void _input_autocomplete_path(char **argv, size_t *len, char *buf, autocomplete_type type);
@@ -68,26 +67,6 @@ static void _input_autocomplete_register_completion(char *cmd, autocomplete_type
 	input_autocomplete_count++;
 
 	LOG("_input_autocomplete_register_completion: count=%d", input_autocomplete_count);
-}
-
-static autocomplete_entry *_input_autocomplete_lookup(const char *cmd)
-{
-	LOG("autocomplete_lookup: cmd='%s'", cmd);
-
-	for (int i = 0; i < input_autocomplete_count; i++)
-	{
-		LOG("autocomplete_lookup: checking '%s'",
-			input_autocomplete_table[i].cmd);
-
-		if (strcmp(input_autocomplete_table[i].cmd, cmd) == 0)
-		{
-			LOG("autocomplete_lookup: match");
-			return &input_autocomplete_table[i];
-		}
-	}
-
-	LOG("autocomplete_lookup: no match");
-	return NULL;
 }
 
 static void _input_autocomplete_load_completions_dir(const char *dirpath)
@@ -139,6 +118,7 @@ static void _input_autocomplete_load_completions_dir(const char *dirpath)
 		char line[256];
 		autocomplete_type type = AUTOCOMPLETE_FILES_AND_DIRS;
 		const char *dynamic_prog = NULL;
+		screen_target_type screen = SCREEN_TYPE_PAGER;
 
 		/* Temporary storage for options/extensions */
 		static char *options[64];
@@ -218,6 +198,25 @@ static void _input_autocomplete_load_completions_dir(const char *dirpath)
 				continue;
 			}
 
+			/* screen: type parsing */
+			if (strncmp(line, "screen:", 7) == 0)
+			{
+				const char *val = line + 7;
+				while (*val == ' ' || *val == '\t')
+					val++;
+
+				if (strcmp(val, "table") == 0)
+					screen = SCREEN_TYPE_TABLE;
+				else if (strcmp(val, "log") == 0)
+					screen = SCREEN_TYPE_LOG;
+				else if (strcmp(val, "status") == 0)
+					screen = SCREEN_TYPE_STATUS;
+				else
+					screen = SCREEN_TYPE_PAGER;
+
+				continue;
+			}
+
 			/* dynamic: helper_program */
 			if (strncmp(line, "dynamic:", 8) == 0)
 			{
@@ -236,12 +235,13 @@ static void _input_autocomplete_load_completions_dir(const char *dirpath)
 		_input_autocomplete_register_completion(cmd, type);
 
 		/* Fill entry fields */
-		autocomplete_entry *e = _input_autocomplete_lookup(cmd);
+		autocomplete_entry *e = input_autocomplete_lookup(cmd);
 		if (e)
 		{
 			e->options = (opt_count > 0) ? (const char **)options : NULL;
 			e->extensions = (ext_count > 0) ? (const char **)extensions : NULL;
 			e->dynamic_prog = dynamic_prog;
+			e->screen_type = screen;
 		}
 	}
 
@@ -262,7 +262,7 @@ static void _input_autocomplete_command(const char *prefix, size_t *len, char *b
 	LOG("autocomplete_cmd: sanitized prefix='%s'", clean);
 
 	/* Lookup completion entry */
-	autocomplete_entry *ce = _input_autocomplete_lookup(clean);
+	autocomplete_entry *ce = input_autocomplete_lookup(clean);
 	autocomplete_type type = AUTOCOMPLETE_EXECUTABLES;
 
 	if (ce)
@@ -418,7 +418,7 @@ static void _input_autocomplete_path(char **argv, size_t *len, char *buf, autoco
 		argv[0], argv[1], type, *len, buf);
 
 	const char *prefix = (argv[1]) ? argv[1] : "";
-	autocomplete_entry *ce = _input_autocomplete_lookup(argv[0]);
+	autocomplete_entry *ce = input_autocomplete_lookup(argv[0]);
 	LOG("autocomplete_path: prefix='%s'", prefix);
 
 	/* Strip control chars */
@@ -772,7 +772,7 @@ void input_autocomplete_load_completions(void)
 		_input_autocomplete_register_completion("cd", AUTOCOMPLETE_DIRS);
 
 		/* Fill optional fields with NULL */
-		e = _input_autocomplete_lookup("cd");
+		e = input_autocomplete_lookup("cd");
 		if (e)
 		{
 			e->options = NULL;
@@ -855,7 +855,7 @@ void input_autocomplete_tab(input_state *st)
 	{
 		/* Determine completion type from command */
 		autocomplete_type type = AUTOCOMPLETE_FILES_AND_DIRS;
-		autocomplete_entry *ce = _input_autocomplete_lookup(argv[0]);
+		autocomplete_entry *ce = input_autocomplete_lookup(argv[0]);
 		LOG("autocomplete_tab: lookup cmd='%s' result=%p", argv[0], ce);
 
 		if (ce)
@@ -935,4 +935,28 @@ void input_autocomplete_tab(input_state *st)
 		*len = original_len;
 		buf[*len] = '\0';
 	}
+}
+
+/* ============================================================
+ * LOOKUP
+ * ============================================================ */
+
+autocomplete_entry *input_autocomplete_lookup(const char *cmd)
+{
+	LOG("autocomplete_lookup: cmd='%s'", cmd);
+
+	for (int i = 0; i < input_autocomplete_count; i++)
+	{
+		LOG("autocomplete_lookup: checking '%s'",
+			input_autocomplete_table[i].cmd);
+
+		if (strcmp(input_autocomplete_table[i].cmd, cmd) == 0)
+		{
+			LOG("autocomplete_lookup: match");
+			return &input_autocomplete_table[i];
+		}
+	}
+
+	LOG("autocomplete_lookup: no match");
+	return NULL;
 }

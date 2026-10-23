@@ -71,6 +71,7 @@ write_comp() {
 # completion for alias
 command: alias
 type: files_and_dirs
+screen: pager
 EOF
             ;;
         bg)
@@ -78,6 +79,7 @@ EOF
 # completion for bg
 command: bg
 type: files_and_dirs
+screen: pager
 EOF
             ;;
         builtin)
@@ -85,6 +87,7 @@ EOF
 # completion for builtin
 command: builtin
 type: files_and_dirs
+screen: pager
 EOF
             ;;
         cd)
@@ -92,6 +95,7 @@ EOF
 # completion for cd
 command: cd
 type: dirs
+screen: pager
 EOF
             ;;
         clear)
@@ -99,6 +103,7 @@ EOF
 # completion for clear
 command: clear
 type: files_and_dirs
+screen: pager
 EOF
             ;;
         echo)
@@ -106,6 +111,7 @@ EOF
 # completion for echo
 command: echo
 type: files_and_dirs
+screen: pager
 
 options:
   - -n
@@ -116,6 +122,7 @@ EOF
 # completion for exit
 command: exit
 type: files_and_dirs
+screen: pager
 EOF
             ;;
         export)
@@ -123,6 +130,7 @@ EOF
 # completion for export
 command: export
 type: files_and_dirs
+screen: pager
 EOF
             ;;
         fg)
@@ -130,6 +138,7 @@ EOF
 # completion for fg
 command: fg
 type: files_and_dirs
+screen: pager
 EOF
             ;;
         getopts)
@@ -137,6 +146,7 @@ EOF
 # completion for getopts
 command: getopts
 type: files_and_dirs
+screen: pager
 EOF
             ;;
         help)
@@ -144,6 +154,7 @@ EOF
 # completion for help
 command: help
 type: files_and_dirs
+screen: pager
 EOF
             ;;
         jobs)
@@ -151,6 +162,7 @@ EOF
 # completion for jobs
 command: jobs
 type: files_and_dirs
+screen: pager
 EOF
             ;;
         kill)
@@ -158,6 +170,7 @@ EOF
 # completion for kill
 command: kill
 type: files_and_dirs
+screen: pager
 
 options:
   - -9
@@ -172,6 +185,7 @@ EOF
 # completion for pwd
 command: pwd
 type: files_and_dirs
+screen: pager
 EOF
             ;;
         read)
@@ -179,6 +193,7 @@ EOF
 # completion for read
 command: read
 type: files_and_dirs
+screen: pager
 
 options:
   - -r
@@ -191,6 +206,7 @@ EOF
 # completion for register
 command: register
 type: files_and_dirs
+screen: pager
 EOF
             ;;
         set)
@@ -198,6 +214,7 @@ EOF
 # completion for set
 command: set
 type: files_and_dirs
+screen: pager
 
 options:
   - -e
@@ -211,6 +228,7 @@ EOF
 # completion for shift
 command: shift
 type: files_and_dirs
+screen: pager
 EOF
             ;;
         source)
@@ -218,6 +236,7 @@ EOF
 # completion for source
 command: source
 type: files
+screen: pager
 
 extensions: tl
 EOF
@@ -227,6 +246,7 @@ EOF
 # completion for trap
 command: trap
 type: files_and_dirs
+screen: pager
 
 options:
   - -l
@@ -238,6 +258,7 @@ EOF
 # completion for type
 command: type
 type: files_and_dirs
+screen: pager
 EOF
             ;;
         umask)
@@ -245,6 +266,7 @@ EOF
 # completion for umask
 command: umask
 type: files_and_dirs
+screen: pager
 EOF
             ;;
         unalias)
@@ -252,6 +274,7 @@ EOF
 # completion for unalias
 command: unalias
 type: files_and_dirs
+screen: pager
 EOF
             ;;
         unset)
@@ -259,6 +282,7 @@ EOF
 # completion for unset
 command: unset
 type: files_and_dirs
+screen: pager
 EOF
             ;;
         wait)
@@ -266,16 +290,18 @@ EOF
 # completion for wait
 command: wait
 type: files_and_dirs
+screen: pager
 EOF
             ;;
         # ---------------------------------------------------------
-        # STANDARD COMMANDS (FULL OPTIONS)
+        # STANDARD COMMANDS
         # ---------------------------------------------------------
         ls)
             cat >"$file" <<EOF
 # completion for ls
 command: ls
 type: files_and_dirs
+screen: table
 
 options:
   - -l
@@ -292,6 +318,7 @@ EOF
 # completion for cat
 command: cat
 type: files
+screen: pager
 
 extensions: txt, md, log
 
@@ -308,6 +335,7 @@ EOF
 # completion for cp
 command: cp
 type: files_and_dirs
+screen: pager
 
 options:
   - -r
@@ -324,6 +352,7 @@ EOF
 # completion for mv
 command: mv
 type: files_and_dirs
+screen: pager
 
 options:
   - -f
@@ -337,6 +366,7 @@ EOF
 # completion for rm
 command: rm
 type: files
+screen: pager
 
 options:
   - -r
@@ -351,6 +381,7 @@ EOF
 # completion for mkdir
 command: mkdir
 type: dirs
+screen: pager
 
 options:
   - -p
@@ -363,6 +394,7 @@ EOF
 # completion for rmdir
 command: rmdir
 type: dirs
+screen: pager
 
 options:
   - -p
@@ -374,6 +406,7 @@ EOF
 # completion for touch
 command: touch
 type: files
+screen: pager
 
 options:
   - -a
@@ -388,6 +421,7 @@ EOF
 # completion for grep
 command: grep
 type: files
+screen: pager
 
 extensions: txt, log, md
 
@@ -407,6 +441,7 @@ EOF
 # completion for find
 command: find
 type: files_and_dirs
+screen: pager
 
 options:
   - -name
@@ -422,6 +457,7 @@ EOF
 # completion for chmod
 command: chmod
 type: files
+screen: pager
 
 options:
   - -R
@@ -434,6 +470,7 @@ EOF
 # completion for chown
 command: chown
 type: files
+screen: pager
 
 options:
   - -R
@@ -446,6 +483,7 @@ EOF
 # completion for head
 command: head
 type: files
+screen: pager
 
 options:
   - -n
@@ -457,6 +495,7 @@ EOF
 # completion for tail
 command: tail
 type: files
+screen: log
 
 options:
   - -n
@@ -469,6 +508,7 @@ EOF
 # completion for diff
 command: diff
 type: files
+screen: pager
 
 options:
   - -u
@@ -482,6 +522,7 @@ EOF
 # completion for patch
 command: patch
 type: files
+screen: pager
 
 options:
   - -p0
@@ -495,6 +536,7 @@ EOF
 # completion for tar
 command: tar
 type: files_and_dirs
+screen: pager
 
 options:
   - -c
@@ -511,6 +553,7 @@ EOF
 # completion for gzip
 command: gzip
 type: files
+screen: pager
 
 extensions: gz
 
@@ -525,6 +568,7 @@ EOF
 # completion for gunzip
 command: gunzip
 type: files
+screen: pager
 
 extensions: gz
 
@@ -538,6 +582,7 @@ EOF
 # completion for df
 command: df
 type: files_and_dirs
+screen: table
 
 options:
   - -h
@@ -550,6 +595,7 @@ EOF
 # completion for du
 command: du
 type: files_and_dirs
+screen: table
 
 options:
   - -h
@@ -562,6 +608,7 @@ EOF
 # completion for ps
 command: ps
 type: files_and_dirs
+screen: table
 
 options:
   - -e
@@ -575,6 +622,7 @@ EOF
 # completion for top
 command: top
 type: files_and_dirs
+screen: table
 EOF
             ;;
         env)
@@ -582,6 +630,7 @@ EOF
 # completion for env
 command: env
 type: files_and_dirs
+screen: pager
 
 options:
   - -i
@@ -592,6 +641,7 @@ EOF
 # completion for uname
 command: uname
 type: files_and_dirs
+screen: pager
 
 options:
   - -a
@@ -607,6 +657,7 @@ EOF
 # completion for whoami
 command: whoami
 type: files_and_dirs
+screen: pager
 EOF
             ;;
     esac
