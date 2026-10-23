@@ -523,9 +523,20 @@ int tl_exec_command(tl_command_t *cmd, tl_exec_ctx_t *ctx)
 	p->completed = false;
 	p->stopped = false;
 
+	/* Capture command string locally on the stack to prevent use-after-free crashes */
+	char local_cmd_name[256];
+	if (p->command)
+	{
+		snprintf(local_cmd_name, sizeof(local_cmd_name), "%s", p->command);
+	}
+	else
+	{
+		snprintf(local_cmd_name, sizeof(local_cmd_name), "command");
+	}
+
 	/* Build job structure */
 	job_t *j = calloc(1, sizeof(job_t));
-	j->name = strdup(p->command);
+	j->name = strdup(local_cmd_name);
 	j->first_process = p;
 	j->state = JOB_RUNNING;
 	j->pgid = 0;
@@ -588,35 +599,35 @@ int tl_exec_command(tl_command_t *cmd, tl_exec_ctx_t *ctx)
 	/* Launch and track job via job control system (brings to foreground, waits, reclaims terminal) */
 	tl_jobs_to_foreground(j, 0);
 
-	/* Determine exit status and print feedback */
+	/* Determine exit status and print feedback using local stack variables */
 	int st = 1;
+
 	if (p->stopped || j->state == JOB_STOPPED)
 	{
 		st = 128 + (WIFSTOPPED(p->status) ? WSTOPSIG(p->status) : SIGTSTP);
 		LOG("tl_exec_command: job stopped, status=%d", st);
 
-		char buf[256];
-		snprintf(buf, sizeof(buf), "\n[1]+  Stopped                     %s\n", j->name ? j->name : "");
+		char buf[512];
+		snprintf(buf, sizeof(buf), "\n[1]+  Stopped                     %s\n", local_cmd_name);
 		terminal_slow_print(buf);
 
 		return st;
 	}
-	else if (WIFSIGNALED(p->status))
+	else if (WIFSIGNALED(p->status) || (p->completed && !WIFEXITED(p->status)))
 	{
-		int sig = WTERMSIG(p->status);
+		int sig = WIFSIGNALED(p->status) ? WTERMSIG(p->status) : SIGINT;
 		st = 128 + sig;
 		LOG("tl_exec_command: terminated by signal %d", sig);
 
-		/* Print newline/feedback on signal termination (like SIGINT) */
-		char buf[256];
+		char buf[512];
 		if (sig == SIGINT)
 		{
-			snprintf(buf, sizeof(buf), "\n"); // Clean newline after ^C
+			snprintf(buf, sizeof(buf), "\n[1]+  Terminated                  %s\n", local_cmd_name);
 			terminal_slow_print(buf);
 		}
 		else
 		{
-			snprintf(buf, sizeof(buf), "\nTerminated by signal %d\n", sig);
+			snprintf(buf, sizeof(buf), "\n[1]+  Signal %d                    %s\n", sig, local_cmd_name);
 			terminal_slow_print(buf);
 		}
 
