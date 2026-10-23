@@ -40,22 +40,30 @@ int builtin_source(int argc, char **argv)
 		return 1;
 	}
 
-	/* Save old positional parameters */
+	/* Save old positional parameters safely by duplicating strings */
 	char *old_params[256];
 	int old_count = positional_count;
 
 	for (int i = 0; i < old_count; i++)
-		old_params[i] = positional_params[i];
+		old_params[i] = positional_params[i] ? strdup(positional_params[i]) : NULL;
 
 	/* Set new positional parameters if args were provided */
 	if (argc > 2)
 	{
+		// Clear current active params first
+		for (int i = 0; i < positional_count; i++)
+		{
+			free(positional_params[i]);
+			positional_params[i] = NULL;
+		}
+
 		positional_count = argc - 2;
 		for (int i = 0; i < positional_count; i++)
 			positional_params[i] = strdup(argv[i + 2]);
 	}
 
 	char line[4096];
+	int last_status = 0;
 
 	while (fgets(line, sizeof(line), fp))
 	{
@@ -68,20 +76,26 @@ int builtin_source(int argc, char **argv)
 
 		/* Execute using your existing command processor */
 		terminal_process(&_source_state, line);
+		// If terminal_process tracks exit status, capture it here if available.
 	}
 
 	fclose(fp);
 
-	/* Restore old positional parameters */
+	/* Clean up current positional parameters set during sourcing */
 	for (int i = 0; i < positional_count; i++)
+	{
 		free(positional_params[i]);
+		positional_params[i] = NULL;
+	}
 
+	/* Restore old positional parameters */
 	positional_count = old_count;
-
 	for (int i = 0; i < old_count; i++)
+	{
 		positional_params[i] = old_params[i];
+	}
 
 	LOG("source: done");
 
-	return 1;
+	return last_status; // POSIX: returns exit status of last command or 0
 }

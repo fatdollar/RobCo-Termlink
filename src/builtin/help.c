@@ -10,6 +10,9 @@
 
 int builtin_help(int argc, char **argv)
 {
+	(void)argc;
+	(void)argv;
+
 	LOG("builtin_help: generating help output");
 
 	pager p;
@@ -41,5 +44,5 @@ int builtin_help(int argc, char **argv)
 	screen_pager_run(&p);
 	screen_pager_free(&p);
 
-	return 1;
+	return 0; // Success
 }

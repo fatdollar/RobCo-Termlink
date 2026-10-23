@@ -7,8 +7,8 @@ typedef int (*builtin_func)(int argc, char **argv);
 
 typedef struct
 {
-    const char *name;
-    builtin_func func;
+	const char *name;
+	builtin_func func;
 } builtin_entry;
 
 /* builtin registry */
@@ -35,6 +35,17 @@ int builtin_unalias(int argc, char **argv);
 int builtin_source(int argc, char **argv); /* '.' command */
 int builtin_trap(int argc, char **argv);
 int builtin_getopts(int argc, char **argv);
+int builtin_eval(int argc, char **argv);
+int builtin_exec(int argc, char **argv);
+int builtin_colon(int argc, char **argv); /* ':' command */
+int builtin_true(int argc, char **argv);
+int builtin_false(int argc, char **argv);
+int builtin_command(int argc, char **argv);
+int builtin_readonly(int argc, char **argv);
+int builtin_return(int argc, char **argv);
+int builtin_break(int argc, char **argv);
+int builtin_continue(int argc, char **argv);
+int builtin_times(int argc, char **argv);
 
 /* ============================================================
  * NON‑POSIX BUILTINS (TERMLINK CUSTOM)

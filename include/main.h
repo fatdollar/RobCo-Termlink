@@ -19,6 +19,8 @@
 #include <sys/wait.h>
 #include <unistd.h>
 #include <utmp.h>
+#include <time.h>
+#include <sys/times.h>
 
 #include "config.h"
 #include "debug.h"

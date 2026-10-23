@@ -18,19 +18,19 @@ extern int alias_count;
 
 static void _builtin_alias_remove(int idx)
 {
-    LOG("unalias: removing index %d", idx);
+	LOG("unalias: removing index %d", idx);
 
-    free(alias_names[idx]);
-    free(alias_values[idx]);
+	free(alias_names[idx]);
+	free(alias_values[idx]);
 
-    /* shift remaining aliases left */
-    for (int i = idx + 1; i < alias_count; i++)
-    {
-        alias_names[i - 1] = alias_names[i];
-        alias_values[i - 1] = alias_values[i];
-    }
+	/* shift remaining aliases left */
+	for (int i = idx + 1; i < alias_count; i++)
+	{
+		alias_names[i - 1] = alias_names[i];
+		alias_values[i - 1] = alias_values[i];
+	}
 
-    alias_count--;
+	alias_count--;
 }
 
 /* ============================================================
@@ -39,54 +39,58 @@ static void _builtin_alias_remove(int idx)
 
 int builtin_unalias(int argc, char **argv)
 {
-    LOG("unalias: argc=%d", argc);
+	LOG("unalias: argc=%d", argc);
 
-    if (argc < 2)
-    {
-        terminal_slow_print("unalias: usage: unalias [-a] name...\n");
-        return 1;
-    }
+	if (argc < 2)
+	{
+		terminal_slow_print("unalias: usage: unalias [-a] name...\n");
+		return 1;
+	}
 
-    /* Case 1: unalias -a → remove all aliases */
-    if (strcmp(argv[1], "-a") == 0)
-    {
-        LOG("unalias: removing all aliases");
+	/* Case 1: unalias -a → remove all aliases */
+	if (strcmp(argv[1], "-a") == 0)
+	{
+		LOG("unalias: removing all aliases");
 
-        for (int i = 0; i < alias_count; i++)
-        {
-            free(alias_names[i]);
-            free(alias_values[i]);
-        }
+		for (int i = 0; i < alias_count; i++)
+		{
+			free(alias_names[i]);
+			alias_values[i] = NULL;
+			alias_names[i] = NULL;
+		}
 
-        alias_count = 0;
-        return 1;
-    }
+		alias_count = 0;
+		return 0; // Success
+	}
 
-    /* Case 2: unalias name... */
-    for (int i = 1; i < argc; i++)
-    {
-        const char *name = argv[i];
-        LOG("unalias: removing '%s'", name);
+	int exit_status = 0;
 
-        int found = 0;
+	/* Case 2: unalias name... */
+	for (int i = 1; i < argc; i++)
+	{
+		const char *name = argv[i];
+		LOG("unalias: removing '%s'", name);
 
-        for (int j = 0; j < alias_count; j++)
-        {
-            if (strcmp(alias_names[j], name) == 0)
-            {
-                _builtin_alias_remove(j);
-                found = 1;
-                break;
-            }
-        }
+		int found = 0;
 
-        if (!found)
-        {
-            terminal_slow_print("unalias: ");
-            terminal_slow_print(name);
-            terminal_slow_print(" not found\n");
-        }
-    }
+		for (int j = 0; j < alias_count; j++)
+		{
+			if (strcmp(alias_names[j], name) == 0)
+			{
+				_builtin_alias_remove(j);
+				found = 1;
+				break;
+			}
+		}
 
-    return 1;
+		if (!found)
+		{
+			terminal_slow_print("unalias: ");
+			terminal_slow_print(name);
+			terminal_slow_print(" not found\n");
+			exit_status = 1;
+		}
+	}
+
+	return exit_status;
 }
