@@ -269,87 +269,56 @@ static tl_node_t *_tl_parse_pipeline(tl_parse_state_t *ps)
 {
 	LOG("_tl_parse_pipeline: start");
 
-	tl_node_t *first = NULL;
-
-	/* First element: command or subshell */
-	if (_tl_parse_peek(ps) && _tl_parse_peek(ps)->type == TL_TOK_LPAREN)
+	tl_command_t *cmd = _tl_parse_command(ps);
+	if (!cmd)
 	{
-		first = _tl_parse_subshell(ps);
-		if (!first)
-		{
-			LOG("_tl_parse_pipeline: subshell parse failed");
-			return NULL;
-		}
-	}
-	else
-	{
-		tl_command_t *cmd = _tl_parse_command(ps);
-		if (!cmd)
-		{
-			LOG("_tl_parse_pipeline: no first command");
-			return NULL;
-		}
-
-		first = calloc(1, sizeof(tl_node_t));
-		first->type = TL_NODE_COMMAND;
-		first->as.command = cmd;
+		LOG("_tl_parse_pipeline: no command");
+		return NULL;
 	}
 
-	/* If no pipe, return the single node */
-	if (!_tl_parse_peek(ps) || _tl_parse_peek(ps)->type != TL_TOK_PIPE)
-	{
-		LOG("_tl_parse_pipeline: single command");
-		return first;
-	}
-
-	/* Pipeline detected */
-	LOG("_tl_parse_pipeline: pipeline detected");
-
-	/* Create pipeline struct */
+	/* Create pipeline struct (even for a single command, count = 1) */
 	tl_pipeline_t *pl = calloc(1, sizeof(tl_pipeline_t));
-	pl->count = 0;
-
-	/* Dynamic array for commands */
 	int cap = 4;
 	pl->commands = calloc(cap, sizeof(tl_command_t *));
+	pl->commands[pl->count++] = cmd;
 
-	/* First element must be a command (your AST stores commands only) */
-	if (first->type != TL_NODE_COMMAND)
-	{
-		LOG("_tl_parse_pipeline: subshell in pipeline not supported");
-		return first;
-	}
-
-	pl->commands[pl->count++] = first->as.command;
-
-	/* Parse remaining pipeline segments */
+	/* Parse remaining pipeline segments if '|' exists */
 	while (_tl_parse_accept(ps, TL_TOK_PIPE))
 	{
 		LOG("_tl_parse_pipeline: '|'");
 
-		tl_command_t *cmd = _tl_parse_command(ps);
-		if (!cmd)
+		tl_command_t *next_cmd = _tl_parse_command(ps);
+		if (!next_cmd)
 		{
 			LOG("_tl_parse_pipeline: missing command after '|'");
 			break;
 		}
 
-		/* Grow array if needed */
 		if (pl->count >= cap)
 		{
 			cap *= 2;
 			pl->commands = realloc(pl->commands, cap * sizeof(tl_command_t *));
 		}
 
-		pl->commands[pl->count++] = cmd;
+		pl->commands[pl->count++] = next_cmd;
 	}
 
-	/* Wrap pipeline in a node */
+	/* Check if followed by background operator '&' */
+	if (_tl_parse_accept(ps, TL_TOK_AMP))
+	{
+		pl->background = 1;
+		LOG("_tl_parse_pipeline: background job detected ('&')");
+	}
+	else
+	{
+		pl->background = 0;
+	}
+
 	tl_node_t *node = calloc(1, sizeof(tl_node_t));
 	node->type = TL_NODE_PIPELINE;
 	node->as.pipeline = pl;
 
-	LOG("_tl_parse_pipeline: done, count=%d", pl->count);
+	LOG("_tl_parse_pipeline: done, count=%d, background=%d", pl->count, pl->background);
 	return node;
 }
 
@@ -397,6 +366,11 @@ static tl_node_t *_tl_parse_list(tl_parse_state_t *ps)
 		{
 			it->op_to_next = TL_LIST_OR;
 			LOG("_tl_parse_list: '||' -> OR");
+		}
+		else if (_tl_parse_accept(ps, TL_TOK_AMP))
+		{
+			it->op_to_next = TL_LIST_ASYNC;
+			LOG("_tl_parse_list: '&' -> ASYNC");
 		}
 		else
 		{

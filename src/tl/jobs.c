@@ -27,7 +27,7 @@ void _tl_jobs_wait(job_t *j)
 	int status;
 	pid_t pid;
 
-	do
+	while (!tl_jobs_is_stopped(j) && !tl_jobs_is_completed(j))
 	{
 		pid = waitpid(-j->pgid, &status, WUNTRACED | WCONTINUED);
 		if (pid > 0)
@@ -36,15 +36,21 @@ void _tl_jobs_wait(job_t *j)
 		}
 		else
 		{
-			if (errno == ECHILD)
+			if (errno == ECHILD || errno == EPERM)
 			{
-				// No more children in this process group
+				// No more children or invalid reference; prevent infinite hang
 				break;
 			}
+			if (errno == EINTR)
+			{
+				continue;
+			}
+			// Other unexpected error, break to avoid infinite loop
+			break;
 		}
-	} while (!tl_jobs_is_stopped(j) && !tl_jobs_is_completed(j));
+	}
 
-	// If the job has completed, update its state
+	// If all processes are done, mark job completed
 	if (tl_jobs_is_completed(j))
 	{
 		j->state = JOB_DONE;
@@ -154,7 +160,7 @@ job_t *tl_jobs_find(pid_t pgid)
 	return NULL;
 }
 
-void tl_jobs_to_foreground(job_t *j, int cont)
+int tl_jobs_to_foreground(job_t *j, int cont)
 {
 	LOG("tl_jobs_to_foreground: start job pgid=%d, cont=%d", (int)j->pgid, cont);
 
@@ -168,6 +174,11 @@ void tl_jobs_to_foreground(job_t *j, int cont)
 		LOG("tl_jobs_to_foreground: sending SIGCONT to pgid=%d", (int)j->pgid);
 		kill(-j->pgid, SIGCONT);
 		j->state = JOB_RUNNING;
+
+		for (process_t *p = j->first_process; p; p = p->next)
+		{
+			p->stopped = false;
+		}
 	}
 
 	_tl_jobs_wait(j);
@@ -175,13 +186,53 @@ void tl_jobs_to_foreground(job_t *j, int cont)
 	/* Reclaim terminal control back for the shell */
 	if (termlink_job_control_enabled)
 	{
-		pid_t shell_pgid = getpid(); // or use a global shell_pgid captured at startup
+		pid_t shell_pgid = getpid();
 		tcsetpgrp(STDIN_FILENO, shell_pgid);
 	}
 
-	LOG("tl_jobs_to_foreground: done job pgid=%d", (int)j->pgid);
+	int last_status = 0;
+	process_t *p = j->first_process;
+	while (p)
+	{
+		if (p->stopped || j->state == JOB_STOPPED)
+		{
+			last_status = 128 + (WIFSTOPPED(p->status) ? WSTOPSIG(p->status) : SIGTSTP);
+			char buf[512];
+			snprintf(buf, sizeof(buf), "\n[1]+  Stopped                     %s\n", j->name ? j->name : "");
+			terminal_slow_print(buf);
+			LOG("tl_jobs_to_foreground: job stopped, status=%d", last_status);
+			return last_status; // Job is stopped, so do NOT clean up yet.
+		}
+		else if (WIFSIGNALED(p->status))
+		{
+			int sig = WTERMSIG(p->status);
+			last_status = 128 + sig;
+			char buf[512];
+			if (sig == SIGINT)
+			{
+				snprintf(buf, sizeof(buf), "\n[1]+  Terminated                  %s\n", j->name ? j->name : "");
+				terminal_slow_print(buf);
+			}
+			else
+			{
+				snprintf(buf, sizeof(buf), "\n[1]+  Signal %d                    %s\n", sig, j->name ? j->name : "");
+				terminal_slow_print(buf);
+			}
+			break;
+		}
+		else if (WIFEXITED(p->status))
+		{
+			last_status = WEXITSTATUS(p->status);
+		}
+		p = p->next;
+	}
 
+	LOG("tl_jobs_to_foreground: done job pgid=%d, status=%d", (int)j->pgid, last_status);
+
+	/* Now safe to clean up the completed job */
 	tl_jobs_cleanup();
+
+	return last_status;
 }
 
 void tl_jobs_to_background(job_t *j, int cont)
@@ -195,31 +246,25 @@ void tl_jobs_to_background(job_t *j, int cont)
 	}
 	LOG("tl_jobs_to_background: done job pgid=%d", (int)j->pgid);
 }
-
-void tl_jobs_launch_process(process_t *p, pid_t infd, pid_t outfd, pid_t errfd, int foreground)
+void tl_jobs_launch_process(process_t *p, pid_t infd, pid_t outfd, pid_t errfd, int foreground, pid_t pgid)
 {
-	LOG("tl_jobs_launch_process: start process command='%s', infd=%d, outfd=%d, errfd=%d, foreground=%d",
-		p->command ? p->command : "(null)", (int)infd, (int)outfd, (int)errfd, foreground);
+	LOG("tl_jobs_launch_process: start process command='%s', pgid=%d, foreground=%d",
+		p->command ? p->command : "(null)", (int)pgid, foreground);
 
 	pid_t pid = getpid();
-
-	// Assign pid directly to the process structure
 	if (p)
 	{
 		p->pid = pid;
 	}
 
-	/* Put the process into its process group */
-	if (setpgid(pid, pid) < 0)
+	/* Put the process into the shared job/pipeline process group */
+	if (setpgid(pid, pgid) < 0)
 	{
 		LOG("tl_jobs_launch_process: setpgid failed (errno=%d)", errno);
 	}
 
-	/* If this is a foreground process and job control is active, give it terminal control */
-	if (foreground && termlink_job_control_enabled)
-	{
-		tcsetpgrp(STDIN_FILENO, pid);
-	}
+	/* If foreground, the parent handles tcsetpgrp; avoid child-side races */
+	(void)foreground;
 
 	/* Restore default signal handlers for the child process */
 	signal(SIGINT, SIG_DFL);
@@ -232,7 +277,6 @@ void tl_jobs_launch_process(process_t *p, pid_t infd, pid_t outfd, pid_t errfd, 
 	/* Handle standard input redirection */
 	if (infd != STDIN_FILENO)
 	{
-		LOG("tl_jobs_launch_process: redirecting stdin from fd %d", (int)infd);
 		dup2(infd, STDIN_FILENO);
 		close(infd);
 	}
@@ -240,7 +284,6 @@ void tl_jobs_launch_process(process_t *p, pid_t infd, pid_t outfd, pid_t errfd, 
 	/* Handle standard output redirection */
 	if (outfd != STDOUT_FILENO)
 	{
-		LOG("tl_jobs_launch_process: redirecting stdout to fd %d", (int)outfd);
 		dup2(outfd, STDOUT_FILENO);
 		close(outfd);
 	}
@@ -248,7 +291,6 @@ void tl_jobs_launch_process(process_t *p, pid_t infd, pid_t outfd, pid_t errfd, 
 	/* Handle standard error redirection */
 	if (errfd != STDERR_FILENO)
 	{
-		LOG("tl_jobs_launch_process: redirecting stderr to fd %d", (int)errfd);
 		dup2(errfd, STDERR_FILENO);
 		close(errfd);
 	}
@@ -256,73 +298,28 @@ void tl_jobs_launch_process(process_t *p, pid_t infd, pid_t outfd, pid_t errfd, 
 	LOG("tl_jobs_launch_process: done for process pid=%d", (int)pid);
 }
 
-void tl_jobs_launch_job(job_t *j, int foreground)
-{
-	LOG("tl_jobs_launch_job: start job name='%s', foreground=%d", j->name ? j->name : "(null)", foreground);
-
-	// Add job to global job list
-	j->next = g_first_job;
-	g_first_job = j;
-
-	// For single or multiple processes in the job, iterate and fork/launch
-	process_t *p = j->first_process;
-	pid_t pid = fork();
-
-	/* Inside child fork branch / tl_jobs_launch_process */
-	signal(SIGINT, SIG_DFL);
-	signal(SIGQUIT, SIG_DFL);
-	signal(SIGTSTP, SIG_DFL);
-
-	if (pid < 0)
-	{
-		LOG("tl_jobs_launch_job: fork failed");
-		return;
-	}
-
-	if (pid == 0)
-	{
-		/* Child process */
-		pid_t child_pid = getpid();
-
-		// If pgid is not set yet, use the first child's pid as the pgid
-		if (j->pgid == 0)
-		{
-			j->pgid = child_pid;
-		}
-		setpgid(child_pid, j->pgid);
-
-		// Call your existing fully-instrumented launcher
-		tl_jobs_launch_process(p, STDIN_FILENO, STDOUT_FILENO, STDERR_FILENO, foreground);
-
-		// Exec handling happens right after in the execution routine,
-		// or we can structure the child exit here.
-	}
-	else
-	{
-		/* Parent process */
-		p->pid = pid;
-		if (j->pgid == 0)
-		{
-			j->pgid = pid;
-		}
-		setpgid(pid, j->pgid);
-
-		if (foreground)
-		{
-			tl_jobs_to_foreground(j, 0);
-		}
-		else
-		{
-			tl_jobs_to_background(j, 0);
-			LOG("tl_jobs_launch_job: background job launched, pgid=%d", (int)j->pgid);
-		}
-	}
-
-	LOG("tl_jobs_launch_job: done");
-}
-
 void tl_jobs_cleanup(void)
 {
+	pid_t pid;
+	int status;
+
+	/* Step 1: Non-blocking reap of any finished child processes */
+	while ((pid = waitpid(-1, &status, WNOHANG | WUNTRACED | WCONTINUED)) > 0)
+	{
+		_tl_jobs_mark_process_status(pid, status);
+	}
+
+	/* Step 2: Mark running jobs as DONE if all processes inside them have completed */
+	for (job_t *j = g_first_job; j; j = j->next)
+	{
+		if (j->state == JOB_RUNNING && tl_jobs_is_completed(j))
+		{
+			j->state = JOB_DONE;
+			LOG("tl_jobs_cleanup: job pgid=%d marked as DONE", (int)j->pgid);
+		}
+	}
+
+	/* Step 3: Unlink and free fully completed jobs from the global list */
 	job_t **curr = &g_first_job;
 	while (*curr)
 	{
@@ -332,7 +329,7 @@ void tl_jobs_cleanup(void)
 			LOG("tl_jobs_cleanup: removing completed job pgid=%d", (int)j->pgid);
 			*curr = j->next; // unlink
 
-			// Free processes
+			/* Free processes */
 			process_t *p = j->first_process;
 			while (p)
 			{

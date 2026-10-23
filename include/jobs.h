@@ -34,10 +34,9 @@ extern job_t *g_first_job;
 
 void tl_jobs_init(void);
 job_t *tl_jobs_find(pid_t pgid);
-void tl_jobs_to_foreground(job_t *j, int cont);
+int tl_jobs_to_foreground(job_t *j, int cont);
 void tl_jobs_to_background(job_t *j, int cont);
-void tl_jobs_launch_process(process_t *p, pid_t infd, pid_t outfd, pid_t errfd, int foreground);
-void tl_jobs_launch_job(job_t *j, int foreground);
+void tl_jobs_launch_process(process_t *p, pid_t infd, pid_t outfd, pid_t errfd, int foreground, pid_t pgid);
 void tl_jobs_cleanup(void);
 
 #endif
