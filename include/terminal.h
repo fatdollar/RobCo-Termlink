@@ -36,6 +36,8 @@ bool terminal_poll_key(int *key);
 
 void terminal_setup(void);
 
+bool terminal_check_resize(void);
+
 void terminal_slow_print_at(int line, const char *s);
 void terminal_slow_print(const char *s);
 void terminal_scroll_print(int row, const char *text);

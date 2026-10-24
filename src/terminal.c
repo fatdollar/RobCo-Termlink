@@ -25,10 +25,14 @@ int terminal_cursor_line = 5;
 
 int termlink_job_control_enabled = 0;
 
+/* Track pending resizes asynchronously */
+static volatile sig_atomic_t terminal_resize_flag = 0;
+
 /* ============================================================
  * FORWARD DECLARATIONS
  * ============================================================ */
 
+static void _terminal_handle_sigwinch(int sig);
 static void _terminal_slow_putc(char c);
 static void _terminal_med_putc(char c);
 static void _terminal_putc(char c);
@@ -40,6 +44,12 @@ static void _terminal_update_size(void);
 /* ============================================================
  * INTERNAL HELPERS
  * ============================================================ */
+
+static void _terminal_handle_sigwinch(int sig)
+{
+	(void)sig;
+	terminal_resize_flag = 1;
+}
 
 static void _terminal_slow_putc(char c)
 {
@@ -202,6 +212,7 @@ void terminal_setup(void)
 		signal(SIGTSTP, SIG_IGN);
 		signal(SIGTTIN, SIG_IGN);
 		signal(SIGTTOU, SIG_IGN);
+		signal(SIGWINCH, _terminal_handle_sigwinch);
 
 		LOG("terminal_setup: job control active (interactive tty)");
 	}
@@ -218,6 +229,32 @@ void terminal_setup(void)
 	terminal_header_print();
 
 	terminal_slow_print_at(terminal_rows, "Accessing systems...");
+}
+
+/* ============================================================
+ * SCREEN RESIZE
+ * ============================================================ */
+
+bool terminal_check_resize(void)
+{
+	if (terminal_resize_flag)
+	{
+		terminal_resize_flag = 0;
+		_terminal_update_size();
+		return true;
+	}
+
+	struct winsize ws;
+	if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) == 0)
+	{
+		// Check if dimensions changed compared to active globals
+		if (ws.ws_row != terminal_rows || ws.ws_col != terminal_cols)
+		{
+			_terminal_update_size(); // This updates terminal_rows, terminal_cols, and scroll bounds
+			return true;
+		}
+	}
+	return false;
 }
 
 /* ============================================================

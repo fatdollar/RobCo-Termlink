@@ -20,9 +20,15 @@ enum
 	ALT_BACKSPACE,
 	ALT_D,
 	CTRL_C,
+	CTRL_D,
 	CTRL_U,
 	CTRL_K,
 	CTRL_Y,
+	CTRL_A,
+	CTRL_E,
+	CTRL_L,
+	CTRL_W,
+	RESIZE = 2000,
 };
 
 void input_redraw(input_state *st, bool place_cursor);

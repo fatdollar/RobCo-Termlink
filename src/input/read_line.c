@@ -24,8 +24,32 @@ void input_read_line(input_state *st, char *buf, size_t maxlen)
 
 	while (1)
 	{
+		/* Check if the user resized the window while typing or waiting */
+		if (terminal_check_resize())
+		{
+			LOG("read_line: window resize detected, redrawing UI layout");
+
+			// 1. Wipe and re-render the RobCo header to the new width
+			terminal_header_print();
+			terminal_prompt_draw();
+
+			// 2. Clear any old scroll lines/trash and redraw input prompt at new terminal_rows
+			input_redraw(st, true);
+		}
+
 		int ch = input_read_char();
 		LOG("read_line: got ch=%d", ch);
+
+		/* Optional: Handle EINTR from SIGWINCH if getchar was interrupted */
+		if (ch == EOF && errno == EINTR)
+		{
+			if (terminal_check_resize())
+			{
+				terminal_header_print();
+				input_redraw(st, true);
+			}
+			continue;
+		}
 
 		switch (ch)
 		{
@@ -159,6 +183,53 @@ void input_read_line(input_state *st, char *buf, size_t maxlen)
 		case CTRL_Y:
 			LOG("read_line: CTRL_Y");
 			input_tokens_yank(st);
+			input_redraw(st, true);
+			break;
+
+		case CTRL_A:
+			LOG("read_line: CTRL_A (Beginning of line)");
+			st->cursor = 0;
+			input_cursor_redraw(st);
+			break;
+
+		case CTRL_E:
+			LOG("read_line: CTRL_E (End of line)");
+			st->cursor = st->len;
+			input_cursor_redraw(st);
+			break;
+
+		case CTRL_D:
+			LOG("read_line: CTRL_D");
+			if (st->len == 0)
+			{
+				// Empty line EOF -> exit shell or signal EOF
+				LOG("read_line: EOF received on empty line");
+				terminal_slow_print_at(terminal_rows, "Shutting down...\n");
+				exit(0);
+			}
+			else
+			{
+				// Delete character under cursor (like DEL)
+				LOG("read_line: deleting char under cursor");
+				input_buffer_delete(st);
+				input_redraw(st, true);
+			}
+			break;
+
+		case CTRL_L:
+			LOG("read_line: CTRL_L (Clear screen)");
+			terminal_scroll_clear();
+			input_redraw(st, true);
+			break;
+
+		case CTRL_W:
+			LOG("read_line: CTRL_W (Kill word backward)");
+			input_tokens_delete_prev(st);
+			input_redraw(st, true);
+			break;
+
+		case RESIZE:
+			terminal_header_print();
 			input_redraw(st, true);
 			break;
 
