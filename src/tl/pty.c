@@ -108,7 +108,7 @@ int pty_run_interactive(char **argv)
 
 	// Restore terminal state and redraw prompt upon exit
 	terminal_scroll_clear();
-	theme_apply_default();
+	theme_apply();
 	terminal_header_print();
 	terminal_prompt_draw();
 

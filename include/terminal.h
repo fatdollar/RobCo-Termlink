@@ -34,6 +34,9 @@ int terminal_scroll_rows(void);
 int terminal_scroll_cols(void);
 bool terminal_poll_key(int *key);
 
+void termlink_check_login(int argc, char **argv);
+void termlink_init_login_profiles(void);
+
 void terminal_setup(void);
 
 bool terminal_check_resize(void);

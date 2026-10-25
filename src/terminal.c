@@ -28,6 +28,8 @@ int termlink_job_control_enabled = 0;
 /* Track pending resizes asynchronously */
 static volatile sig_atomic_t terminal_resize_flag = 0;
 
+bool termlink_is_login_shell = false;
+
 /* ============================================================
  * FORWARD DECLARATIONS
  * ============================================================ */
@@ -180,6 +182,65 @@ bool terminal_poll_key(int *key)
 }
 
 /* ============================================================
+ * LOGIN
+ * ============================================================ */
+
+void termlink_check_login(int argc, char **argv)
+{
+	// Check if argv[0] starts with '-' (e.g., "-termlink")
+	if (argv[0] && argv[0][0] == '-')
+	{
+		termlink_is_login_shell = true;
+	}
+
+	// Or check explicit flags
+	for (int i = 1; i < argc; i++)
+	{
+		if (strcmp(argv[i], "-l") == 0 || strcmp(argv[i], "--login") == 0)
+		{
+			termlink_is_login_shell = true;
+			break;
+		}
+	}
+
+	if (termlink_is_login_shell)
+	{
+		LOG("login: identified as a login shell");
+	}
+}
+
+void termlink_init_login_profiles(void)
+{
+	if (!termlink_is_login_shell)
+		return;
+
+	LOG("login: sourcing initialization profiles");
+
+	// 1. System-wide profile
+	if (access("/etc/profile", R_OK) == 0)
+	{
+		LOG("login: sourcing /etc/profile");
+		char *args[] = {".", "/etc/profile", NULL};
+		// Assuming your source builtin can be called programmatically:
+		// builtin_source(2, args);
+	}
+
+	// 2. User profile (~/.profile or ~/.termlink_profile)
+	const char *home = getenv("HOME");
+	if (home)
+	{
+		char profile_path[PATH_MAX];
+		snprintf(profile_path, sizeof(profile_path), "%s/.profile", home);
+		if (access(profile_path, R_OK) == 0)
+		{
+			LOG("login: sourcing %s", profile_path);
+			char *args[] = {".", profile_path, NULL};
+			// builtin_source(2, args);
+		}
+	}
+}
+
+/* ============================================================
  * SETUP
  * ============================================================ */
 
@@ -223,7 +284,7 @@ void terminal_setup(void)
 
 	_terminal_update_size();
 
-	theme_apply_default();
+	theme_load_config();
 	LOG("terminal_setup: rows=%d cols=%d", terminal_rows, terminal_cols);
 
 	terminal_header_print();

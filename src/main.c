@@ -26,7 +26,7 @@ tl_exec_ctx_t tl_ctx = {
  * MAIN
  * ============================================================ */
 
-int main(void)
+int main(int argc, char **argv)
 {
 	char input_buf[PATH_MAX];
 	input_state st;
@@ -60,7 +60,12 @@ int main(void)
 		LOG("Non-interactive mode — fallback mode");
 	}
 
+	// Check if invoked as a login shell
+	termlink_check_login(argc, argv);
+
 	terminal_setup();
+
+	termlink_init_login_profiles();
 
 	history_load(&st.hist);
 	input_autocomplete_load_completions();
